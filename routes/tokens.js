@@ -1,4 +1,4 @@
-// routes/tokens.js - Token API routes
+// routes/tokens.js - Updated token API routes with better error handling
 const express = require("express");
 const rateLimit = require("express-rate-limit");
 const { logger } = require("../utils/logger");
@@ -43,11 +43,45 @@ router.get("/wallet/:address", async (req, res) => {
 
     logger.info(`Fetching tokens for wallet: ${address} on chain: ${chainId}`);
 
+    // Check if Moralis service is initialized
+    if (!moralisService.initialized) {
+      logger.warn(
+        "Moralis service not initialized, attempting to initialize..."
+      );
+      try {
+        await moralisService.initialize();
+      } catch (initError) {
+        logger.error("Failed to initialize Moralis service:", initError);
+        return ResponseUtil.error(res, "Service initialization failed", 503);
+      }
+    }
+
     // Get token balances from Moralis
-    const tokens = await moralisService.getWalletTokenBalances(
-      address,
-      chainId
-    );
+    let tokens = [];
+    try {
+      tokens = await moralisService.getWalletTokenBalances(address, chainId);
+    } catch (moralisError) {
+      logger.error("Moralis API error:", moralisError);
+
+      // Check for specific Moralis errors
+      if (moralisError.message.includes("Invalid address")) {
+        return ResponseUtil.validation(res, "Invalid wallet address");
+      }
+
+      if (moralisError.message.includes("Invalid chain")) {
+        return ResponseUtil.validation(res, "Unsupported chain ID");
+      }
+
+      if (moralisError.message.includes("API key")) {
+        return ResponseUtil.error(res, "API configuration error", 503);
+      }
+
+      // Return empty result for other errors (don't break the UI)
+      logger.warn(
+        `Returning empty result due to Moralis error: ${moralisError.message}`
+      );
+      tokens = [];
+    }
 
     // Calculate total portfolio value
     const totalValue = tokens.reduce(
@@ -64,6 +98,12 @@ router.get("/wallet/:address", async (req, res) => {
       lastUpdated: new Date().toISOString(),
     };
 
+    logger.info(
+      `Successfully returning ${
+        tokens.length
+      } tokens with total value $${totalValue.toFixed(2)}`
+    );
+
     return ResponseUtil.success(res, response, "Tokens fetched successfully");
   } catch (error) {
     logger.error("Error in /tokens/wallet/:address", {
@@ -72,14 +112,6 @@ router.get("/wallet/:address", async (req, res) => {
       error: error.message,
       stack: error.stack,
     });
-
-    if (error.message.includes("Unsupported chain")) {
-      return ResponseUtil.validation(res, error.message);
-    }
-
-    if (error.message.includes("API key")) {
-      return ResponseUtil.error(res, "API configuration error", 503);
-    }
 
     return ResponseUtil.serverError(res, "Failed to fetch token balances");
   }
@@ -193,6 +225,62 @@ router.post("/refresh/:address", async (req, res) => {
 });
 
 /**
+ * GET /api/tokens/native/:address
+ * Get native token balance for a wallet
+ */
+router.get("/native/:address", async (req, res) => {
+  try {
+    const { address } = req.params;
+    const { chain } = req.query;
+
+    // Validation
+    if (!address || !address.match(/^0x[a-fA-F0-9]{40}$/)) {
+      return ResponseUtil.validation(res, "Invalid wallet address format");
+    }
+
+    if (!chain) {
+      return ResponseUtil.validation(res, "Chain ID is required");
+    }
+
+    const chainId = parseInt(chain);
+    if (isNaN(chainId)) {
+      return ResponseUtil.validation(res, "Invalid chain ID");
+    }
+
+    logger.info(
+      `Fetching native balance for wallet: ${address} on chain: ${chainId}`
+    );
+
+    // Get native balance from Moralis
+    const nativeBalance = await moralisService.getNativeBalance(
+      address,
+      chainId
+    );
+
+    const response = {
+      wallet: address,
+      chainId,
+      nativeBalance,
+      lastUpdated: new Date().toISOString(),
+    };
+
+    return ResponseUtil.success(
+      res,
+      response,
+      "Native balance fetched successfully"
+    );
+  } catch (error) {
+    logger.error("Error in /tokens/native/:address", {
+      address: req.params.address,
+      chain: req.query.chain,
+      error: error.message,
+    });
+
+    return ResponseUtil.serverError(res, "Failed to fetch native balance");
+  }
+});
+
+/**
  * GET /api/tokens/stats
  * Get service statistics
  */
@@ -206,6 +294,7 @@ router.get("/stats", async (req, res) => {
       uptime: process.uptime(),
       cache: moralisService.getCacheStats(),
       supportedChains: moralisService.getSupportedChains().length,
+      moralisInitialized: moralisService.initialized,
       timestamp: new Date().toISOString(),
     };
 
@@ -233,6 +322,7 @@ router.get("/health", async (req, res) => {
       service: "Token Service",
       moralis: isHealthy ? "connected" : "disconnected",
       cache: "active",
+      apiKey: process.env.MORALIS_API_KEY ? "configured" : "missing",
       timestamp: new Date().toISOString(),
     };
 

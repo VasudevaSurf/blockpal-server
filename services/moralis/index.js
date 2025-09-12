@@ -1,6 +1,5 @@
-// services/moralis/index.js - Moralis integration service
+// services/moralis/index.js - FIXED with hardcoded API key and better debugging
 const Moralis = require("moralis").default;
-const axios = require("axios");
 const NodeCache = require("node-cache");
 const { logger } = require("../../utils/logger");
 const chainConfig = require("../../config/chains");
@@ -14,10 +13,10 @@ const cache = new NodeCache({
 class MoralisService {
   constructor() {
     this.initialized = false;
+    // Hardcode your API key directly here as fallback
     this.apiKey =
       process.env.MORALIS_API_KEY ||
-      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6IjcwM2JkNmYwLWE3OTQtNDAzYy1hMTc4LTg4ZmZiYTY0YTVhYyIsIm9yZ0lkIjoiNDQ1NTIyIiwidXNlcklkIjoiNDU4Mzg4IiwidHlwZUlkIjoiNzA0ODUyNzgtNTUxYS00OWMxLTk4ZDktZTMwOTVkYTNiMGQ4IiwidHlwZSI6IlBST0pFQ1QiLCJpYXQiOjE3NDY1MTc1MzAsImV4cCI6NDkwMjI3NzUzMH0.cbvMGGnlu0EFsAFkukRa9i6_NQknx7iidSlfyowgCMg";
-    this.baseURL = "https://deep-index.moralis.io/api/v2.2";
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6IjcxN2EyZTI3LWM1YjItNDRlMC05MGE3LWRjNGFiMGEzOTliYyIsIm9yZ0lkIjoiNDY4MzYzIiwidXNlcklkIjoiNDgxODIwIiwidHlwZUlkIjoiNTcwMjhhMzQtMzc0OC00NWRlLTg4NTktNjlmNzU5ODEzNTM2IiwidHlwZSI6IlBST0pFQ1QiLCJpYXQiOjE3NTY2MjE2NjAsImV4cCI6NDkxMjM4MTY2MH0.H2IkylE8uOgFiZodaezRSpN9nYE-D0GnF0SoMbbXCFQ";
   }
 
   async initialize() {
@@ -27,6 +26,8 @@ class MoralisService {
       if (!this.apiKey) {
         throw new Error("MORALIS_API_KEY is required");
       }
+
+      logger.info("🔑 Using API Key:", this.apiKey.substring(0, 20) + "...");
 
       await Moralis.start({
         apiKey: this.apiKey,
@@ -41,7 +42,7 @@ class MoralisService {
   }
 
   /**
-   * Get wallet token balances for a specific chain
+   * Get wallet token balances for a specific chain using the correct Moralis API
    */
   async getWalletTokenBalances(walletAddress, chainId) {
     try {
@@ -66,32 +67,107 @@ class MoralisService {
         throw new Error(`Unsupported chain ID: ${chainId}`);
       }
 
-      // Get ERC-20 tokens
-      const response = await axios.get(
-        `${this.baseURL}/${walletAddress}/erc20`,
-        {
-          headers: {
-            "X-API-Key": this.apiKey,
-            Accept: "application/json",
-          },
-          params: {
+      logger.info(`🔗 Using chain hex: ${chainHex} for chain ID: ${chainId}`);
+
+      // First, get ALL tokens without specifying token addresses
+      logger.info("🔄 Making Moralis API call for ALL tokens...");
+
+      let allTokensResponse;
+      try {
+        allTokensResponse =
+          await Moralis.EvmApi.wallets.getWalletTokenBalancesPrice({
             chain: chainHex,
-            limit: 100,
-            exclude_spam: true,
-            exclude_unverified_contracts: true,
-          },
+            address: walletAddress,
+          });
+
+        logger.info("✅ Moralis ALL tokens API call successful");
+        logger.info(
+          "📋 Full Raw Response:",
+          JSON.stringify(allTokensResponse, null, 2)
+        );
+
+        if (allTokensResponse.raw) {
+          logger.info(
+            "📋 Raw Data:",
+            JSON.stringify(allTokensResponse.raw, null, 2)
+          );
+
+          if (allTokensResponse.raw.result) {
+            logger.info(
+              `📊 Found ${allTokensResponse.raw.result.length} tokens in raw result`
+            );
+
+            // Log first few tokens for debugging
+            allTokensResponse.raw.result.slice(0, 3).forEach((token, index) => {
+              logger.info(`🪙 Token ${index + 1}:`, {
+                symbol: token.symbol,
+                name: token.name,
+                balance: token.balance,
+                balance_formatted: token.balance_formatted,
+                usd_value: token.usd_value,
+                native_token: token.native_token,
+                token_address: token.token_address,
+              });
+            });
+          } else {
+            logger.warn("⚠️ No 'result' field in raw response");
+          }
+        } else {
+          logger.warn("⚠️ No 'raw' field in response");
         }
+      } catch (moralisError) {
+        logger.error("❌ Moralis ALL tokens API call failed:", {
+          message: moralisError.message,
+          code: moralisError.code,
+          details: moralisError.details,
+          stack: moralisError.stack,
+        });
+        throw moralisError;
+      }
+
+      // Process the response
+      let allTokens = allTokensResponse.raw?.result || [];
+      logger.info(
+        `📊 Processing ${allTokens.length} tokens from Moralis response`
       );
 
-      // Get native token balance
-      const nativeBalance = await this.getNativeBalance(walletAddress, chainId);
+      if (allTokens.length === 0) {
+        logger.warn(
+          "⚠️ No tokens returned from Moralis API - this might indicate:"
+        );
+        logger.warn("   1. Empty wallet");
+        logger.warn("   2. API key issues");
+        logger.warn("   3. Invalid wallet address");
+        logger.warn("   4. Network/chain issues");
 
-      // Process tokens
-      const tokens = await this.processTokenBalances(
-        response.data.result || [],
-        chainId,
-        nativeBalance
-      );
+        // Try a test call with a known wallet that has tokens
+        logger.info("🧪 Testing with known wallet that has tokens...");
+        try {
+          const testResponse =
+            await Moralis.EvmApi.wallets.getWalletTokenBalancesPrice({
+              chain: chainHex,
+              address: "0xcB1C1FdE09f811B294172696404e88E658659905", // Known wallet with tokens
+            });
+
+          logger.info(
+            `🧪 Test wallet returned ${
+              testResponse.raw?.result?.length || 0
+            } tokens`
+          );
+          if (testResponse.raw?.result?.length > 0) {
+            logger.info("✅ API is working - your wallet might be empty");
+          } else {
+            logger.warn(
+              "❌ Even test wallet returns no tokens - API issue suspected"
+            );
+          }
+        } catch (testError) {
+          logger.error("❌ Test call also failed:", testError.message);
+        }
+      }
+
+      // Process the combined response
+      const tokens = await this.processTokenBalances(allTokens, chainId);
 
       // Cache the result
       cache.set(cacheKey, tokens);
@@ -105,172 +181,159 @@ class MoralisService {
         wallet: walletAddress,
         chain: chainId,
         error: error.message,
+        stack: error.stack,
       });
       throw error;
     }
   }
 
   /**
-   * Get native token balance
+   * Process token balances from Moralis API response
    */
-  async getNativeBalance(walletAddress, chainId) {
-    try {
-      const chainHex = this.getChainHex(chainId);
-
-      const response = await axios.get(
-        `${this.baseURL}/${walletAddress}/balance`,
-        {
-          headers: {
-            "X-API-Key": this.apiKey,
-            Accept: "application/json",
-          },
-          params: {
-            chain: chainHex,
-          },
-        }
-      );
-
-      const balance = response.data.balance;
-      const balanceEth = parseFloat(balance) / Math.pow(10, 18);
-
-      return {
-        balance: balanceEth,
-        balanceWei: balance,
-      };
-    } catch (error) {
-      logger.error("Error fetching native balance", {
-        wallet: walletAddress,
-        chain: chainId,
-        error: error.message,
-      });
-      return { balance: 0, balanceWei: "0" };
-    }
-  }
-
-  /**
-   * Process token balances and match with popular tokens
-   */
-  async processTokenBalances(tokenData, chainId, nativeBalance) {
+  async processTokenBalances(tokenData, chainId) {
     const chainInfo = chainConfig[chainId];
     if (!chainInfo) {
       throw new Error(`Chain ${chainId} not supported`);
     }
 
+    logger.info(`🔄 Processing ${tokenData.length} raw tokens from Moralis`);
+
     const processedTokens = [];
 
-    // Add native token first
-    processedTokens.push({
-      id: `native-${chainId}`,
-      symbol: chainInfo.symbol,
-      name: chainInfo.name,
-      contractAddress: "native",
-      decimals: 18,
-      balance: nativeBalance.balance,
-      balanceWei: nativeBalance.balanceWei,
-      value: 0, // Will be calculated with price data
-      change24h: 0,
-      price: 0,
-      isNative: true,
-      logoUrl: this.getNativeTokenLogo(chainInfo.symbol),
-    });
-
-    // Process ERC-20 tokens
     for (const token of tokenData) {
-      if (!token.token_address || !token.balance) continue;
+      try {
+        logger.info(`🔍 Processing token:`, {
+          symbol: token.symbol,
+          name: token.name,
+          address: token.token_address,
+          balance: token.balance,
+          balance_formatted: token.balance_formatted,
+          usd_value: token.usd_value,
+          native_token: token.native_token,
+          possible_spam: token.possible_spam,
+        });
 
-      // Check if token is in our popular tokens list
-      const popularToken = chainInfo.popularTokens.find(
-        (pt) => pt.address.toLowerCase() === token.token_address.toLowerCase()
-      );
+        // Get balance value
+        const balance = parseFloat(token.balance_formatted || "0");
+        logger.info(`💰 Token ${token.symbol} balance: ${balance}`);
 
-      if (!popularToken) {
-        logger.debug(`Token ${token.token_address} not in popular tokens list`);
+        // Skip tokens with zero balance
+        if (balance <= 0) {
+          logger.info(
+            `⏭️ Skipping ${token.symbol} - zero balance (${balance})`
+          );
+          continue;
+        }
+
+        // Skip possible spam tokens (unless they're popular)
+        if (token.possible_spam) {
+          const isPopularToken = chainInfo.popularTokens.find(
+            (pt) =>
+              pt.address.toLowerCase() === token.token_address?.toLowerCase()
+          );
+
+          if (!isPopularToken) {
+            logger.info(
+              `⏭️ Skipping ${token.symbol} - marked as possible spam`
+            );
+            continue;
+          }
+        }
+
+        // Handle native token
+        if (
+          token.native_token ||
+          token.token_address === "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
+        ) {
+          const processedToken = {
+            id: `native-${chainId}`,
+            symbol: token.symbol || chainInfo.symbol,
+            name: token.name || chainInfo.name,
+            contractAddress: "native",
+            decimals: 18,
+            balance: balance,
+            balanceWei: token.balance || "0",
+            value: parseFloat(token.usd_value || "0"),
+            change24h: parseFloat(token.usd_price_24hr_percent_change || "0"),
+            price: parseFloat(token.usd_price || "0"),
+            isNative: true,
+            logoUrl:
+              token.logo ||
+              token.thumbnail ||
+              this.getNativeTokenLogo(chainInfo.symbol),
+          };
+
+          processedTokens.push(processedToken);
+          logger.info(
+            `✅ Added native token: ${
+              token.symbol
+            } - Balance: ${balance}, USD: $${token.usd_value || "0"}`
+          );
+          continue;
+        }
+
+        // Handle ERC-20 tokens
+        if (token.token_address) {
+          // Check if token is in our popular tokens list (case-insensitive)
+          const popularToken = chainInfo.popularTokens.find(
+            (pt) =>
+              pt.address.toLowerCase() === token.token_address.toLowerCase()
+          );
+
+          const decimals =
+            parseInt(token.decimals) ||
+            (popularToken ? popularToken.decimals : 18);
+
+          const processedToken = {
+            id: `${token.token_address.toLowerCase()}-${chainId}`,
+            symbol:
+              token.symbol || (popularToken ? popularToken.symbol : "UNKNOWN"),
+            name:
+              token.name ||
+              (popularToken ? popularToken.name : "Unknown Token"),
+            contractAddress: token.token_address.toLowerCase(),
+            decimals,
+            balance: balance,
+            balanceWei: token.balance || "0",
+            value: parseFloat(token.usd_value || "0"),
+            change24h: parseFloat(token.usd_price_24hr_percent_change || "0"),
+            price: parseFloat(token.usd_price || "0"),
+            isNative: false,
+            logoUrl:
+              token.logo || token.thumbnail || this.getTokenLogo(token.symbol),
+            isPopular: !!popularToken,
+            possibleSpam: token.possible_spam || false,
+            verifiedContract: token.verified_contract || false,
+          };
+
+          processedTokens.push(processedToken);
+          logger.info(
+            `✅ Added ERC-20 token: ${
+              token.symbol
+            } - Balance: ${balance}, USD: $${token.usd_value || "0"}`
+          );
+        }
+      } catch (error) {
+        logger.warn(
+          `⚠️ Error processing token ${token.token_address}:`,
+          error.message
+        );
         continue;
       }
-
-      const decimals = parseInt(token.decimals) || popularToken.decimals;
-      const balance = parseFloat(token.balance) / Math.pow(10, decimals);
-
-      // Only include tokens with non-zero balance
-      if (balance > 0) {
-        processedTokens.push({
-          id: `${token.token_address.toLowerCase()}-${chainId}`,
-          symbol: token.symbol || popularToken.symbol,
-          name: token.name || popularToken.name,
-          contractAddress: token.token_address.toLowerCase(),
-          decimals,
-          balance,
-          balanceWei: token.balance,
-          value: 0, // Will be calculated with price data
-          change24h: 0,
-          price: 0,
-          isNative: false,
-          logoUrl: token.logo || this.getTokenLogo(popularToken.symbol),
-        });
-      }
     }
 
-    // Get price data for all tokens
-    await this.enrichWithPriceData(processedTokens);
-
-    // Sort by value descending
+    // Sort by USD value descending
     processedTokens.sort((a, b) => b.value - a.value);
 
-    return processedTokens;
-  }
-
-  /**
-   * Enrich tokens with price data
-   */
-  async enrichWithPriceData(tokens) {
-    try {
-      // Get token addresses for price lookup
-      const tokenAddresses = tokens
-        .filter((token) => !token.isNative)
-        .map((token) => token.contractAddress);
-
-      if (tokenAddresses.length === 0) return;
-
-      // You can implement price fetching from CoinGecko or other price API
-      // For now, we'll use mock prices
-      for (const token of tokens) {
-        const mockPrice = this.getMockPrice(token.symbol);
-        token.price = mockPrice.current_price;
-        token.change24h = mockPrice.price_change_percentage_24h;
-        token.value = token.balance * token.price;
-      }
-
-      logger.info(`Enriched ${tokens.length} tokens with price data`);
-    } catch (error) {
-      logger.error("Error enriching tokens with price data", error);
-      // Continue without price data
-    }
-  }
-
-  /**
-   * Get mock price data for demonstration
-   */
-  getMockPrice(symbol) {
-    const mockPrices = {
-      ETH: { current_price: 3200.45, price_change_percentage_24h: 2.5 },
-      BTC: { current_price: 67000.0, price_change_percentage_24h: 1.2 },
-      USDT: { current_price: 1.0, price_change_percentage_24h: 0.1 },
-      USDC: { current_price: 1.0, price_change_percentage_24h: -0.05 },
-      BNB: { current_price: 635.0, price_change_percentage_24h: 3.1 },
-      MATIC: { current_price: 0.95, price_change_percentage_24h: -1.2 },
-      AVAX: { current_price: 42.5, price_change_percentage_24h: 4.3 },
-      LINK: { current_price: 18.5, price_change_percentage_24h: -0.8 },
-      UNI: { current_price: 12.3, price_change_percentage_24h: 2.1 },
-      AAVE: { current_price: 156.7, price_change_percentage_24h: 1.9 },
-      DAI: { current_price: 1.0, price_change_percentage_24h: 0.02 },
-      WBTC: { current_price: 66800.0, price_change_percentage_24h: 1.1 },
-      ARB: { current_price: 2.1, price_change_percentage_24h: 5.2 },
-      // Add more as needed
-    };
-
-    return (
-      mockPrices[symbol] || { current_price: 0, price_change_percentage_24h: 0 }
+    logger.info(
+      `✅ Successfully processed ${processedTokens.length} tokens with balances`
     );
+
+    // Log summary
+    const totalValue = processedTokens.reduce((sum, t) => sum + t.value, 0);
+    logger.info(`💰 Total portfolio value: $${totalValue.toFixed(2)}`);
+
+    return processedTokens;
   }
 
   /**
@@ -287,24 +350,19 @@ class MoralisService {
    */
   getNativeTokenLogo(symbol) {
     const logos = {
-      ETH: "https://tokens.1inch.io/0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee.png",
+      ETH: "https://cdn.moralis.io/eth/0x.png",
       BNB: "https://tokens.1inch.io/0xbb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c.png",
       MATIC:
         "https://tokens.1inch.io/0x0000000000000000000000000000000000001010_1.png",
       AVAX: "https://tokens.1inch.io/0xb31f66aa3c1e785363f0875a1b74e27b85fd66c7.png",
     };
-    return (
-      logos[symbol] ||
-      `https://tokens.1inch.io/0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee.png`
-    );
+    return logos[symbol] || "https://cdn.moralis.io/eth/0x.png";
   }
 
   /**
    * Get token logo URL
    */
   getTokenLogo(symbol) {
-    // You can implement a mapping to token logo URLs
-    // For now, return a generic token icon
     return `https://tokens.1inch.io/generic.png`;
   }
 
@@ -352,6 +410,50 @@ class MoralisService {
       misses: cache.getStats().misses,
       ttl: cache.options.stdTTL,
     };
+  }
+
+  /**
+   * Test method to debug Moralis API calls
+   */
+  async testMoralisCall(walletAddress, chainId) {
+    try {
+      await this.initialize();
+
+      const chainHex = this.getChainHex(chainId);
+
+      logger.info("🧪 Testing Moralis API call with parameters:", {
+        chain: chainHex,
+        address: walletAddress,
+        apiKey: this.apiKey.substring(0, 20) + "...",
+      });
+
+      // Test call without token addresses (gets all tokens)
+      const allTokensResponse =
+        await Moralis.EvmApi.wallets.getWalletTokenBalancesPrice({
+          chain: chainHex,
+          address: walletAddress,
+        });
+
+      logger.info(
+        "🧪 Raw test response:",
+        JSON.stringify(allTokensResponse.raw, null, 2)
+      );
+
+      return {
+        allTokens: {
+          count: allTokensResponse.raw.result?.length || 0,
+          result: allTokensResponse.raw.result?.slice(0, 3), // First 3 for debug
+          fullRaw: allTokensResponse.raw,
+        },
+      };
+    } catch (error) {
+      logger.error("🧪 Moralis test call failed:", {
+        message: error.message,
+        code: error.code,
+        details: error.details,
+      });
+      throw error;
+    }
   }
 }
 

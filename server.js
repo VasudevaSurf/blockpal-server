@@ -14,6 +14,7 @@ const moralisService = require("./services/moralis");
 
 // Import routes
 const tokenRoutes = require("./routes/tokens");
+const debugRoutes = require("./routes/debug"); // Add debug routes
 
 const app = express();
 const server = http.createServer(app);
@@ -76,6 +77,8 @@ app.get("/health", async (req, res) => {
       },
       uptime: process.uptime(),
       memory: process.memoryUsage(),
+      environment: process.env.NODE_ENV,
+      apiKey: process.env.MORALIS_API_KEY ? "configured" : "missing",
     };
 
     res.json(health);
@@ -99,7 +102,7 @@ app.use(
   walletConnectService
 );
 
-// Token routes - NEW
+// Token routes
 app.use(
   "/api/tokens",
   (req, res, next) => {
@@ -108,6 +111,19 @@ app.use(
   },
   tokenRoutes
 );
+
+// Debug routes (only in development)
+if (process.env.NODE_ENV === "development") {
+  app.use(
+    "/api/debug",
+    (req, res, next) => {
+      console.log(`🐛 Debug API Request: ${req.method} ${req.path}`);
+      next();
+    },
+    debugRoutes
+  );
+  console.log("🐛 Debug routes enabled in development mode");
+}
 
 // WebSocket handling for real-time updates
 wss.on("connection", (ws, req) => {
@@ -189,16 +205,33 @@ async function initializeServices() {
   try {
     logger.info("🔄 Initializing services...");
 
+    // Log environment info
+    logger.info("Environment:", {
+      NODE_ENV: process.env.NODE_ENV,
+      PORT: process.env.PORT,
+      MORALIS_API_KEY:
+        process.env.MORALIS_API_KEY ||
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6IjcxN2EyZTI3LWM1YjItNDRlMC05MGE3LWRjNGFiMGEzOTliYyIsIm9yZ0lkIjoiNDY4MzYzIiwidXNlcklkIjoiNDgxODIwIiwidHlwZUlkIjoiNTcwMjhhMzQtMzc0OC00NWRlLTg4NTktNjlmNzU5ODEzNTM2IiwidHlwZSI6IlBST0pFQ1QiLCJpYXQiOjE3NTY2MjE2NjAsImV4cCI6NDkxMjM4MTY2MH0.H2IkylE8uOgFiZodaezRSpN9nYE-D0GnF0SoMbbXCFQ"
+          ? "configured"
+          : "missing",
+      ALLOWED_ORIGINS: process.env.ALLOWED_ORIGINS,
+    });
+
     // Initialize Moralis service
+    logger.info("🔄 Starting Moralis initialization...");
     await moralisService.initialize();
     logger.info("✅ Moralis service initialized");
 
     logger.info("🎉 All services initialized successfully");
   } catch (error) {
-    logger.error("❌ Failed to initialize services", error);
+    logger.error("❌ Failed to initialize services", {
+      message: error.message,
+      stack: error.stack,
+    });
 
     // Don't exit the process, but log the error
     // Some services might still work without all dependencies
+    logger.warn("⚠️ Continuing with partial service initialization");
   }
 }
 
@@ -213,6 +246,14 @@ app.use("*", (req, res) => {
     error: "Route not found",
     path: req.originalUrl,
     method: req.method,
+    availableEndpoints: {
+      health: "GET /health",
+      wallet: "POST /api/wallet/*",
+      tokens: "GET /api/tokens/*",
+      ...(process.env.NODE_ENV === "development" && {
+        debug: "GET /api/debug/*",
+      }),
+    },
   });
 });
 
@@ -224,6 +265,13 @@ server.listen(PORT, async () => {
   logger.info(`🔌 WebSocket server running on ws://localhost:${PORT}`);
   logger.info(`📡 Wallet Connect API: http://localhost:${PORT}/api/wallet`);
   logger.info(`🪙 Token API: http://localhost:${PORT}/api/tokens`);
+
+  if (process.env.NODE_ENV === "development") {
+    logger.info(`🐛 Debug API: http://localhost:${PORT}/api/debug`);
+    logger.info(
+      `🧪 Test Moralis: http://localhost:${PORT}/api/debug/test-moralis`
+    );
+  }
 
   // Log CORS configuration
   const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(",") || [
@@ -250,6 +298,20 @@ process.on("SIGINT", () => {
     logger.info("Process terminated");
     process.exit(0);
   });
+});
+
+// Handle uncaught exceptions
+process.on("uncaughtException", (error) => {
+  logger.error("Uncaught Exception:", error);
+  process.exit(1);
+});
+
+process.on("unhandledRejection", (reason, promise) => {
+  logger.error("Unhandled Rejection at:", promise, "reason:", reason);
+  // Don't exit on unhandled rejections in production
+  if (process.env.NODE_ENV === "development") {
+    process.exit(1);
+  }
 });
 
 module.exports = app;

@@ -1,0 +1,25 @@
+{"timestamp":"2025-09-12T17:36:48.136Z","level":"WARN","message":"⚠️ Failed to fetch preset tokens, continuing with all tokens only:","data":"[C0005] Invalid address provided: 0x4ed4E862860beD51a9570b96d89aF5E1B0Eff918"}
+{"timestamp":"2025-09-12T17:37:54.309Z","level":"WARN","message":"⚠️ Failed to fetch preset tokens, continuing with all tokens only:","data":"[C0005] Invalid address provided: 0xA0b86a33E6417f5a10c4C9a6bd1a0d7AF0DB58a7"}
+{"timestamp":"2025-09-12T17:39:29.664Z","level":"WARN","message":"⚠️ Failed to fetch preset tokens, continuing with all tokens only:","data":"[C0005] Invalid address provided: 0xA0b86a33E6417f5a10c4C9a6bd1a0d7AF0DB58a7"}
+{"timestamp":"2025-09-12T17:41:35.096Z","level":"WARN","message":"⚠️ Failed to fetch preset tokens, continuing with all tokens only:","data":"[C0005] Invalid address provided: 0xA0b86a33E6417f5a10c4C9a6bd1a0d7AF0DB58a7"}
+{"timestamp":"2025-09-12T17:47:26.381Z","level":"WARN","message":"⚠️ No 'result' field in raw response"}
+{"timestamp":"2025-09-12T17:47:26.382Z","level":"WARN","message":"⚠️ No tokens returned from Moralis API - this might indicate:"}
+{"timestamp":"2025-09-12T17:47:26.383Z","level":"WARN","message":"   1. Empty wallet"}
+{"timestamp":"2025-09-12T17:47:26.383Z","level":"WARN","message":"   2. API key issues"}
+{"timestamp":"2025-09-12T17:47:26.383Z","level":"WARN","message":"   3. Invalid wallet address"}
+{"timestamp":"2025-09-12T17:47:26.384Z","level":"WARN","message":"   4. Network/chain issues"}
+{"timestamp":"2025-09-12T17:47:27.341Z","level":"WARN","message":"❌ Even test wallet returns no tokens - API issue suspected"}
+{"timestamp":"2025-09-12T17:48:59.789Z","level":"WARN","message":"⚠️ No 'result' field in raw response"}
+{"timestamp":"2025-09-12T17:48:59.789Z","level":"WARN","message":"⚠️ No tokens returned from Moralis API - this might indicate:"}
+{"timestamp":"2025-09-12T17:48:59.790Z","level":"WARN","message":"   1. Empty wallet"}
+{"timestamp":"2025-09-12T17:48:59.791Z","level":"WARN","message":"   2. API key issues"}
+{"timestamp":"2025-09-12T17:48:59.791Z","level":"WARN","message":"   3. Invalid wallet address"}
+{"timestamp":"2025-09-12T17:48:59.791Z","level":"WARN","message":"   4. Network/chain issues"}
+{"timestamp":"2025-09-12T17:49:00.649Z","level":"WARN","message":"❌ Even test wallet returns no tokens - API issue suspected"}
+{"timestamp":"2025-09-12T17:49:53.836Z","level":"WARN","message":"⚠️ No 'result' field in raw response"}
+{"timestamp":"2025-09-12T17:49:53.838Z","level":"WARN","message":"⚠️ No tokens returned from Moralis API - this might indicate:"}
+{"timestamp":"2025-09-12T17:49:53.839Z","level":"WARN","message":"   1. Empty wallet"}
+{"timestamp":"2025-09-12T17:49:53.840Z","level":"WARN","message":"   2. API key issues"}
+{"timestamp":"2025-09-12T17:49:53.841Z","level":"WARN","message":"   3. Invalid wallet address"}
+{"timestamp":"2025-09-12T17:49:53.842Z","level":"WARN","message":"   4. Network/chain issues"}
+{"timestamp":"2025-09-12T17:49:54.729Z","level":"WARN","message":"❌ Even test wallet returns no tokens - API issue suspected"}
