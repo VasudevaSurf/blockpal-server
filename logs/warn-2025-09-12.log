@@ -23,3 +23,15 @@
 {"timestamp":"2025-09-12T17:49:53.841Z","level":"WARN","message":"   3. Invalid wallet address"}
 {"timestamp":"2025-09-12T17:49:53.842Z","level":"WARN","message":"   4. Network/chain issues"}
 {"timestamp":"2025-09-12T17:49:54.729Z","level":"WARN","message":"❌ Even test wallet returns no tokens - API issue suspected"}
+{"timestamp":"2025-09-12T18:35:18.147Z","level":"WARN","message":"🔄 Returning empty token array due to error"}
+{"timestamp":"2025-09-12T18:35:18.212Z","level":"WARN","message":"🔄 Returning empty token array due to error"}
+{"timestamp":"2025-09-12T18:35:18.226Z","level":"WARN","message":"🔄 Returning empty token array due to error"}
+{"timestamp":"2025-09-12T18:35:18.238Z","level":"WARN","message":"🔄 Returning empty token array due to error"}
+{"timestamp":"2025-09-12T18:35:28.419Z","level":"WARN","message":"🔄 Returning empty token array due to error"}
+{"timestamp":"2025-09-12T18:35:28.461Z","level":"WARN","message":"🔄 Returning empty token array due to error"}
+{"timestamp":"2025-09-12T18:35:28.494Z","level":"WARN","message":"🔄 Returning empty token array due to error"}
+{"timestamp":"2025-09-12T18:35:28.517Z","level":"WARN","message":"🔄 Returning empty token array due to error"}
+{"timestamp":"2025-09-12T18:35:48.750Z","level":"WARN","message":"🔄 Returning empty token array due to error"}
+{"timestamp":"2025-09-12T18:35:48.800Z","level":"WARN","message":"🔄 Returning empty token array due to error"}
+{"timestamp":"2025-09-12T18:35:48.842Z","level":"WARN","message":"🔄 Returning empty token array due to error"}
+{"timestamp":"2025-09-12T18:35:48.882Z","level":"WARN","message":"🔄 Returning empty token array due to error"}

@@ -1,4 +1,4 @@
-// services/moralis/index.js - FIXED VERSION with better token processing
+// services/moralis/index.js - FIXED VERSION with preset token filtering and USD values
 const Moralis = require("moralis").default;
 const NodeCache = require("node-cache");
 const { logger } = require("../../utils/logger");
@@ -41,7 +41,7 @@ class MoralisService {
   }
 
   /**
-   * Get wallet token balances for a specific chain using the correct Moralis API
+   * FIXED: Get wallet token balances with preset token filtering and USD values
    */
   async getWalletTokenBalances(walletAddress, chainId) {
     try {
@@ -68,131 +68,147 @@ class MoralisService {
 
       logger.info(`🔗 Using chain hex: ${chainHex} for chain ID: ${chainId}`);
 
-      // Get all tokens with better error handling
-      logger.info("🔄 Making Moralis API call for ALL tokens...");
+      // FIXED: Get preset tokens for this chain
+      const chainInfo = chainConfig[chainId];
+      if (!chainInfo) {
+        throw new Error(`Chain ${chainId} not configured`);
+      }
 
-      let allTokensResponse;
+      // Get preset token addresses (excluding native token)
+      const presetTokenAddresses = chainInfo.popularTokens.map(
+        (token) => token.address
+      );
+      logger.info(
+        `📋 Preset tokens for chain ${chainId}:`,
+        presetTokenAddresses
+      );
+
+      let allTokens = [];
+
+      // STEP 1: Get native token balance and price
+      logger.info("💎 Fetching native token balance...");
       try {
-        allTokensResponse =
-          await Moralis.EvmApi.wallets.getWalletTokenBalancesPrice({
-            chain: chainHex,
-            address: walletAddress,
+        const nativeResponse = await Moralis.EvmApi.balance.getNativeBalance({
+          chain: chainHex,
+          address: walletAddress,
+        });
+
+        if (
+          nativeResponse?.result?.balance &&
+          nativeResponse.result.balance !== "0"
+        ) {
+          const nativeBalanceWei = nativeResponse.result.balance;
+          const nativeBalance = parseFloat(nativeBalanceWei) / 1e18;
+
+          logger.info(
+            `💎 Native balance: ${nativeBalance} ${chainInfo.symbol}`
+          );
+
+          // Get native token price
+          let nativePrice = 0;
+          try {
+            const priceResponse = await Moralis.EvmApi.token.getTokenPrice({
+              chain: chainHex,
+              address: "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2", // WETH for price reference
+            });
+            nativePrice = parseFloat(priceResponse.result.usdPrice) || 0;
+            logger.info(`💰 Native token price: $${nativePrice}`);
+          } catch (priceError) {
+            logger.warn(
+              "⚠️ Could not fetch native token price:",
+              priceError.message
+            );
+          }
+
+          // Add native token to results
+          allTokens.push({
+            symbol: chainInfo.symbol,
+            name: chainInfo.name,
+            token_address: null,
+            balance: nativeBalanceWei,
+            balance_formatted: nativeBalance.toString(),
+            decimals: 18,
+            usd_price: nativePrice,
+            usd_value: nativeBalance * nativePrice,
+            usd_price_24hr_percent_change: 0,
+            native_token: true,
+            possible_spam: false,
+            verified_contract: true,
+            logo: null,
+            thumbnail: null,
           });
+        }
+      } catch (nativeError) {
+        logger.warn("⚠️ Error fetching native balance:", nativeError.message);
+      }
 
-        logger.info("✅ Moralis ALL tokens API call successful");
+      // STEP 2: Get preset token balances with USD values
+      if (presetTokenAddresses.length > 0) {
+        logger.info(
+          "🔄 Making Moralis API call for PRESET tokens with USD values..."
+        );
 
-        // Better response logging
-        if (allTokensResponse?.result || allTokensResponse?.raw?.result) {
-          const tokenResults =
-            allTokensResponse.result ||
-            allTokensResponse.raw.result ||
-            allTokensResponse.raw ||
-            [];
-          logger.info(`📊 Found ${tokenResults.length} tokens in response`);
+        try {
+          const tokenResponse =
+            await Moralis.EvmApi.wallets.getWalletTokenBalancesPrice({
+              chain: chainHex,
+              address: walletAddress,
+              tokenAddresses: presetTokenAddresses, // FIXED: Pass preset token addresses
+            });
+
+          logger.info("✅ Moralis preset tokens API call successful");
+
+          // Extract token results
+          let tokenResults = [];
+          if (tokenResponse?.result) {
+            tokenResults = tokenResponse.result;
+          } else if (tokenResponse?.raw?.result) {
+            tokenResults = tokenResponse.raw.result;
+          } else if (tokenResponse?.raw && Array.isArray(tokenResponse.raw)) {
+            tokenResults = tokenResponse.raw;
+          }
+
+          logger.info(
+            `📊 Found ${tokenResults.length} preset tokens in response`
+          );
 
           // Log first few tokens for debugging
           tokenResults.slice(0, 3).forEach((token, index) => {
-            logger.info(`🪙 Token ${index + 1}:`, {
+            logger.info(`🪙 Preset Token ${index + 1}:`, {
               symbol: token.symbol,
               name: token.name,
               balance: token.balance,
               balance_formatted: token.balance_formatted,
               usd_value: token.usd_value,
               usd_price: token.usd_price,
-              native_token: token.native_token,
               token_address: token.token_address,
             });
           });
-        } else {
-          logger.warn("⚠️ No token results found in response structure");
-          logger.info(
-            "📋 Full response structure:",
-            JSON.stringify(allTokensResponse, null, 2)
-          );
+
+          // Add to all tokens
+          allTokens.push(...tokenResults);
+        } catch (presetError) {
+          logger.error("❌ Error fetching preset tokens:", presetError.message);
         }
-      } catch (moralisError) {
-        logger.error("❌ Moralis API call failed:", {
-          message: moralisError.message,
-          code: moralisError.code,
-          details: moralisError.details,
-        });
-        throw moralisError;
       }
 
-      // FIXED: Better response parsing
-      let allTokens = [];
-
-      // Try multiple response structures
-      if (allTokensResponse?.result) {
-        allTokens = allTokensResponse.result;
-      } else if (allTokensResponse?.raw?.result) {
-        allTokens = allTokensResponse.raw.result;
-      } else if (
-        allTokensResponse?.raw &&
-        Array.isArray(allTokensResponse.raw)
-      ) {
-        allTokens = allTokensResponse.raw;
-      } else if (Array.isArray(allTokensResponse)) {
-        allTokens = allTokensResponse;
-      } else {
-        logger.warn("⚠️ Could not parse token results from response");
-        allTokens = [];
-      }
-
+      // STEP 3: Process the combined token results
       logger.info(
-        `📊 Processing ${allTokens.length} tokens from Moralis response`
+        `📊 Processing ${allTokens.length} total tokens from Moralis response`
       );
 
-      if (allTokens.length === 0) {
-        logger.warn("⚠️ No tokens returned - this might indicate:");
-        logger.warn("   1. Empty wallet");
-        logger.warn("   2. All tokens have zero balance");
-        logger.warn("   3. API response parsing issue");
-
-        // Still process what we have - even if it's empty
-        const tokens = await this.processTokenBalances([], chainId);
-
-        // For wallets with zero balance, still return native token with 0 balance
-        if (tokens.length === 0) {
-          const chainInfo = chainConfig[chainId];
-          if (chainInfo) {
-            const nativeToken = {
-              id: `native-${chainId}`,
-              symbol: chainInfo.symbol,
-              name: chainInfo.name,
-              contractAddress: "native",
-              decimals: 18,
-              balance: 0,
-              balanceWei: "0",
-              value: 0,
-              change24h: 0,
-              price: 0,
-              isNative: true,
-              logoUrl: this.getNativeTokenLogo(chainInfo.symbol),
-              isPopular: true,
-              possibleSpam: false,
-              verifiedContract: true,
-            };
-            tokens.push(nativeToken);
-            logger.info("✅ Added zero-balance native token for display");
-          }
-        }
-
-        // Cache even empty results
-        cache.set(cacheKey, tokens);
-        return tokens;
-      }
-
-      // Process the tokens
-      const tokens = await this.processTokenBalances(allTokens, chainId);
+      const processedTokens = await this.processTokenBalances(
+        allTokens,
+        chainId
+      );
 
       // Cache the result
-      cache.set(cacheKey, tokens);
+      cache.set(cacheKey, processedTokens);
 
       logger.info(
-        `✅ Successfully fetched ${tokens.length} tokens for wallet ${walletAddress}`
+        `✅ Successfully fetched ${processedTokens.length} tokens for wallet ${walletAddress}`
       );
-      return tokens;
+      return processedTokens;
     } catch (error) {
       logger.error("Error fetching wallet token balances", {
         wallet: walletAddress,
@@ -208,7 +224,7 @@ class MoralisService {
   }
 
   /**
-   * FIXED: Process token balances with corrected logic
+   * FIXED: Process token balances with better USD value handling
    */
   async processTokenBalances(tokenData, chainId) {
     const chainInfo = chainConfig[chainId];
@@ -241,7 +257,6 @@ class MoralisService {
         if (token.balance_formatted) {
           balance = parseFloat(token.balance_formatted);
         } else if (token.balance) {
-          // Try to parse raw balance
           const rawBalance = token.balance.toString();
           if (token.decimals) {
             balance =
@@ -253,67 +268,52 @@ class MoralisService {
 
         logger.info(`💰 Token ${token.symbol} parsed balance: ${balance}`);
 
+        // Skip tokens with zero balance (except native tokens)
+        if (balance <= 0 && !token.native_token) {
+          logger.info(`⏭️ Skipping ${token.symbol} - zero balance`);
+          continue;
+        }
+
         // FIXED: Better token identification
-        const isNativeToken =
-          token.native_token ||
-          token.token_address ===
-            "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE" ||
-          token.token_address ===
-            "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee" ||
-          !token.token_address; // Native tokens might not have token_address
+        const isNativeToken = token.native_token || !token.token_address;
 
-        // FIXED: More lenient filtering - include more tokens
-        if (balance <= 0) {
-          // Only skip if it's not native AND not a popular token AND has truly zero balance
-          if (!isNativeToken) {
-            const isPopularToken = chainInfo.popularTokens.find(
-              (pt) =>
-                pt.address.toLowerCase() === token.token_address?.toLowerCase()
-            );
-
-            if (!isPopularToken && balance === 0) {
-              logger.info(
-                `⏭️ Skipping ${token.symbol} - zero balance and not popular`
-              );
-              continue;
-            }
-          }
-          logger.info(
-            `✅ Including ${token.symbol} despite low balance (native or popular token)`
-          );
-        }
-
-        // FIXED: Less aggressive spam filtering - only skip obvious spam
-        if (token.possible_spam && balance < 0.001 && !isNativeToken) {
-          const isPopularToken = chainInfo.popularTokens.find(
-            (pt) =>
-              pt.address.toLowerCase() === token.token_address?.toLowerCase()
-          );
-
-          if (!isPopularToken) {
-            logger.info(`⏭️ Skipping ${token.symbol} - low-value spam token`);
-            continue;
-          }
-        }
-
-        // FIXED: Better price and value parsing
+        // FIXED: Better price and value parsing with fallback
         let price = 0;
         let value = 0;
         let change24h = 0;
 
-        // Parse price and value
-        if (token.usd_price !== null && token.usd_price !== undefined) {
+        // Parse USD price and value
+        if (
+          token.usd_price !== null &&
+          token.usd_price !== undefined &&
+          token.usd_price !== 0
+        ) {
           price = parseFloat(token.usd_price) || 0;
           value = balance * price;
-        }
-
-        if (token.usd_value !== null && token.usd_value !== undefined) {
-          value = parseFloat(token.usd_value) || value;
+          logger.info(
+            `💵 Token ${
+              token.symbol
+            } - Price: $${price}, Value: $${value.toFixed(2)}`
+          );
+        } else if (
+          token.usd_value !== null &&
+          token.usd_value !== undefined &&
+          token.usd_value !== 0
+        ) {
+          value = parseFloat(token.usd_value) || 0;
           if (balance > 0 && value > 0) {
             price = value / balance;
           }
+          logger.info(
+            `💵 Token ${token.symbol} - Value: $${value.toFixed(
+              2
+            )}, Calculated Price: $${price}`
+          );
+        } else {
+          logger.warn(`⚠️ Token ${token.symbol} has no USD price/value data`);
         }
 
+        // Parse 24h change
         if (
           token.usd_price_24hr_percent_change !== null &&
           token.usd_price_24hr_percent_change !== undefined
@@ -392,37 +392,6 @@ class MoralisService {
               token.symbol
             } - Balance: ${balance}, USD: $${value.toFixed(2)}`
           );
-        } else {
-          logger.warn(
-            `⚠️ Token ${token.symbol} has no contract address, treating as native`
-          );
-
-          // Handle tokens without contract address as native-like
-          const processedToken = {
-            id: `unknown-${token.symbol}-${chainId}`,
-            symbol: token.symbol || "UNKNOWN",
-            name: token.name || "Unknown Token",
-            contractAddress: "unknown",
-            decimals: parseInt(token.decimals) || 18,
-            balance: balance,
-            balanceWei: token.balance || "0",
-            value: value,
-            change24h: change24h,
-            price: price,
-            isNative: false,
-            logoUrl:
-              token.logo || token.thumbnail || this.getTokenLogo(token.symbol),
-            isPopular: false,
-            possibleSpam: token.possible_spam || false,
-            verifiedContract: token.verified_contract !== false,
-          };
-
-          processedTokens.push(processedToken);
-          logger.info(
-            `✅ Added unknown token: ${
-              token.symbol
-            } - Balance: ${balance}, USD: $${value.toFixed(2)}`
-          );
         }
       } catch (error) {
         logger.warn(
@@ -465,9 +434,9 @@ class MoralisService {
   }
 
   /**
-   * FIXED: Get native balance separately
+   * Test method to verify API connectivity and token filtering
    */
-  async getNativeBalance(walletAddress, chainId) {
+  async testMoralisCall(walletAddress, chainId) {
     try {
       await this.initialize();
 
@@ -476,37 +445,43 @@ class MoralisService {
         throw new Error(`Unsupported chain ID: ${chainId}`);
       }
 
-      logger.info(
-        `💎 Fetching native balance for ${walletAddress} on chain ${chainId}`
+      const chainInfo = chainConfig[chainId];
+      if (!chainInfo) {
+        throw new Error(`Chain ${chainId} not configured`);
+      }
+
+      const presetTokenAddresses = chainInfo.popularTokens.map(
+        (token) => token.address
       );
 
-      const response = await Moralis.EvmApi.balance.getNativeBalance({
-        chain: chainHex,
-        address: walletAddress,
-      });
-
-      const balanceWei = response.result?.balance || "0";
-      const balanceFormatted = parseFloat(balanceWei) / 1e18;
-
       logger.info(
-        `✅ Native balance: ${balanceFormatted} ${
-          chainConfig[chainId]?.symbol || "ETH"
-        }`
+        `🧪 Testing Moralis API with preset tokens:`,
+        presetTokenAddresses
+      );
+
+      const response = await Moralis.EvmApi.wallets.getWalletTokenBalancesPrice(
+        {
+          chain: chainHex,
+          address: walletAddress,
+          tokenAddresses: presetTokenAddresses,
+        }
       );
 
       return {
-        balance: balanceFormatted,
-        balanceWei: balanceWei,
+        success: true,
+        chainId,
+        chainHex,
+        presetTokenCount: presetTokenAddresses.length,
+        responseTokenCount: response?.result?.length || 0,
+        rawResponse: response.raw,
       };
     } catch (error) {
-      logger.error("Error fetching native balance:", error);
-      return {
-        balance: 0,
-        balanceWei: "0",
-      };
+      logger.error("❌ Moralis test call failed:", error);
+      throw error;
     }
   }
 
+  // ... (keep all other existing methods unchanged)
   getChainHex(chainId) {
     const chainIdNum = parseInt(chainId);
     const chainInfo = chainConfig[chainIdNum];
@@ -560,6 +535,46 @@ class MoralisService {
       misses: cache.getStats().misses,
       ttl: cache.options.stdTTL,
     };
+  }
+
+  async getNativeBalance(walletAddress, chainId) {
+    try {
+      await this.initialize();
+
+      const chainHex = this.getChainHex(chainId);
+      if (!chainHex) {
+        throw new Error(`Unsupported chain ID: ${chainId}`);
+      }
+
+      logger.info(
+        `💎 Fetching native balance for ${walletAddress} on chain ${chainId}`
+      );
+
+      const response = await Moralis.EvmApi.balance.getNativeBalance({
+        chain: chainHex,
+        address: walletAddress,
+      });
+
+      const balanceWei = response.result?.balance || "0";
+      const balanceFormatted = parseFloat(balanceWei) / 1e18;
+
+      logger.info(
+        `✅ Native balance: ${balanceFormatted} ${
+          chainConfig[chainId]?.symbol || "ETH"
+        }`
+      );
+
+      return {
+        balance: balanceFormatted,
+        balanceWei: balanceWei,
+      };
+    } catch (error) {
+      logger.error("Error fetching native balance:", error);
+      return {
+        balance: 0,
+        balanceWei: "0",
+      };
+    }
   }
 }
 

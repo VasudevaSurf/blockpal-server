@@ -1,10 +1,210 @@
-// routes/debug.js - Debug endpoint for testing Moralis integration
+// routes/debug.js - UPDATED with preset token testing
 const express = require("express");
 const { logger } = require("../utils/logger");
 const ResponseUtil = require("../utils/response");
 const moralisService = require("../services/moralis");
+const chainConfig = require("../config/chains");
 
 const router = express.Router();
+
+/**
+ * NEW: GET /api/debug/test-preset-tokens
+ * Test preset token filtering for a specific chain
+ */
+router.get("/test-preset-tokens", async (req, res) => {
+  try {
+    const { wallet, chain } = req.query;
+    const testWallet = wallet || "0xcB1C1FdE09f811B294172696404e88E658659905";
+    const testChain = chain ? parseInt(chain) : 1;
+
+    logger.info(
+      `🧪 Testing preset token filtering for wallet: ${testWallet} on chain: ${testChain}`
+    );
+
+    // Get chain configuration
+    const chainInfo = chainConfig[testChain];
+    if (!chainInfo) {
+      return ResponseUtil.error(res, `Chain ${testChain} not configured`, 400);
+    }
+
+    // Get preset tokens for this chain
+    const presetTokens = chainInfo.popularTokens;
+    const presetAddresses = presetTokens.map((token) => token.address);
+
+    logger.info(
+      `📋 Found ${presetTokens.length} preset tokens for ${chainInfo.name}`
+    );
+
+    // Test Moralis API call
+    if (!moralisService.initialized) {
+      await moralisService.initialize();
+    }
+
+    const startTime = Date.now();
+    const testResult = await moralisService.testMoralisCall(
+      testWallet,
+      testChain
+    );
+    const endTime = Date.now();
+
+    // Get actual wallet tokens
+    const walletTokens = await moralisService.getWalletTokenBalances(
+      testWallet,
+      testChain
+    );
+
+    const response = {
+      test: "Preset Token Filtering Test",
+      wallet: testWallet,
+      chainId: testChain,
+      chainName: chainInfo.name,
+      presetTokens: {
+        count: presetTokens.length,
+        addresses: presetAddresses,
+        tokens: presetTokens.slice(0, 5), // Show first 5 for reference
+      },
+      moralisTest: testResult,
+      walletTokensFound: {
+        count: walletTokens.length,
+        tokens: walletTokens.map((token) => ({
+          symbol: token.symbol,
+          name: token.name,
+          balance: token.balance,
+          value: token.value,
+          isNative: token.isNative,
+          contractAddress: token.contractAddress,
+        })),
+        totalValue: walletTokens.reduce((sum, t) => sum + t.value, 0),
+      },
+      responseTime: `${endTime - startTime}ms`,
+      success: true,
+      timestamp: new Date().toISOString(),
+    };
+
+    return ResponseUtil.success(
+      res,
+      response,
+      "Preset token filtering test completed"
+    );
+  } catch (error) {
+    logger.error("❌ Preset token filtering test failed:", error);
+    return ResponseUtil.error(res, "Preset token filtering test failed", 500, {
+      error: error.message,
+      stack: process.env.NODE_ENV === "development" ? error.stack : undefined,
+    });
+  }
+});
+
+/**
+ * UPDATED: GET /api/debug/test-moralis
+ * Enhanced Moralis test with preset token filtering
+ */
+router.get("/test-moralis", async (req, res) => {
+  try {
+    const { wallet, chain } = req.query;
+
+    // Use default test values if not provided
+    const testWallet = wallet || "0xcB1C1FdE09f811B294172696404e88E658659905";
+    const testChain = chain ? parseInt(chain) : 1;
+
+    logger.info(
+      `🧪 Testing Moralis API with wallet: ${testWallet} on chain: ${testChain}`
+    );
+
+    // Test initialization
+    if (!moralisService.initialized) {
+      logger.info("🔄 Initializing Moralis service for test...");
+      await moralisService.initialize();
+    }
+
+    // Get chain info and preset tokens
+    const chainInfo = chainConfig[testChain];
+    if (!chainInfo) {
+      throw new Error(`Chain ${testChain} not configured`);
+    }
+
+    const presetTokens = chainInfo.popularTokens;
+    const presetAddresses = presetTokens.map((token) => token.address);
+
+    // Test the API call
+    const startTime = Date.now();
+    const tokens = await moralisService.getWalletTokenBalances(
+      testWallet,
+      testChain
+    );
+    const endTime = Date.now();
+
+    const response = {
+      test: "Enhanced Moralis API Test",
+      wallet: testWallet,
+      chainId: testChain,
+      chainName: chainInfo.name,
+      success: true,
+      responseTime: `${endTime - startTime}ms`,
+      presetTokenConfiguration: {
+        chainName: chainInfo.name,
+        presetTokenCount: presetTokens.length,
+        presetAddresses: presetAddresses,
+        samplePresetTokens: presetTokens.slice(0, 3),
+      },
+      results: {
+        tokensFound: tokens.length,
+        tokens: tokens.map((token) => ({
+          symbol: token.symbol,
+          name: token.name,
+          balance: token.balance,
+          value: token.value,
+          price: token.price,
+          isNative: token.isNative,
+          contractAddress: token.contractAddress,
+          isPopular: token.isPopular,
+        })),
+        totalValue: tokens.reduce((sum, t) => sum + t.value, 0),
+        nativeTokenFound: tokens.some((t) => t.isNative),
+        presetTokensFound: tokens.filter((t) => t.isPopular).length,
+      },
+      moralisInitialized: moralisService.initialized,
+      apiKey: process.env.MORALIS_API_KEY ? "configured" : "missing",
+      timestamp: new Date().toISOString(),
+    };
+
+    logger.info(
+      `✅ Enhanced Moralis test completed successfully in ${
+        endTime - startTime
+      }ms`
+    );
+    logger.info(
+      `📊 Found ${
+        tokens.length
+      } tokens with total value $${response.results.totalValue.toFixed(2)}`
+    );
+
+    return ResponseUtil.success(
+      res,
+      response,
+      "Enhanced Moralis test completed successfully"
+    );
+  } catch (error) {
+    logger.error("❌ Enhanced Moralis test failed:", error);
+
+    const response = {
+      test: "Enhanced Moralis API Test",
+      success: false,
+      error: error.message,
+      stack: process.env.NODE_ENV === "development" ? error.stack : undefined,
+      moralisInitialized: moralisService.initialized,
+      apiKey: process.env.MORALIS_API_KEY ? "configured" : "missing",
+      timestamp: new Date().toISOString(),
+    };
+
+    return ResponseUtil.error(
+      res,
+      "Enhanced Moralis test failed",
+      500,
+      response
+    );
+  }
+});
 
 /**
  * GET /api/debug/verify-wallet
@@ -59,78 +259,8 @@ router.get("/verify-wallet", async (req, res) => {
 });
 
 /**
- * GET /api/debug/test-moralis
- * Test Moralis API connection with a known wallet
- */
-router.get("/test-moralis", async (req, res) => {
-  try {
-    const { wallet, chain } = req.query;
-
-    // Use default test values if not provided
-    const testWallet = wallet || "0xcB1C1FdE09f811B294172696404e88E658659905";
-    const testChain = chain ? parseInt(chain) : 1;
-
-    logger.info(
-      `🧪 Testing Moralis API with wallet: ${testWallet} on chain: ${testChain}`
-    );
-
-    // Test initialization
-    if (!moralisService.initialized) {
-      logger.info("🔄 Initializing Moralis service for test...");
-      await moralisService.initialize();
-    }
-
-    // Test the API call
-    const startTime = Date.now();
-    const tokens = await moralisService.getWalletTokenBalances(
-      testWallet,
-      testChain
-    );
-    const endTime = Date.now();
-
-    const response = {
-      test: "Moralis API Test",
-      wallet: testWallet,
-      chainId: testChain,
-      success: true,
-      responseTime: `${endTime - startTime}ms`,
-      tokensFound: tokens.length,
-      tokens: tokens.slice(0, 5), // Return first 5 tokens for debugging
-      totalValue: tokens.reduce((sum, t) => sum + t.value, 0),
-      moralisInitialized: moralisService.initialized,
-      apiKey: process.env.MORALIS_API_KEY ? "configured" : "missing",
-      timestamp: new Date().toISOString(),
-    };
-
-    logger.info(
-      `✅ Moralis test completed successfully in ${endTime - startTime}ms`
-    );
-
-    return ResponseUtil.success(
-      res,
-      response,
-      "Moralis test completed successfully"
-    );
-  } catch (error) {
-    logger.error("❌ Moralis test failed:", error);
-
-    const response = {
-      test: "Moralis API Test",
-      success: false,
-      error: error.message,
-      stack: process.env.NODE_ENV === "development" ? error.stack : undefined,
-      moralisInitialized: moralisService.initialized,
-      apiKey: process.env.MORALIS_API_KEY ? "configured" : "missing",
-      timestamp: new Date().toISOString(),
-    };
-
-    return ResponseUtil.error(res, "Moralis test failed", 500, response);
-  }
-});
-
-/**
  * GET /api/debug/raw-moralis
- * Test raw Moralis API call
+ * Test raw Moralis API call with preset tokens
  */
 router.get("/raw-moralis", async (req, res) => {
   try {
@@ -139,8 +269,9 @@ router.get("/raw-moralis", async (req, res) => {
     const { wallet, chain } = req.query;
     const testWallet = wallet || "0xcB1C1FdE09f811B294172696404e88E658659905";
     const testChain = chain || "0x1";
+    const chainId = parseInt(testChain.replace("0x", ""), 16);
 
-    logger.info(`🧪 Testing RAW Moralis API call`);
+    logger.info(`🧪 Testing RAW Moralis API call with preset tokens`);
 
     // Initialize if not done
     if (!Moralis.Core.isStarted) {
@@ -149,15 +280,31 @@ router.get("/raw-moralis", async (req, res) => {
       });
     }
 
+    // Get preset tokens for this chain
+    const chainInfo = chainConfig[chainId];
+    const presetTokenAddresses = chainInfo
+      ? chainInfo.popularTokens.map((t) => t.address)
+      : [];
+
+    logger.info(
+      `📋 Using ${presetTokenAddresses.length} preset token addresses for chain ${chainId}`
+    );
+
     const response = await Moralis.EvmApi.wallets.getWalletTokenBalancesPrice({
       chain: testChain,
       address: testWallet,
+      tokenAddresses: presetTokenAddresses, // FIXED: Include preset tokens
     });
 
     const debugResponse = {
-      test: "Raw Moralis API Test",
+      test: "Raw Moralis API Test with Preset Tokens",
       wallet: testWallet,
       chain: testChain,
+      chainId: chainId,
+      presetTokens: {
+        count: presetTokenAddresses.length,
+        addresses: presetTokenAddresses,
+      },
       success: true,
       rawResponse: response.raw,
       jsonResponse: response.toJSON(),
@@ -165,7 +312,9 @@ router.get("/raw-moralis", async (req, res) => {
       timestamp: new Date().toISOString(),
     };
 
-    logger.info(`✅ Raw Moralis test successful`);
+    logger.info(
+      `✅ Raw Moralis test successful with ${debugResponse.resultCount} tokens`
+    );
 
     return ResponseUtil.success(
       res,
@@ -176,7 +325,7 @@ router.get("/raw-moralis", async (req, res) => {
     logger.error("❌ Raw Moralis test failed:", error);
 
     const debugResponse = {
-      test: "Raw Moralis API Test",
+      test: "Raw Moralis API Test with Preset Tokens",
       success: false,
       error: error.message,
       stack: process.env.NODE_ENV === "development" ? error.stack : undefined,
@@ -208,6 +357,12 @@ router.get("/config", async (req, res) => {
       cacheEnabled: process.env.ENABLE_CACHE,
       cacheTtl: process.env.CACHE_TTL_SECONDS,
       moralisInitialized: moralisService.initialized,
+      supportedChains: Object.keys(chainConfig).map((chainId) => ({
+        chainId: parseInt(chainId),
+        name: chainConfig[chainId].name,
+        symbol: chainConfig[chainId].symbol,
+        presetTokenCount: chainConfig[chainId].popularTokens.length,
+      })),
       uptime: process.uptime(),
       timestamp: new Date().toISOString(),
     };
@@ -251,8 +406,8 @@ router.post("/clear-cache", async (req, res) => {
 });
 
 /**
- * GET /api/debug/test-wallet
- * Test specific wallet with detailed debugging
+ * UPDATED: GET /api/debug/test-wallet
+ * Test specific wallet with preset token filtering
  */
 router.get("/test-wallet", async (req, res) => {
   try {
@@ -266,13 +421,13 @@ router.get("/test-wallet", async (req, res) => {
         name: "Vitalik's Wallet",
       },
       {
-        address: "0x8ba1f109551bD432803012645Hac136c22C7F6e2", // Test wallet with tokens
+        address: "0xcB1C1FdE09f811B294172696404e88E658659905", // Test wallet
         chain: 1,
         name: "Test Wallet",
       },
       {
         address: "0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0", // Your current wallet
-        chain: 8453, // Base
+        chain: 1, // Try Ethereum first
         name: "Your Wallet",
       },
     ];
@@ -288,8 +443,14 @@ router.get("/test-wallet", async (req, res) => {
       await moralisService.initialize();
     }
 
-    // Test the direct Moralis call
-    logger.info("🔄 Testing direct Moralis API call...");
+    // Get chain info
+    const chainInfo = chainConfig[targetChain];
+    if (!chainInfo) {
+      throw new Error(`Chain ${targetChain} not configured`);
+    }
+
+    // Test the direct Moralis call with preset tokens
+    logger.info("🔄 Testing Moralis API call with preset token filtering...");
     const startTime = Date.now();
 
     let testResult;
@@ -335,26 +496,45 @@ router.get("/test-wallet", async (req, res) => {
     }
 
     const response = {
-      test: "Wallet Token Test",
+      test: "Enhanced Wallet Token Test",
       wallet: targetWallet,
       chainId: targetChain,
+      chainName: chainInfo.name,
+      presetTokenConfiguration: {
+        totalPresetTokens: chainInfo.popularTokens.length,
+        presetAddresses: chainInfo.popularTokens.map((t) => t.address),
+        sampleTokens: chainInfo.popularTokens.slice(0, 3),
+      },
       success: true,
       responseTime: `${endTime - startTime}ms`,
       results: {
-        moralisRaw: testResult,
+        moralisRawTest: testResult,
         processedTokens: {
           count: processedTokens.length,
           tokens: processedTokens,
           totalValue: processedTokens.reduce((sum, t) => sum + t.value, 0),
+          nativeTokenFound: processedTokens.some((t) => t.isNative),
+          presetTokensFound: processedTokens.filter((t) => t.isPopular).length,
         },
         nativeBalance,
+        analysis: {
+          hasTokens: processedTokens.length > 0,
+          hasValue: processedTokens.reduce((sum, t) => sum + t.value, 0) > 0,
+          tokensWithUsdValue: processedTokens.filter((t) => t.value > 0).length,
+          tokensWithoutUsdValue: processedTokens.filter((t) => t.value === 0)
+            .length,
+        },
         suggestions:
           processedTokens.length === 0
             ? [
                 "Try a different wallet address with known token balances",
                 "Check if the wallet has any transaction history",
                 "Verify the chain ID is correct",
-                "Test with Ethereum mainnet (chain ID 1) first",
+                "Ensure the wallet has tokens from the preset list",
+                `Preset tokens for ${chainInfo.name}: ${chainInfo.popularTokens
+                  .slice(0, 3)
+                  .map((t) => t.symbol)
+                  .join(", ")}...`,
               ]
             : [],
       },
@@ -364,57 +544,83 @@ router.get("/test-wallet", async (req, res) => {
       timestamp: new Date().toISOString(),
     };
 
-    logger.info(`✅ Wallet test completed in ${endTime - startTime}ms`);
+    logger.info(
+      `✅ Enhanced wallet test completed in ${endTime - startTime}ms`
+    );
     logger.info(`📊 Found ${processedTokens.length} processed tokens`);
 
     return ResponseUtil.success(
       res,
       response,
-      "Wallet test completed successfully"
+      "Enhanced wallet test completed successfully"
     );
   } catch (error) {
-    logger.error("❌ Wallet test failed:", error);
+    logger.error("❌ Enhanced wallet test failed:", error);
 
     const response = {
-      test: "Wallet Token Test",
+      test: "Enhanced Wallet Token Test",
       success: false,
       error: error.message,
       stack: process.env.NODE_ENV === "development" ? error.stack : undefined,
       timestamp: new Date().toISOString(),
     };
 
-    return ResponseUtil.error(res, "Wallet test failed", 500, response);
+    return ResponseUtil.error(
+      res,
+      "Enhanced wallet test failed",
+      500,
+      response
+    );
   }
 });
 
 /**
  * GET /api/debug/chain-info
- * Get information about supported chains
+ * Get information about supported chains and their preset tokens
  */
 router.get("/chain-info", async (req, res) => {
   try {
-    const chainConfig = require("../config/chains");
-
     const chainInfo = Object.entries(chainConfig).map(([chainId, config]) => ({
       chainId: parseInt(chainId),
       name: config.name,
       symbol: config.symbol,
       hexId: config.chainId,
       popularTokensCount: config.popularTokens.length,
-      sampleTokens: config.popularTokens.slice(0, 3),
+      sampleTokens: config.popularTokens.slice(0, 5).map((token) => ({
+        symbol: token.symbol,
+        name: token.name,
+        address: token.address,
+        decimals: token.decimals,
+      })),
+      allTokenAddresses: config.popularTokens.map((t) => t.address),
     }));
 
     const response = {
       supportedChains: chainInfo,
       totalChains: chainInfo.length,
+      totalPresetTokens: chainInfo.reduce(
+        (sum, chain) => sum + chain.popularTokensCount,
+        0
+      ),
       recommendedTestChains: [
         {
           chainId: 1,
           name: "Ethereum Mainnet",
           reason: "Most tokens and activity",
+          presetTokenCount: chainConfig[1]?.popularTokens.length || 0,
         },
-        { chainId: 8453, name: "Base", reason: "Active L2 with many tokens" },
-        { chainId: 137, name: "Polygon", reason: "Many DeFi tokens" },
+        {
+          chainId: 8453,
+          name: "Base",
+          reason: "Active L2 with many tokens",
+          presetTokenCount: chainConfig[8453]?.popularTokens.length || 0,
+        },
+        {
+          chainId: 137,
+          name: "Polygon",
+          reason: "Many DeFi tokens",
+          presetTokenCount: chainConfig[137]?.popularTokens.length || 0,
+        },
       ],
     };
 
