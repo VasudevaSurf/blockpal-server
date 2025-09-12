@@ -1124,3 +1124,527 @@
 {"timestamp":"2025-09-12T17:49:54.768Z","level":"INFO","message":"Successfully returning 0 tokens with total value $0.00"}
 {"timestamp":"2025-09-12T17:49:54.772Z","level":"INFO","message":"Success response: 200","data":{"message":"Tokens fetched successfully","dataType":"object"}}
 {"timestamp":"2025-09-12T17:49:54.773Z","level":"INFO","message":"::1 - - [12/Sep/2025:17:49:54 +0000] \"GET /api/tokens/wallet/0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0?chain=8453 HTTP/1.1\" 200 256 \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-12T17:55:16.559Z","level":"INFO","message":"🚀 Blockpal Services running on port 5002"}
+{"timestamp":"2025-09-12T17:55:16.561Z","level":"INFO","message":"🔗 Health check: http://localhost:5002/health"}
+{"timestamp":"2025-09-12T17:55:16.561Z","level":"INFO","message":"🔌 WebSocket server running on ws://localhost:5002"}
+{"timestamp":"2025-09-12T17:55:16.562Z","level":"INFO","message":"📡 Wallet Connect API: http://localhost:5002/api/wallet"}
+{"timestamp":"2025-09-12T17:55:16.563Z","level":"INFO","message":"🪙 Token API: http://localhost:5002/api/tokens"}
+{"timestamp":"2025-09-12T17:55:16.563Z","level":"INFO","message":"🐛 Debug API: http://localhost:5002/api/debug"}
+{"timestamp":"2025-09-12T17:55:16.564Z","level":"INFO","message":"🧪 Test Moralis: http://localhost:5002/api/debug/test-moralis"}
+{"timestamp":"2025-09-12T17:55:16.564Z","level":"INFO","message":"🔒 CORS allowed origins: http://localhost:3000, http://localhost:3001, http://127.0.0.1:3000, http://127.0.0.1:3001, http://localhost:5173"}
+{"timestamp":"2025-09-12T17:55:16.565Z","level":"INFO","message":"🔄 Initializing services..."}
+{"timestamp":"2025-09-12T17:55:16.566Z","level":"INFO","message":"Environment:","data":{"NODE_ENV":"development","PORT":"5002","MORALIS_API_KEY":"configured","ALLOWED_ORIGINS":"http://localhost:3000,http://localhost:3001,http://127.0.0.1:3000,http://127.0.0.1:3001,http://localhost:5173"}}
+{"timestamp":"2025-09-12T17:55:16.566Z","level":"INFO","message":"🔄 Starting Moralis initialization..."}
+{"timestamp":"2025-09-12T17:55:16.567Z","level":"INFO","message":"🔑 Using API Key:","data":"eyJhbGciOiJIUzI1NiIs..."}
+{"timestamp":"2025-09-12T17:55:16.570Z","level":"INFO","message":"Moralis service initialized successfully"}
+{"timestamp":"2025-09-12T17:55:16.570Z","level":"INFO","message":"✅ Moralis service initialized"}
+{"timestamp":"2025-09-12T17:55:16.571Z","level":"INFO","message":"🎉 All services initialized successfully"}
+{"timestamp":"2025-09-12T17:55:58.903Z","level":"INFO","message":"Fetching tokens for wallet: 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0 on chain: 8453"}
+{"timestamp":"2025-09-12T17:55:58.904Z","level":"INFO","message":"Fetching token balances for wallet: 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0 on chain: 8453"}
+{"timestamp":"2025-09-12T17:55:58.905Z","level":"INFO","message":"🔗 Using chain hex: 0x2105 for chain ID: 8453"}
+{"timestamp":"2025-09-12T17:55:58.905Z","level":"INFO","message":"🔄 Making Moralis API call for ALL tokens..."}
+{"timestamp":"2025-09-12T17:55:59.983Z","level":"INFO","message":"✅ Moralis ALL tokens API call successful"}
+{"timestamp":"2025-09-12T17:55:59.984Z","level":"INFO","message":"📊 Found 1 tokens in response"}
+{"timestamp":"2025-09-12T17:55:59.984Z","level":"INFO","message":"🪙 Token 1:","data":{"symbol":"ETH","name":"Ether","balance":"0"}}
+{"timestamp":"2025-09-12T17:55:59.985Z","level":"INFO","message":"📊 Processing 1 tokens from Moralis response"}
+{"timestamp":"2025-09-12T17:55:59.989Z","level":"INFO","message":"🔄 Processing 1 raw tokens from Moralis"}
+{"timestamp":"2025-09-12T17:55:59.993Z","level":"INFO","message":"🔍 Processing token:","data":{"symbol":"ETH","name":"Ether","balance":"0"}}
+{"timestamp":"2025-09-12T17:55:59.995Z","level":"INFO","message":"💰 Token ETH parsed balance: 0"}
+{"timestamp":"2025-09-12T17:55:59.995Z","level":"INFO","message":"⏭️ Skipping ETH - zero balance and not popular"}
+{"timestamp":"2025-09-12T17:55:59.996Z","level":"INFO","message":"✅ Successfully processed 0 tokens with balances"}
+{"timestamp":"2025-09-12T17:55:59.997Z","level":"INFO","message":"💰 Total portfolio value: $0.00"}
+{"timestamp":"2025-09-12T17:55:59.999Z","level":"INFO","message":"✅ Successfully fetched 0 tokens for wallet 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0"}
+{"timestamp":"2025-09-12T17:56:00.001Z","level":"INFO","message":"Successfully returning 0 tokens with total value $0.00"}
+{"timestamp":"2025-09-12T17:56:00.004Z","level":"INFO","message":"Success response: 200","data":{"message":"Tokens fetched successfully","dataType":"object"}}
+{"timestamp":"2025-09-12T17:56:00.012Z","level":"INFO","message":"::1 - - [12/Sep/2025:17:56:00 +0000] \"GET /api/tokens/wallet/0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0?chain=8453 HTTP/1.1\" 200 256 \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-12T17:56:00.026Z","level":"INFO","message":"Fetching tokens for wallet: 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0 on chain: 8453"}
+{"timestamp":"2025-09-12T17:56:00.027Z","level":"INFO","message":"Cache hit for wallet tokens: 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0 on chain 8453"}
+{"timestamp":"2025-09-12T17:56:00.029Z","level":"INFO","message":"Successfully returning 0 tokens with total value $0.00"}
+{"timestamp":"2025-09-12T17:56:00.030Z","level":"INFO","message":"Success response: 200","data":{"message":"Tokens fetched successfully","dataType":"object"}}
+{"timestamp":"2025-09-12T17:56:00.033Z","level":"INFO","message":"::1 - - [12/Sep/2025:17:56:00 +0000] \"GET /api/tokens/wallet/0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0?chain=8453 HTTP/1.1\" 200 256 \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-12T17:56:00.041Z","level":"INFO","message":"Fetching tokens for wallet: 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0 on chain: 8453"}
+{"timestamp":"2025-09-12T17:56:00.044Z","level":"INFO","message":"Cache hit for wallet tokens: 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0 on chain 8453"}
+{"timestamp":"2025-09-12T17:56:00.045Z","level":"INFO","message":"Successfully returning 0 tokens with total value $0.00"}
+{"timestamp":"2025-09-12T17:56:00.046Z","level":"INFO","message":"Success response: 200","data":{"message":"Tokens fetched successfully","dataType":"object"}}
+{"timestamp":"2025-09-12T17:56:00.048Z","level":"INFO","message":"::1 - - [12/Sep/2025:17:56:00 +0000] \"GET /api/tokens/wallet/0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0?chain=8453 HTTP/1.1\" 200 256 \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-12T17:56:00.068Z","level":"INFO","message":"Fetching tokens for wallet: 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0 on chain: 8453"}
+{"timestamp":"2025-09-12T17:56:00.069Z","level":"INFO","message":"Cache hit for wallet tokens: 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0 on chain 8453"}
+{"timestamp":"2025-09-12T17:56:00.069Z","level":"INFO","message":"Successfully returning 0 tokens with total value $0.00"}
+{"timestamp":"2025-09-12T17:56:00.070Z","level":"INFO","message":"Success response: 200","data":{"message":"Tokens fetched successfully","dataType":"object"}}
+{"timestamp":"2025-09-12T17:56:00.072Z","level":"INFO","message":"::1 - - [12/Sep/2025:17:56:00 +0000] \"GET /api/tokens/wallet/0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0?chain=8453 HTTP/1.1\" 200 256 \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-12T17:56:21.422Z","level":"INFO","message":"🚀 Blockpal Services running on port 5002"}
+{"timestamp":"2025-09-12T17:56:21.424Z","level":"INFO","message":"🔗 Health check: http://localhost:5002/health"}
+{"timestamp":"2025-09-12T17:56:21.426Z","level":"INFO","message":"🔌 WebSocket server running on ws://localhost:5002"}
+{"timestamp":"2025-09-12T17:56:21.427Z","level":"INFO","message":"📡 Wallet Connect API: http://localhost:5002/api/wallet"}
+{"timestamp":"2025-09-12T17:56:21.427Z","level":"INFO","message":"🪙 Token API: http://localhost:5002/api/tokens"}
+{"timestamp":"2025-09-12T17:56:21.428Z","level":"INFO","message":"🐛 Debug API: http://localhost:5002/api/debug"}
+{"timestamp":"2025-09-12T17:56:21.428Z","level":"INFO","message":"🧪 Test Moralis: http://localhost:5002/api/debug/test-moralis"}
+{"timestamp":"2025-09-12T17:56:21.429Z","level":"INFO","message":"🔒 CORS allowed origins: http://localhost:3000, http://localhost:3001, http://127.0.0.1:3000, http://127.0.0.1:3001, http://localhost:5173"}
+{"timestamp":"2025-09-12T17:56:21.431Z","level":"INFO","message":"🔄 Initializing services..."}
+{"timestamp":"2025-09-12T17:56:21.433Z","level":"INFO","message":"Environment:","data":{"NODE_ENV":"development","PORT":"5002","MORALIS_API_KEY":"configured","ALLOWED_ORIGINS":"http://localhost:3000,http://localhost:3001,http://127.0.0.1:3000,http://127.0.0.1:3001,http://localhost:5173"}}
+{"timestamp":"2025-09-12T17:56:21.434Z","level":"INFO","message":"🔄 Starting Moralis initialization..."}
+{"timestamp":"2025-09-12T17:56:21.434Z","level":"INFO","message":"🔑 Using API Key:","data":"eyJhbGciOiJIUzI1NiIs..."}
+{"timestamp":"2025-09-12T17:56:21.437Z","level":"INFO","message":"Moralis service initialized successfully"}
+{"timestamp":"2025-09-12T17:56:21.437Z","level":"INFO","message":"✅ Moralis service initialized"}
+{"timestamp":"2025-09-12T17:56:21.440Z","level":"INFO","message":"🎉 All services initialized successfully"}
+{"timestamp":"2025-09-12T17:56:34.745Z","level":"INFO","message":"🚀 Blockpal Services running on port 5002"}
+{"timestamp":"2025-09-12T17:56:34.746Z","level":"INFO","message":"🔗 Health check: http://localhost:5002/health"}
+{"timestamp":"2025-09-12T17:56:34.747Z","level":"INFO","message":"🔌 WebSocket server running on ws://localhost:5002"}
+{"timestamp":"2025-09-12T17:56:34.747Z","level":"INFO","message":"📡 Wallet Connect API: http://localhost:5002/api/wallet"}
+{"timestamp":"2025-09-12T17:56:34.748Z","level":"INFO","message":"🪙 Token API: http://localhost:5002/api/tokens"}
+{"timestamp":"2025-09-12T17:56:34.748Z","level":"INFO","message":"🐛 Debug API: http://localhost:5002/api/debug"}
+{"timestamp":"2025-09-12T17:56:34.749Z","level":"INFO","message":"🧪 Test Moralis: http://localhost:5002/api/debug/test-moralis"}
+{"timestamp":"2025-09-12T17:56:34.749Z","level":"INFO","message":"🔒 CORS allowed origins: http://localhost:3000, http://localhost:3001, http://127.0.0.1:3000, http://127.0.0.1:3001, http://localhost:5173"}
+{"timestamp":"2025-09-12T17:56:34.750Z","level":"INFO","message":"🔄 Initializing services..."}
+{"timestamp":"2025-09-12T17:56:34.751Z","level":"INFO","message":"Environment:","data":{"NODE_ENV":"development","PORT":"5002","MORALIS_API_KEY":"configured","ALLOWED_ORIGINS":"http://localhost:3000,http://localhost:3001,http://127.0.0.1:3000,http://127.0.0.1:3001,http://localhost:5173"}}
+{"timestamp":"2025-09-12T17:56:34.752Z","level":"INFO","message":"🔄 Starting Moralis initialization..."}
+{"timestamp":"2025-09-12T17:56:34.752Z","level":"INFO","message":"🔑 Using API Key:","data":"eyJhbGciOiJIUzI1NiIs..."}
+{"timestamp":"2025-09-12T17:56:34.754Z","level":"INFO","message":"Moralis service initialized successfully"}
+{"timestamp":"2025-09-12T17:56:34.754Z","level":"INFO","message":"✅ Moralis service initialized"}
+{"timestamp":"2025-09-12T17:56:34.755Z","level":"INFO","message":"🎉 All services initialized successfully"}
+{"timestamp":"2025-09-12T17:56:36.604Z","level":"INFO","message":"SIGINT received, shutting down gracefully"}
+{"timestamp":"2025-09-12T17:57:24.495Z","level":"INFO","message":"🚀 Blockpal Services running on port 5002"}
+{"timestamp":"2025-09-12T17:57:24.496Z","level":"INFO","message":"🔗 Health check: http://localhost:5002/health"}
+{"timestamp":"2025-09-12T17:57:24.497Z","level":"INFO","message":"🔌 WebSocket server running on ws://localhost:5002"}
+{"timestamp":"2025-09-12T17:57:24.497Z","level":"INFO","message":"📡 Wallet Connect API: http://localhost:5002/api/wallet"}
+{"timestamp":"2025-09-12T17:57:24.498Z","level":"INFO","message":"🪙 Token API: http://localhost:5002/api/tokens"}
+{"timestamp":"2025-09-12T17:57:24.498Z","level":"INFO","message":"🐛 Debug API: http://localhost:5002/api/debug"}
+{"timestamp":"2025-09-12T17:57:24.499Z","level":"INFO","message":"🧪 Test Moralis: http://localhost:5002/api/debug/test-moralis"}
+{"timestamp":"2025-09-12T17:57:24.499Z","level":"INFO","message":"🔒 CORS allowed origins: http://localhost:3000, http://localhost:3001, http://127.0.0.1:3000, http://127.0.0.1:3001, http://localhost:5173"}
+{"timestamp":"2025-09-12T17:57:24.500Z","level":"INFO","message":"🔄 Initializing services..."}
+{"timestamp":"2025-09-12T17:57:24.501Z","level":"INFO","message":"Environment:","data":{"NODE_ENV":"development","PORT":"5002","MORALIS_API_KEY":"configured","ALLOWED_ORIGINS":"http://localhost:3000,http://localhost:3001,http://127.0.0.1:3000,http://127.0.0.1:3001,http://localhost:5173"}}
+{"timestamp":"2025-09-12T17:57:24.502Z","level":"INFO","message":"🔄 Starting Moralis initialization..."}
+{"timestamp":"2025-09-12T17:57:24.503Z","level":"INFO","message":"🔑 Using API Key:","data":"eyJhbGciOiJIUzI1NiIs..."}
+{"timestamp":"2025-09-12T17:57:24.505Z","level":"INFO","message":"Moralis service initialized successfully"}
+{"timestamp":"2025-09-12T17:57:24.505Z","level":"INFO","message":"✅ Moralis service initialized"}
+{"timestamp":"2025-09-12T17:57:24.506Z","level":"INFO","message":"🎉 All services initialized successfully"}
+{"timestamp":"2025-09-12T17:57:30.761Z","level":"INFO","message":"Fetching tokens for wallet: 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0 on chain: 8453"}
+{"timestamp":"2025-09-12T17:57:30.762Z","level":"INFO","message":"Fetching token balances for wallet: 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0 on chain: 8453"}
+{"timestamp":"2025-09-12T17:57:30.767Z","level":"INFO","message":"🔗 Using chain hex: 0x2105 for chain ID: 8453"}
+{"timestamp":"2025-09-12T17:57:30.770Z","level":"INFO","message":"🔄 Making Moralis API call for ALL tokens..."}
+{"timestamp":"2025-09-12T17:57:32.517Z","level":"INFO","message":"✅ Moralis ALL tokens API call successful"}
+{"timestamp":"2025-09-12T17:57:32.518Z","level":"INFO","message":"📊 Found 1 tokens in response"}
+{"timestamp":"2025-09-12T17:57:32.518Z","level":"INFO","message":"🪙 Token 1:","data":{"symbol":"ETH","name":"Ether","balance":"0"}}
+{"timestamp":"2025-09-12T17:57:32.519Z","level":"INFO","message":"📊 Processing 1 tokens from Moralis response"}
+{"timestamp":"2025-09-12T17:57:32.519Z","level":"INFO","message":"🔄 Processing 1 raw tokens from Moralis"}
+{"timestamp":"2025-09-12T17:57:32.520Z","level":"INFO","message":"🔍 Processing token:","data":{"symbol":"ETH","name":"Ether","balance":"0"}}
+{"timestamp":"2025-09-12T17:57:32.520Z","level":"INFO","message":"💰 Token ETH parsed balance: 0"}
+{"timestamp":"2025-09-12T17:57:32.521Z","level":"INFO","message":"⏭️ Skipping ETH - zero balance and not popular"}
+{"timestamp":"2025-09-12T17:57:32.521Z","level":"INFO","message":"✅ Successfully processed 0 tokens with balances"}
+{"timestamp":"2025-09-12T17:57:32.521Z","level":"INFO","message":"💰 Total portfolio value: $0.00"}
+{"timestamp":"2025-09-12T17:57:32.522Z","level":"INFO","message":"✅ Successfully fetched 0 tokens for wallet 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0"}
+{"timestamp":"2025-09-12T17:57:32.522Z","level":"INFO","message":"Successfully returning 0 tokens with total value $0.00"}
+{"timestamp":"2025-09-12T17:57:32.525Z","level":"INFO","message":"Success response: 200","data":{"message":"Tokens fetched successfully","dataType":"object"}}
+{"timestamp":"2025-09-12T17:57:32.531Z","level":"INFO","message":"::1 - - [12/Sep/2025:17:57:32 +0000] \"GET /api/tokens/wallet/0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0?chain=8453 HTTP/1.1\" 200 256 \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-12T17:57:32.536Z","level":"INFO","message":"Fetching tokens for wallet: 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0 on chain: 8453"}
+{"timestamp":"2025-09-12T17:57:32.537Z","level":"INFO","message":"Cache hit for wallet tokens: 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0 on chain 8453"}
+{"timestamp":"2025-09-12T17:57:32.537Z","level":"INFO","message":"Successfully returning 0 tokens with total value $0.00"}
+{"timestamp":"2025-09-12T17:57:32.539Z","level":"INFO","message":"Success response: 200","data":{"message":"Tokens fetched successfully","dataType":"object"}}
+{"timestamp":"2025-09-12T17:57:32.540Z","level":"INFO","message":"::1 - - [12/Sep/2025:17:57:32 +0000] \"GET /api/tokens/wallet/0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0?chain=8453 HTTP/1.1\" 200 256 \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-12T17:57:32.547Z","level":"INFO","message":"Fetching tokens for wallet: 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0 on chain: 8453"}
+{"timestamp":"2025-09-12T17:57:32.548Z","level":"INFO","message":"Cache hit for wallet tokens: 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0 on chain 8453"}
+{"timestamp":"2025-09-12T17:57:32.548Z","level":"INFO","message":"Successfully returning 0 tokens with total value $0.00"}
+{"timestamp":"2025-09-12T17:57:32.549Z","level":"INFO","message":"Success response: 200","data":{"message":"Tokens fetched successfully","dataType":"object"}}
+{"timestamp":"2025-09-12T17:57:32.551Z","level":"INFO","message":"::1 - - [12/Sep/2025:17:57:32 +0000] \"GET /api/tokens/wallet/0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0?chain=8453 HTTP/1.1\" 200 256 \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-12T17:57:32.566Z","level":"INFO","message":"Fetching tokens for wallet: 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0 on chain: 8453"}
+{"timestamp":"2025-09-12T17:57:32.567Z","level":"INFO","message":"Cache hit for wallet tokens: 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0 on chain 8453"}
+{"timestamp":"2025-09-12T17:57:32.568Z","level":"INFO","message":"Successfully returning 0 tokens with total value $0.00"}
+{"timestamp":"2025-09-12T17:57:32.568Z","level":"INFO","message":"Success response: 200","data":{"message":"Tokens fetched successfully","dataType":"object"}}
+{"timestamp":"2025-09-12T17:57:32.570Z","level":"INFO","message":"::1 - - [12/Sep/2025:17:57:32 +0000] \"GET /api/tokens/wallet/0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0?chain=8453 HTTP/1.1\" 200 256 \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-12T17:58:34.437Z","level":"INFO","message":"Fetching tokens for wallet: 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0 on chain: 1"}
+{"timestamp":"2025-09-12T17:58:34.438Z","level":"INFO","message":"Fetching token balances for wallet: 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0 on chain: 1"}
+{"timestamp":"2025-09-12T17:58:34.449Z","level":"INFO","message":"🔗 Using chain hex: 0x1 for chain ID: 1"}
+{"timestamp":"2025-09-12T17:58:34.536Z","level":"INFO","message":"🔄 Making Moralis API call for ALL tokens..."}
+{"timestamp":"2025-09-12T17:58:35.454Z","level":"INFO","message":"✅ Moralis ALL tokens API call successful"}
+{"timestamp":"2025-09-12T17:58:35.455Z","level":"INFO","message":"📊 Found 10 tokens in response"}
+{"timestamp":"2025-09-12T17:58:35.456Z","level":"INFO","message":"🪙 Token 1:","data":{"symbol":"ETH","name":"Ether","balance":"103063934324106"}}
+{"timestamp":"2025-09-12T17:58:35.457Z","level":"INFO","message":"🪙 Token 2:","data":{"symbol":"ROLL","name":"Rollback","balance":"180157695307832086645"}}
+{"timestamp":"2025-09-12T17:58:35.457Z","level":"INFO","message":"🪙 Token 3:","data":{"symbol":"UNI","name":"Uniswap","balance":"39767637652903489"}}
+{"timestamp":"2025-09-12T17:58:35.458Z","level":"INFO","message":"📊 Processing 10 tokens from Moralis response"}
+{"timestamp":"2025-09-12T17:58:35.458Z","level":"INFO","message":"🔄 Processing 10 raw tokens from Moralis"}
+{"timestamp":"2025-09-12T17:58:35.458Z","level":"INFO","message":"🔍 Processing token:","data":{"symbol":"ETH","name":"Ether","balance":"103063934324106"}}
+{"timestamp":"2025-09-12T17:58:35.459Z","level":"INFO","message":"💰 Token ETH parsed balance: 0.000103063934324106"}
+{"timestamp":"2025-09-12T17:58:35.459Z","level":"INFO","message":"🔍 Processing token:","data":{"symbol":"ROLL","name":"Rollback","balance":"180157695307832086645"}}
+{"timestamp":"2025-09-12T17:58:35.460Z","level":"INFO","message":"💰 Token ROLL parsed balance: 180.15769530783209"}
+{"timestamp":"2025-09-12T17:58:35.460Z","level":"INFO","message":"🔍 Processing token:","data":{"symbol":"UNI","name":"Uniswap","balance":"39767637652903489"}}
+{"timestamp":"2025-09-12T17:58:35.464Z","level":"INFO","message":"💰 Token UNI parsed balance: 0.03976763765290349"}
+{"timestamp":"2025-09-12T17:58:35.464Z","level":"INFO","message":"🔍 Processing token:","data":{"symbol":"WBTC","name":"Wrapped BTC","balance":"302"}}
+{"timestamp":"2025-09-12T17:58:35.465Z","level":"INFO","message":"💰 Token WBTC parsed balance: 0.00000302"}
+{"timestamp":"2025-09-12T17:58:35.465Z","level":"INFO","message":"🔍 Processing token:","data":{"symbol":"LINK","name":"ChainLink Token","balance":"8848420842770951"}}
+{"timestamp":"2025-09-12T17:58:35.466Z","level":"INFO","message":"💰 Token LINK parsed balance: 0.008848420842770951"}
+{"timestamp":"2025-09-12T17:58:35.466Z","level":"INFO","message":"🔍 Processing token:","data":{"symbol":"RAI","name":"Reploy","balance":"359106816406535356"}}
+{"timestamp":"2025-09-12T17:58:35.466Z","level":"INFO","message":"💰 Token RAI parsed balance: 0.35910681640653536"}
+{"timestamp":"2025-09-12T17:58:35.467Z","level":"INFO","message":"🔍 Processing token:","data":{"symbol":"USDT","name":"Tether USD","balance":"63712"}}
+{"timestamp":"2025-09-12T17:58:35.469Z","level":"INFO","message":"💰 Token USDT parsed balance: 0.063712"}
+{"timestamp":"2025-09-12T17:58:35.471Z","level":"INFO","message":"🔍 Processing token:","data":{"symbol":"DAI","name":"Dai Stablecoin","balance":"34005069916855565"}}
+{"timestamp":"2025-09-12T17:58:35.472Z","level":"INFO","message":"💰 Token DAI parsed balance: 0.03400506991685556"}
+{"timestamp":"2025-09-12T17:58:35.473Z","level":"INFO","message":"🔍 Processing token:","data":{"symbol":"ZENT","name":"ZENTIUM","balance":"16886937307689667428"}}
+{"timestamp":"2025-09-12T17:58:35.473Z","level":"INFO","message":"💰 Token ZENT parsed balance: 16.886937307689667"}
+{"timestamp":"2025-09-12T17:58:35.473Z","level":"INFO","message":"🔍 Processing token:","data":{"symbol":"USDC","name":"USD Coin","balance":"19727"}}
+{"timestamp":"2025-09-12T17:58:35.474Z","level":"INFO","message":"💰 Token USDC parsed balance: 0.019727"}
+{"timestamp":"2025-09-12T17:58:35.474Z","level":"INFO","message":"✅ Successfully processed 0 tokens with balances"}
+{"timestamp":"2025-09-12T17:58:35.475Z","level":"INFO","message":"💰 Total portfolio value: $0.00"}
+{"timestamp":"2025-09-12T17:58:35.479Z","level":"INFO","message":"✅ Successfully fetched 0 tokens for wallet 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0"}
+{"timestamp":"2025-09-12T17:58:35.479Z","level":"INFO","message":"Successfully returning 0 tokens with total value $0.00"}
+{"timestamp":"2025-09-12T17:58:35.479Z","level":"INFO","message":"Success response: 200","data":{"message":"Tokens fetched successfully","dataType":"object"}}
+{"timestamp":"2025-09-12T17:58:35.481Z","level":"INFO","message":"::1 - - [12/Sep/2025:17:58:35 +0000] \"GET /api/tokens/wallet/0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0?chain=1 HTTP/1.1\" 200 253 \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-12T17:58:35.488Z","level":"INFO","message":"Fetching tokens for wallet: 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0 on chain: 1"}
+{"timestamp":"2025-09-12T17:58:35.488Z","level":"INFO","message":"Cache hit for wallet tokens: 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0 on chain 1"}
+{"timestamp":"2025-09-12T17:58:35.491Z","level":"INFO","message":"Successfully returning 0 tokens with total value $0.00"}
+{"timestamp":"2025-09-12T17:58:35.493Z","level":"INFO","message":"Success response: 200","data":{"message":"Tokens fetched successfully","dataType":"object"}}
+{"timestamp":"2025-09-12T17:58:35.494Z","level":"INFO","message":"::1 - - [12/Sep/2025:17:58:35 +0000] \"GET /api/tokens/wallet/0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0?chain=1 HTTP/1.1\" 200 253 \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-12T17:58:35.501Z","level":"INFO","message":"Fetching tokens for wallet: 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0 on chain: 1"}
+{"timestamp":"2025-09-12T17:58:35.501Z","level":"INFO","message":"Cache hit for wallet tokens: 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0 on chain 1"}
+{"timestamp":"2025-09-12T17:58:35.502Z","level":"INFO","message":"Successfully returning 0 tokens with total value $0.00"}
+{"timestamp":"2025-09-12T17:58:35.502Z","level":"INFO","message":"Success response: 200","data":{"message":"Tokens fetched successfully","dataType":"object"}}
+{"timestamp":"2025-09-12T17:58:35.507Z","level":"INFO","message":"::1 - - [12/Sep/2025:17:58:35 +0000] \"GET /api/tokens/wallet/0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0?chain=1 HTTP/1.1\" 200 253 \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-12T17:58:35.521Z","level":"INFO","message":"Fetching tokens for wallet: 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0 on chain: 1"}
+{"timestamp":"2025-09-12T17:58:35.522Z","level":"INFO","message":"Cache hit for wallet tokens: 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0 on chain 1"}
+{"timestamp":"2025-09-12T17:58:35.526Z","level":"INFO","message":"Successfully returning 0 tokens with total value $0.00"}
+{"timestamp":"2025-09-12T17:58:35.528Z","level":"INFO","message":"Success response: 200","data":{"message":"Tokens fetched successfully","dataType":"object"}}
+{"timestamp":"2025-09-12T17:58:35.529Z","level":"INFO","message":"::1 - - [12/Sep/2025:17:58:35 +0000] \"GET /api/tokens/wallet/0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0?chain=1 HTTP/1.1\" 200 253 \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-12T17:59:00.747Z","level":"INFO","message":"🧪 Testing wallet: 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0 on chain: 8453"}
+{"timestamp":"2025-09-12T17:59:00.748Z","level":"INFO","message":"🔄 Testing direct Moralis API call..."}
+{"timestamp":"2025-09-12T17:59:00.750Z","level":"INFO","message":"🔄 Testing processed token balances..."}
+{"timestamp":"2025-09-12T17:59:00.754Z","level":"INFO","message":"Cache hit for wallet tokens: 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0 on chain 8453"}
+{"timestamp":"2025-09-12T17:59:00.756Z","level":"INFO","message":"🔄 Testing native balance..."}
+{"timestamp":"2025-09-12T17:59:00.770Z","level":"INFO","message":"💎 Fetching native balance for 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0 on chain 8453"}
+{"timestamp":"2025-09-12T17:59:01.425Z","level":"INFO","message":"✅ Native balance: 0 ETH"}
+{"timestamp":"2025-09-12T17:59:01.426Z","level":"INFO","message":"✅ Wallet test completed in 1ms"}
+{"timestamp":"2025-09-12T17:59:01.430Z","level":"INFO","message":"📊 Found 0 processed tokens"}
+{"timestamp":"2025-09-12T17:59:01.431Z","level":"INFO","message":"Success response: 200","data":{"message":"Wallet test completed successfully","dataType":"object"}}
+{"timestamp":"2025-09-12T17:59:01.434Z","level":"INFO","message":"::1 - - [12/Sep/2025:17:59:01 +0000] \"GET /api/debug/test-wallet?wallet=0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0&chain=8453 HTTP/1.1\" 200 1023 \"-\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-12T18:00:23.286Z","level":"INFO","message":"🚀 Blockpal Services running on port 5002"}
+{"timestamp":"2025-09-12T18:00:23.288Z","level":"INFO","message":"🔗 Health check: http://localhost:5002/health"}
+{"timestamp":"2025-09-12T18:00:23.295Z","level":"INFO","message":"🔌 WebSocket server running on ws://localhost:5002"}
+{"timestamp":"2025-09-12T18:00:23.296Z","level":"INFO","message":"📡 Wallet Connect API: http://localhost:5002/api/wallet"}
+{"timestamp":"2025-09-12T18:00:23.297Z","level":"INFO","message":"🪙 Token API: http://localhost:5002/api/tokens"}
+{"timestamp":"2025-09-12T18:00:23.301Z","level":"INFO","message":"🐛 Debug API: http://localhost:5002/api/debug"}
+{"timestamp":"2025-09-12T18:00:23.302Z","level":"INFO","message":"🧪 Test Moralis: http://localhost:5002/api/debug/test-moralis"}
+{"timestamp":"2025-09-12T18:00:23.302Z","level":"INFO","message":"🔒 CORS allowed origins: http://localhost:3000, http://localhost:3001, http://127.0.0.1:3000, http://127.0.0.1:3001, http://localhost:5173"}
+{"timestamp":"2025-09-12T18:00:23.304Z","level":"INFO","message":"🔄 Initializing services..."}
+{"timestamp":"2025-09-12T18:00:23.305Z","level":"INFO","message":"Environment:","data":{"NODE_ENV":"development","PORT":"5002","MORALIS_API_KEY":"configured","ALLOWED_ORIGINS":"http://localhost:3000,http://localhost:3001,http://127.0.0.1:3000,http://127.0.0.1:3001,http://localhost:5173"}}
+{"timestamp":"2025-09-12T18:00:23.306Z","level":"INFO","message":"🔄 Starting Moralis initialization..."}
+{"timestamp":"2025-09-12T18:00:23.308Z","level":"INFO","message":"🔑 Using API Key:","data":"eyJhbGciOiJIUzI1NiIs..."}
+{"timestamp":"2025-09-12T18:00:23.310Z","level":"INFO","message":"Moralis service initialized successfully"}
+{"timestamp":"2025-09-12T18:00:23.311Z","level":"INFO","message":"✅ Moralis service initialized"}
+{"timestamp":"2025-09-12T18:00:23.314Z","level":"INFO","message":"🎉 All services initialized successfully"}
+{"timestamp":"2025-09-12T18:00:44.750Z","level":"INFO","message":"Fetching tokens for wallet: 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0 on chain: 1"}
+{"timestamp":"2025-09-12T18:00:44.752Z","level":"INFO","message":"Fetching token balances for wallet: 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0 on chain: 1"}
+{"timestamp":"2025-09-12T18:00:44.754Z","level":"INFO","message":"🔗 Using chain hex: 0x1 for chain ID: 1"}
+{"timestamp":"2025-09-12T18:00:44.759Z","level":"INFO","message":"🔄 Making Moralis API call for ALL tokens..."}
+{"timestamp":"2025-09-12T18:00:46.158Z","level":"INFO","message":"✅ Moralis ALL tokens API call successful"}
+{"timestamp":"2025-09-12T18:00:46.158Z","level":"INFO","message":"📊 Found 10 tokens in response"}
+{"timestamp":"2025-09-12T18:00:46.161Z","level":"INFO","message":"🪙 Token 1:","data":{"symbol":"ETH","name":"Ether","balance":"103063934324106"}}
+{"timestamp":"2025-09-12T18:00:46.162Z","level":"INFO","message":"🪙 Token 2:","data":{"symbol":"ROLL","name":"Rollback","balance":"180157695307832086645"}}
+{"timestamp":"2025-09-12T18:00:46.162Z","level":"INFO","message":"🪙 Token 3:","data":{"symbol":"UNI","name":"Uniswap","balance":"39767637652903489"}}
+{"timestamp":"2025-09-12T18:00:46.163Z","level":"INFO","message":"📊 Processing 10 tokens from Moralis response"}
+{"timestamp":"2025-09-12T18:00:46.164Z","level":"INFO","message":"🔄 Processing 10 raw tokens from Moralis"}
+{"timestamp":"2025-09-12T18:00:46.165Z","level":"INFO","message":"🔍 Processing token:","data":{"symbol":"ETH","name":"Ether","balance":"103063934324106","decimals":18}}
+{"timestamp":"2025-09-12T18:00:46.195Z","level":"INFO","message":"💰 Token ETH parsed balance: 0.000103063934324106"}
+{"timestamp":"2025-09-12T18:00:46.197Z","level":"INFO","message":"✅ Added native token: ETH - Balance: 0.000103063934324106, USD: $0.00"}
+{"timestamp":"2025-09-12T18:00:46.199Z","level":"INFO","message":"🔍 Processing token:","data":{"symbol":"ROLL","name":"Rollback","balance":"180157695307832086645","decimals":18}}
+{"timestamp":"2025-09-12T18:00:46.199Z","level":"INFO","message":"💰 Token ROLL parsed balance: 180.15769530783209"}
+{"timestamp":"2025-09-12T18:00:46.203Z","level":"INFO","message":"✅ Added native token: ROLL - Balance: 180.15769530783209, USD: $0.00"}
+{"timestamp":"2025-09-12T18:00:46.204Z","level":"INFO","message":"🔍 Processing token:","data":{"symbol":"UNI","name":"Uniswap","balance":"39767637652903489","decimals":18}}
+{"timestamp":"2025-09-12T18:00:46.205Z","level":"INFO","message":"💰 Token UNI parsed balance: 0.03976763765290349"}
+{"timestamp":"2025-09-12T18:00:46.205Z","level":"INFO","message":"✅ Added native token: UNI - Balance: 0.03976763765290349, USD: $0.00"}
+{"timestamp":"2025-09-12T18:00:46.205Z","level":"INFO","message":"🔍 Processing token:","data":{"symbol":"WBTC","name":"Wrapped BTC","balance":"302","decimals":8}}
+{"timestamp":"2025-09-12T18:00:46.206Z","level":"INFO","message":"💰 Token WBTC parsed balance: 0.00000302"}
+{"timestamp":"2025-09-12T18:00:46.206Z","level":"INFO","message":"✅ Added native token: WBTC - Balance: 0.00000302, USD: $0.00"}
+{"timestamp":"2025-09-12T18:00:46.207Z","level":"INFO","message":"🔍 Processing token:","data":{"symbol":"LINK","name":"ChainLink Token","balance":"8848420842770951","decimals":18}}
+{"timestamp":"2025-09-12T18:00:46.209Z","level":"INFO","message":"💰 Token LINK parsed balance: 0.008848420842770951"}
+{"timestamp":"2025-09-12T18:00:46.210Z","level":"INFO","message":"✅ Added native token: LINK - Balance: 0.008848420842770951, USD: $0.00"}
+{"timestamp":"2025-09-12T18:00:46.211Z","level":"INFO","message":"🔍 Processing token:","data":{"symbol":"RAI","name":"Reploy","balance":"359106816406535356","decimals":18}}
+{"timestamp":"2025-09-12T18:00:46.212Z","level":"INFO","message":"💰 Token RAI parsed balance: 0.35910681640653536"}
+{"timestamp":"2025-09-12T18:00:46.213Z","level":"INFO","message":"✅ Added native token: RAI - Balance: 0.35910681640653536, USD: $0.00"}
+{"timestamp":"2025-09-12T18:00:46.219Z","level":"INFO","message":"🔍 Processing token:","data":{"symbol":"USDT","name":"Tether USD","balance":"63712","decimals":6}}
+{"timestamp":"2025-09-12T18:00:46.221Z","level":"INFO","message":"💰 Token USDT parsed balance: 0.063712"}
+{"timestamp":"2025-09-12T18:00:46.225Z","level":"INFO","message":"✅ Added native token: USDT - Balance: 0.063712, USD: $0.00"}
+{"timestamp":"2025-09-12T18:00:46.227Z","level":"INFO","message":"🔍 Processing token:","data":{"symbol":"DAI","name":"Dai Stablecoin","balance":"34005069916855565","decimals":18}}
+{"timestamp":"2025-09-12T18:00:46.229Z","level":"INFO","message":"💰 Token DAI parsed balance: 0.03400506991685556"}
+{"timestamp":"2025-09-12T18:00:46.231Z","level":"INFO","message":"✅ Added native token: DAI - Balance: 0.03400506991685556, USD: $0.00"}
+{"timestamp":"2025-09-12T18:00:46.232Z","level":"INFO","message":"🔍 Processing token:","data":{"symbol":"ZENT","name":"ZENTIUM","balance":"16886937307689667428","decimals":18}}
+{"timestamp":"2025-09-12T18:00:46.233Z","level":"INFO","message":"💰 Token ZENT parsed balance: 16.886937307689667"}
+{"timestamp":"2025-09-12T18:00:46.234Z","level":"INFO","message":"✅ Added native token: ZENT - Balance: 16.886937307689667, USD: $0.00"}
+{"timestamp":"2025-09-12T18:00:46.234Z","level":"INFO","message":"🔍 Processing token:","data":{"symbol":"USDC","name":"USD Coin","balance":"19727","decimals":6}}
+{"timestamp":"2025-09-12T18:00:46.235Z","level":"INFO","message":"💰 Token USDC parsed balance: 0.019727"}
+{"timestamp":"2025-09-12T18:00:46.237Z","level":"INFO","message":"✅ Added native token: USDC - Balance: 0.019727, USD: $0.00"}
+{"timestamp":"2025-09-12T18:00:46.238Z","level":"INFO","message":"✅ Successfully processed 10 tokens with balances"}
+{"timestamp":"2025-09-12T18:00:46.239Z","level":"INFO","message":"💰 Total portfolio value: $0.00"}
+{"timestamp":"2025-09-12T18:00:46.239Z","level":"INFO","message":"📋 Processed Token 1: ROLL - Balance: 180.15769530783209, Value: $0.00, Native: true"}
+{"timestamp":"2025-09-12T18:00:46.240Z","level":"INFO","message":"📋 Processed Token 2: ZENT - Balance: 16.886937307689667, Value: $0.00, Native: true"}
+{"timestamp":"2025-09-12T18:00:46.240Z","level":"INFO","message":"📋 Processed Token 3: RAI - Balance: 0.35910681640653536, Value: $0.00, Native: true"}
+{"timestamp":"2025-09-12T18:00:46.241Z","level":"INFO","message":"📋 Processed Token 4: USDT - Balance: 0.063712, Value: $0.00, Native: true"}
+{"timestamp":"2025-09-12T18:00:46.241Z","level":"INFO","message":"📋 Processed Token 5: UNI - Balance: 0.03976763765290349, Value: $0.00, Native: true"}
+{"timestamp":"2025-09-12T18:00:46.241Z","level":"INFO","message":"📋 Processed Token 6: DAI - Balance: 0.03400506991685556, Value: $0.00, Native: true"}
+{"timestamp":"2025-09-12T18:00:46.242Z","level":"INFO","message":"📋 Processed Token 7: USDC - Balance: 0.019727, Value: $0.00, Native: true"}
+{"timestamp":"2025-09-12T18:00:46.244Z","level":"INFO","message":"📋 Processed Token 8: LINK - Balance: 0.008848420842770951, Value: $0.00, Native: true"}
+{"timestamp":"2025-09-12T18:00:46.245Z","level":"INFO","message":"📋 Processed Token 9: ETH - Balance: 0.000103063934324106, Value: $0.00, Native: true"}
+{"timestamp":"2025-09-12T18:00:46.245Z","level":"INFO","message":"📋 Processed Token 10: WBTC - Balance: 0.00000302, Value: $0.00, Native: true"}
+{"timestamp":"2025-09-12T18:00:46.248Z","level":"INFO","message":"✅ Successfully fetched 10 tokens for wallet 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0"}
+{"timestamp":"2025-09-12T18:00:46.251Z","level":"INFO","message":"Successfully returning 10 tokens with total value $0.00"}
+{"timestamp":"2025-09-12T18:00:46.254Z","level":"INFO","message":"Success response: 200","data":{"message":"Tokens fetched successfully","dataType":"object"}}
+{"timestamp":"2025-09-12T18:00:46.265Z","level":"INFO","message":"::1 - - [12/Sep/2025:18:00:46 +0000] \"GET /api/tokens/wallet/0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0?chain=1 HTTP/1.1\" 200 - \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-12T18:00:46.274Z","level":"INFO","message":"Fetching tokens for wallet: 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0 on chain: 1"}
+{"timestamp":"2025-09-12T18:00:46.275Z","level":"INFO","message":"Cache hit for wallet tokens: 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0 on chain 1"}
+{"timestamp":"2025-09-12T18:00:46.275Z","level":"INFO","message":"Successfully returning 10 tokens with total value $0.00"}
+{"timestamp":"2025-09-12T18:00:46.276Z","level":"INFO","message":"Success response: 200","data":{"message":"Tokens fetched successfully","dataType":"object"}}
+{"timestamp":"2025-09-12T18:00:46.281Z","level":"INFO","message":"::1 - - [12/Sep/2025:18:00:46 +0000] \"GET /api/tokens/wallet/0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0?chain=1 HTTP/1.1\" 200 - \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-12T18:00:46.287Z","level":"INFO","message":"Fetching tokens for wallet: 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0 on chain: 1"}
+{"timestamp":"2025-09-12T18:00:46.288Z","level":"INFO","message":"Cache hit for wallet tokens: 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0 on chain 1"}
+{"timestamp":"2025-09-12T18:00:46.289Z","level":"INFO","message":"Successfully returning 10 tokens with total value $0.00"}
+{"timestamp":"2025-09-12T18:00:46.296Z","level":"INFO","message":"Success response: 200","data":{"message":"Tokens fetched successfully","dataType":"object"}}
+{"timestamp":"2025-09-12T18:00:46.302Z","level":"INFO","message":"::1 - - [12/Sep/2025:18:00:46 +0000] \"GET /api/tokens/wallet/0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0?chain=1 HTTP/1.1\" 200 - \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-12T18:00:46.313Z","level":"INFO","message":"Fetching tokens for wallet: 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0 on chain: 1"}
+{"timestamp":"2025-09-12T18:00:46.314Z","level":"INFO","message":"Cache hit for wallet tokens: 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0 on chain 1"}
+{"timestamp":"2025-09-12T18:00:46.314Z","level":"INFO","message":"Successfully returning 10 tokens with total value $0.00"}
+{"timestamp":"2025-09-12T18:00:46.315Z","level":"INFO","message":"Success response: 200","data":{"message":"Tokens fetched successfully","dataType":"object"}}
+{"timestamp":"2025-09-12T18:00:46.320Z","level":"INFO","message":"::1 - - [12/Sep/2025:18:00:46 +0000] \"GET /api/tokens/wallet/0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0?chain=1 HTTP/1.1\" 200 - \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-12T18:00:55.771Z","level":"INFO","message":"Fetching tokens for wallet: 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0 on chain: 8453"}
+{"timestamp":"2025-09-12T18:00:55.790Z","level":"INFO","message":"Fetching token balances for wallet: 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0 on chain: 8453"}
+{"timestamp":"2025-09-12T18:00:55.797Z","level":"INFO","message":"🔗 Using chain hex: 0x2105 for chain ID: 8453"}
+{"timestamp":"2025-09-12T18:00:55.804Z","level":"INFO","message":"🔄 Making Moralis API call for ALL tokens..."}
+{"timestamp":"2025-09-12T18:00:56.745Z","level":"INFO","message":"✅ Moralis ALL tokens API call successful"}
+{"timestamp":"2025-09-12T18:00:56.745Z","level":"INFO","message":"📊 Found 1 tokens in response"}
+{"timestamp":"2025-09-12T18:00:56.746Z","level":"INFO","message":"🪙 Token 1:","data":{"symbol":"ETH","name":"Ether","balance":"0"}}
+{"timestamp":"2025-09-12T18:00:56.746Z","level":"INFO","message":"📊 Processing 1 tokens from Moralis response"}
+{"timestamp":"2025-09-12T18:00:56.747Z","level":"INFO","message":"🔄 Processing 1 raw tokens from Moralis"}
+{"timestamp":"2025-09-12T18:00:56.748Z","level":"INFO","message":"🔍 Processing token:","data":{"symbol":"ETH","name":"Ether","balance":"0","decimals":18}}
+{"timestamp":"2025-09-12T18:00:56.748Z","level":"INFO","message":"💰 Token ETH parsed balance: 0"}
+{"timestamp":"2025-09-12T18:00:56.750Z","level":"INFO","message":"✅ Including ETH despite low balance (native or popular token)"}
+{"timestamp":"2025-09-12T18:00:56.753Z","level":"INFO","message":"✅ Added native token: ETH - Balance: 0, USD: $0.00"}
+{"timestamp":"2025-09-12T18:00:56.753Z","level":"INFO","message":"✅ Successfully processed 1 tokens with balances"}
+{"timestamp":"2025-09-12T18:00:56.754Z","level":"INFO","message":"💰 Total portfolio value: $0.00"}
+{"timestamp":"2025-09-12T18:00:56.754Z","level":"INFO","message":"📋 Processed Token 1: ETH - Balance: 0, Value: $0.00, Native: true"}
+{"timestamp":"2025-09-12T18:00:56.755Z","level":"INFO","message":"✅ Successfully fetched 1 tokens for wallet 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0"}
+{"timestamp":"2025-09-12T18:00:56.755Z","level":"INFO","message":"Successfully returning 1 tokens with total value $0.00"}
+{"timestamp":"2025-09-12T18:00:56.755Z","level":"INFO","message":"Success response: 200","data":{"message":"Tokens fetched successfully","dataType":"object"}}
+{"timestamp":"2025-09-12T18:00:56.760Z","level":"INFO","message":"::1 - - [12/Sep/2025:18:00:56 +0000] \"GET /api/tokens/wallet/0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0?chain=8453 HTTP/1.1\" 200 534 \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-12T18:00:56.769Z","level":"INFO","message":"Fetching tokens for wallet: 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0 on chain: 8453"}
+{"timestamp":"2025-09-12T18:00:56.770Z","level":"INFO","message":"Cache hit for wallet tokens: 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0 on chain 8453"}
+{"timestamp":"2025-09-12T18:00:56.773Z","level":"INFO","message":"Successfully returning 1 tokens with total value $0.00"}
+{"timestamp":"2025-09-12T18:00:56.773Z","level":"INFO","message":"Success response: 200","data":{"message":"Tokens fetched successfully","dataType":"object"}}
+{"timestamp":"2025-09-12T18:00:56.776Z","level":"INFO","message":"::1 - - [12/Sep/2025:18:00:56 +0000] \"GET /api/tokens/wallet/0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0?chain=8453 HTTP/1.1\" 200 534 \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-12T18:00:56.789Z","level":"INFO","message":"Fetching tokens for wallet: 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0 on chain: 8453"}
+{"timestamp":"2025-09-12T18:00:56.790Z","level":"INFO","message":"Cache hit for wallet tokens: 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0 on chain 8453"}
+{"timestamp":"2025-09-12T18:00:56.790Z","level":"INFO","message":"Successfully returning 1 tokens with total value $0.00"}
+{"timestamp":"2025-09-12T18:00:56.793Z","level":"INFO","message":"Success response: 200","data":{"message":"Tokens fetched successfully","dataType":"object"}}
+{"timestamp":"2025-09-12T18:00:56.795Z","level":"INFO","message":"::1 - - [12/Sep/2025:18:00:56 +0000] \"GET /api/tokens/wallet/0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0?chain=8453 HTTP/1.1\" 200 534 \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-12T18:00:56.802Z","level":"INFO","message":"Fetching tokens for wallet: 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0 on chain: 8453"}
+{"timestamp":"2025-09-12T18:00:56.802Z","level":"INFO","message":"Cache hit for wallet tokens: 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0 on chain 8453"}
+{"timestamp":"2025-09-12T18:00:56.803Z","level":"INFO","message":"Successfully returning 1 tokens with total value $0.00"}
+{"timestamp":"2025-09-12T18:00:56.803Z","level":"INFO","message":"Success response: 200","data":{"message":"Tokens fetched successfully","dataType":"object"}}
+{"timestamp":"2025-09-12T18:00:56.807Z","level":"INFO","message":"::1 - - [12/Sep/2025:18:00:56 +0000] \"GET /api/tokens/wallet/0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0?chain=8453 HTTP/1.1\" 200 534 \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-12T18:00:59.096Z","level":"INFO","message":"Fetching tokens for wallet: 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0 on chain: 137"}
+{"timestamp":"2025-09-12T18:00:59.096Z","level":"INFO","message":"Fetching token balances for wallet: 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0 on chain: 137"}
+{"timestamp":"2025-09-12T18:00:59.098Z","level":"INFO","message":"🔗 Using chain hex: 0x89 for chain ID: 137"}
+{"timestamp":"2025-09-12T18:00:59.098Z","level":"INFO","message":"🔄 Making Moralis API call for ALL tokens..."}
+{"timestamp":"2025-09-12T18:01:00.123Z","level":"INFO","message":"✅ Moralis ALL tokens API call successful"}
+{"timestamp":"2025-09-12T18:01:00.124Z","level":"INFO","message":"📊 Found 1 tokens in response"}
+{"timestamp":"2025-09-12T18:01:00.124Z","level":"INFO","message":"🪙 Token 1:","data":{"symbol":"POL","name":"Polygon Ecosystem Token","balance":"0"}}
+{"timestamp":"2025-09-12T18:01:00.126Z","level":"INFO","message":"📊 Processing 1 tokens from Moralis response"}
+{"timestamp":"2025-09-12T18:01:00.126Z","level":"INFO","message":"🔄 Processing 1 raw tokens from Moralis"}
+{"timestamp":"2025-09-12T18:01:00.127Z","level":"INFO","message":"🔍 Processing token:","data":{"symbol":"POL","name":"Polygon Ecosystem Token","balance":"0","decimals":18}}
+{"timestamp":"2025-09-12T18:01:00.127Z","level":"INFO","message":"💰 Token POL parsed balance: 0"}
+{"timestamp":"2025-09-12T18:01:00.127Z","level":"INFO","message":"✅ Including POL despite low balance (native or popular token)"}
+{"timestamp":"2025-09-12T18:01:00.128Z","level":"INFO","message":"✅ Added native token: POL - Balance: 0, USD: $0.00"}
+{"timestamp":"2025-09-12T18:01:00.128Z","level":"INFO","message":"✅ Successfully processed 1 tokens with balances"}
+{"timestamp":"2025-09-12T18:01:00.129Z","level":"INFO","message":"💰 Total portfolio value: $0.00"}
+{"timestamp":"2025-09-12T18:01:00.129Z","level":"INFO","message":"📋 Processed Token 1: POL - Balance: 0, Value: $0.00, Native: true"}
+{"timestamp":"2025-09-12T18:01:00.130Z","level":"INFO","message":"✅ Successfully fetched 1 tokens for wallet 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0"}
+{"timestamp":"2025-09-12T18:01:00.130Z","level":"INFO","message":"Successfully returning 1 tokens with total value $0.00"}
+{"timestamp":"2025-09-12T18:01:00.130Z","level":"INFO","message":"Success response: 200","data":{"message":"Tokens fetched successfully","dataType":"object"}}
+{"timestamp":"2025-09-12T18:01:00.133Z","level":"INFO","message":"::1 - - [12/Sep/2025:18:01:00 +0000] \"GET /api/tokens/wallet/0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0?chain=137 HTTP/1.1\" 200 554 \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-12T18:01:00.142Z","level":"INFO","message":"Fetching tokens for wallet: 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0 on chain: 137"}
+{"timestamp":"2025-09-12T18:01:00.142Z","level":"INFO","message":"Cache hit for wallet tokens: 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0 on chain 137"}
+{"timestamp":"2025-09-12T18:01:00.143Z","level":"INFO","message":"Successfully returning 1 tokens with total value $0.00"}
+{"timestamp":"2025-09-12T18:01:00.143Z","level":"INFO","message":"Success response: 200","data":{"message":"Tokens fetched successfully","dataType":"object"}}
+{"timestamp":"2025-09-12T18:01:00.150Z","level":"INFO","message":"::1 - - [12/Sep/2025:18:01:00 +0000] \"GET /api/tokens/wallet/0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0?chain=137 HTTP/1.1\" 200 554 \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-12T18:01:00.155Z","level":"INFO","message":"Fetching tokens for wallet: 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0 on chain: 137"}
+{"timestamp":"2025-09-12T18:01:00.156Z","level":"INFO","message":"Cache hit for wallet tokens: 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0 on chain 137"}
+{"timestamp":"2025-09-12T18:01:00.156Z","level":"INFO","message":"Successfully returning 1 tokens with total value $0.00"}
+{"timestamp":"2025-09-12T18:01:00.157Z","level":"INFO","message":"Success response: 200","data":{"message":"Tokens fetched successfully","dataType":"object"}}
+{"timestamp":"2025-09-12T18:01:00.158Z","level":"INFO","message":"::1 - - [12/Sep/2025:18:01:00 +0000] \"GET /api/tokens/wallet/0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0?chain=137 HTTP/1.1\" 200 554 \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-12T18:01:00.169Z","level":"INFO","message":"Fetching tokens for wallet: 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0 on chain: 137"}
+{"timestamp":"2025-09-12T18:01:00.170Z","level":"INFO","message":"Cache hit for wallet tokens: 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0 on chain 137"}
+{"timestamp":"2025-09-12T18:01:00.171Z","level":"INFO","message":"Successfully returning 1 tokens with total value $0.00"}
+{"timestamp":"2025-09-12T18:01:00.172Z","level":"INFO","message":"Success response: 200","data":{"message":"Tokens fetched successfully","dataType":"object"}}
+{"timestamp":"2025-09-12T18:01:00.177Z","level":"INFO","message":"::1 - - [12/Sep/2025:18:01:00 +0000] \"GET /api/tokens/wallet/0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0?chain=137 HTTP/1.1\" 200 554 \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-12T18:01:02.173Z","level":"INFO","message":"Fetching tokens for wallet: 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0 on chain: 1"}
+{"timestamp":"2025-09-12T18:01:02.175Z","level":"INFO","message":"Cache hit for wallet tokens: 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0 on chain 1"}
+{"timestamp":"2025-09-12T18:01:02.247Z","level":"INFO","message":"Successfully returning 10 tokens with total value $0.00"}
+{"timestamp":"2025-09-12T18:01:02.254Z","level":"INFO","message":"Success response: 200","data":{"message":"Tokens fetched successfully","dataType":"object"}}
+{"timestamp":"2025-09-12T18:01:02.262Z","level":"INFO","message":"::1 - - [12/Sep/2025:18:01:02 +0000] \"GET /api/tokens/wallet/0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0?chain=1 HTTP/1.1\" 200 - \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-12T18:01:02.275Z","level":"INFO","message":"Fetching tokens for wallet: 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0 on chain: 1"}
+{"timestamp":"2025-09-12T18:01:02.276Z","level":"INFO","message":"Cache hit for wallet tokens: 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0 on chain 1"}
+{"timestamp":"2025-09-12T18:01:02.279Z","level":"INFO","message":"Successfully returning 10 tokens with total value $0.00"}
+{"timestamp":"2025-09-12T18:01:02.279Z","level":"INFO","message":"Success response: 200","data":{"message":"Tokens fetched successfully","dataType":"object"}}
+{"timestamp":"2025-09-12T18:01:02.282Z","level":"INFO","message":"::1 - - [12/Sep/2025:18:01:02 +0000] \"GET /api/tokens/wallet/0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0?chain=1 HTTP/1.1\" 200 - \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-12T18:01:02.294Z","level":"INFO","message":"Fetching tokens for wallet: 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0 on chain: 1"}
+{"timestamp":"2025-09-12T18:01:02.295Z","level":"INFO","message":"Cache hit for wallet tokens: 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0 on chain 1"}
+{"timestamp":"2025-09-12T18:01:02.296Z","level":"INFO","message":"Successfully returning 10 tokens with total value $0.00"}
+{"timestamp":"2025-09-12T18:01:02.297Z","level":"INFO","message":"Success response: 200","data":{"message":"Tokens fetched successfully","dataType":"object"}}
+{"timestamp":"2025-09-12T18:01:02.307Z","level":"INFO","message":"::1 - - [12/Sep/2025:18:01:02 +0000] \"GET /api/tokens/wallet/0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0?chain=1 HTTP/1.1\" 200 - \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-12T18:01:02.323Z","level":"INFO","message":"Fetching tokens for wallet: 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0 on chain: 1"}
+{"timestamp":"2025-09-12T18:01:02.324Z","level":"INFO","message":"Cache hit for wallet tokens: 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0 on chain 1"}
+{"timestamp":"2025-09-12T18:01:02.328Z","level":"INFO","message":"Successfully returning 10 tokens with total value $0.00"}
+{"timestamp":"2025-09-12T18:01:02.330Z","level":"INFO","message":"Success response: 200","data":{"message":"Tokens fetched successfully","dataType":"object"}}
+{"timestamp":"2025-09-12T18:01:02.336Z","level":"INFO","message":"::1 - - [12/Sep/2025:18:01:02 +0000] \"GET /api/tokens/wallet/0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0?chain=1 HTTP/1.1\" 200 - \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-12T18:01:51.769Z","level":"INFO","message":"::1 - - [12/Sep/2025:18:01:51 +0000] \"OPTIONS /api/tokens/wallet/0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0?chain=42161 HTTP/1.1\" 200 0 \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-12T18:01:51.775Z","level":"INFO","message":"Fetching tokens for wallet: 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0 on chain: 42161"}
+{"timestamp":"2025-09-12T18:01:51.776Z","level":"INFO","message":"Fetching token balances for wallet: 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0 on chain: 42161"}
+{"timestamp":"2025-09-12T18:01:51.778Z","level":"INFO","message":"🔗 Using chain hex: 0xa4b1 for chain ID: 42161"}
+{"timestamp":"2025-09-12T18:01:51.779Z","level":"INFO","message":"🔄 Making Moralis API call for ALL tokens..."}
+{"timestamp":"2025-09-12T18:01:51.818Z","level":"INFO","message":"::1 - - [12/Sep/2025:18:01:51 +0000] \"OPTIONS /api/tokens/wallet/0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0?chain=42161 HTTP/1.1\" 200 0 \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-12T18:01:51.837Z","level":"INFO","message":"::1 - - [12/Sep/2025:18:01:51 +0000] \"OPTIONS /api/tokens/wallet/0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0?chain=42161 HTTP/1.1\" 200 0 \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-12T18:01:51.840Z","level":"INFO","message":"::1 - - [12/Sep/2025:18:01:51 +0000] \"OPTIONS /api/tokens/wallet/0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0?chain=42161 HTTP/1.1\" 200 0 \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-12T18:01:53.060Z","level":"INFO","message":"✅ Moralis ALL tokens API call successful"}
+{"timestamp":"2025-09-12T18:01:53.061Z","level":"INFO","message":"📊 Found 1 tokens in response"}
+{"timestamp":"2025-09-12T18:01:53.061Z","level":"INFO","message":"🪙 Token 1:","data":{"symbol":"ETH","name":"Ether","balance":"0"}}
+{"timestamp":"2025-09-12T18:01:53.062Z","level":"INFO","message":"📊 Processing 1 tokens from Moralis response"}
+{"timestamp":"2025-09-12T18:01:53.063Z","level":"INFO","message":"🔄 Processing 1 raw tokens from Moralis"}
+{"timestamp":"2025-09-12T18:01:53.066Z","level":"INFO","message":"🔍 Processing token:","data":{"symbol":"ETH","name":"Ether","balance":"0","decimals":18}}
+{"timestamp":"2025-09-12T18:01:53.067Z","level":"INFO","message":"💰 Token ETH parsed balance: 0"}
+{"timestamp":"2025-09-12T18:01:53.068Z","level":"INFO","message":"✅ Including ETH despite low balance (native or popular token)"}
+{"timestamp":"2025-09-12T18:01:53.069Z","level":"INFO","message":"✅ Added native token: ETH - Balance: 0, USD: $0.00"}
+{"timestamp":"2025-09-12T18:01:53.069Z","level":"INFO","message":"✅ Successfully processed 1 tokens with balances"}
+{"timestamp":"2025-09-12T18:01:53.070Z","level":"INFO","message":"💰 Total portfolio value: $0.00"}
+{"timestamp":"2025-09-12T18:01:53.071Z","level":"INFO","message":"📋 Processed Token 1: ETH - Balance: 0, Value: $0.00, Native: true"}
+{"timestamp":"2025-09-12T18:01:53.072Z","level":"INFO","message":"✅ Successfully fetched 1 tokens for wallet 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0"}
+{"timestamp":"2025-09-12T18:01:53.073Z","level":"INFO","message":"Successfully returning 1 tokens with total value $0.00"}
+{"timestamp":"2025-09-12T18:01:53.073Z","level":"INFO","message":"Success response: 200","data":{"message":"Tokens fetched successfully","dataType":"object"}}
+{"timestamp":"2025-09-12T18:01:53.075Z","level":"INFO","message":"::1 - - [12/Sep/2025:18:01:53 +0000] \"GET /api/tokens/wallet/0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0?chain=42161 HTTP/1.1\" 200 536 \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-12T18:01:53.084Z","level":"INFO","message":"Fetching tokens for wallet: 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0 on chain: 42161"}
+{"timestamp":"2025-09-12T18:01:53.086Z","level":"INFO","message":"Cache hit for wallet tokens: 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0 on chain 42161"}
+{"timestamp":"2025-09-12T18:01:53.087Z","level":"INFO","message":"Successfully returning 1 tokens with total value $0.00"}
+{"timestamp":"2025-09-12T18:01:53.087Z","level":"INFO","message":"Success response: 200","data":{"message":"Tokens fetched successfully","dataType":"object"}}
+{"timestamp":"2025-09-12T18:01:53.089Z","level":"INFO","message":"::1 - - [12/Sep/2025:18:01:53 +0000] \"GET /api/tokens/wallet/0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0?chain=42161 HTTP/1.1\" 200 536 \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-12T18:01:53.095Z","level":"INFO","message":"Fetching tokens for wallet: 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0 on chain: 42161"}
+{"timestamp":"2025-09-12T18:01:53.097Z","level":"INFO","message":"Cache hit for wallet tokens: 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0 on chain 42161"}
+{"timestamp":"2025-09-12T18:01:53.097Z","level":"INFO","message":"Successfully returning 1 tokens with total value $0.00"}
+{"timestamp":"2025-09-12T18:01:53.101Z","level":"INFO","message":"Success response: 200","data":{"message":"Tokens fetched successfully","dataType":"object"}}
+{"timestamp":"2025-09-12T18:01:53.102Z","level":"INFO","message":"::1 - - [12/Sep/2025:18:01:53 +0000] \"GET /api/tokens/wallet/0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0?chain=42161 HTTP/1.1\" 200 536 \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-12T18:01:53.109Z","level":"INFO","message":"Fetching tokens for wallet: 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0 on chain: 42161"}
+{"timestamp":"2025-09-12T18:01:53.110Z","level":"INFO","message":"Cache hit for wallet tokens: 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0 on chain 42161"}
+{"timestamp":"2025-09-12T18:01:53.111Z","level":"INFO","message":"Successfully returning 1 tokens with total value $0.00"}
+{"timestamp":"2025-09-12T18:01:53.111Z","level":"INFO","message":"Success response: 200","data":{"message":"Tokens fetched successfully","dataType":"object"}}
+{"timestamp":"2025-09-12T18:01:53.121Z","level":"INFO","message":"::1 - - [12/Sep/2025:18:01:53 +0000] \"GET /api/tokens/wallet/0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0?chain=42161 HTTP/1.1\" 200 536 \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-12T18:01:56.699Z","level":"INFO","message":"::1 - - [12/Sep/2025:18:01:56 +0000] \"OPTIONS /api/tokens/wallet/0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0?chain=56 HTTP/1.1\" 200 0 \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-12T18:01:56.711Z","level":"INFO","message":"::1 - - [12/Sep/2025:18:01:56 +0000] \"OPTIONS /api/tokens/wallet/0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0?chain=56 HTTP/1.1\" 200 0 \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-12T18:01:56.740Z","level":"INFO","message":"::1 - - [12/Sep/2025:18:01:56 +0000] \"OPTIONS /api/tokens/wallet/0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0?chain=56 HTTP/1.1\" 200 0 \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-12T18:01:56.748Z","level":"INFO","message":"Fetching tokens for wallet: 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0 on chain: 56"}
+{"timestamp":"2025-09-12T18:01:56.748Z","level":"INFO","message":"Fetching token balances for wallet: 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0 on chain: 56"}
+{"timestamp":"2025-09-12T18:01:56.749Z","level":"INFO","message":"🔗 Using chain hex: 0x38 for chain ID: 56"}
+{"timestamp":"2025-09-12T18:01:56.749Z","level":"INFO","message":"🔄 Making Moralis API call for ALL tokens..."}
+{"timestamp":"2025-09-12T18:01:57.611Z","level":"INFO","message":"✅ Moralis ALL tokens API call successful"}
+{"timestamp":"2025-09-12T18:01:57.611Z","level":"INFO","message":"📊 Found 1 tokens in response"}
+{"timestamp":"2025-09-12T18:01:57.612Z","level":"INFO","message":"🪙 Token 1:","data":{"symbol":"BNB","name":"Binance Chain Native Token","balance":"0"}}
+{"timestamp":"2025-09-12T18:01:57.612Z","level":"INFO","message":"📊 Processing 1 tokens from Moralis response"}
+{"timestamp":"2025-09-12T18:01:57.614Z","level":"INFO","message":"🔄 Processing 1 raw tokens from Moralis"}
+{"timestamp":"2025-09-12T18:01:57.614Z","level":"INFO","message":"🔍 Processing token:","data":{"symbol":"BNB","name":"Binance Chain Native Token","balance":"0","decimals":18}}
+{"timestamp":"2025-09-12T18:01:57.615Z","level":"INFO","message":"💰 Token BNB parsed balance: 0"}
+{"timestamp":"2025-09-12T18:01:57.615Z","level":"INFO","message":"✅ Including BNB despite low balance (native or popular token)"}
+{"timestamp":"2025-09-12T18:01:57.615Z","level":"INFO","message":"✅ Added native token: BNB - Balance: 0, USD: $0.00"}
+{"timestamp":"2025-09-12T18:01:57.616Z","level":"INFO","message":"✅ Successfully processed 1 tokens with balances"}
+{"timestamp":"2025-09-12T18:01:57.616Z","level":"INFO","message":"💰 Total portfolio value: $0.00"}
+{"timestamp":"2025-09-12T18:01:57.617Z","level":"INFO","message":"📋 Processed Token 1: BNB - Balance: 0, Value: $0.00, Native: true"}
+{"timestamp":"2025-09-12T18:01:57.617Z","level":"INFO","message":"✅ Successfully fetched 1 tokens for wallet 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0"}
+{"timestamp":"2025-09-12T18:01:57.618Z","level":"INFO","message":"Successfully returning 1 tokens with total value $0.00"}
+{"timestamp":"2025-09-12T18:01:57.618Z","level":"INFO","message":"Success response: 200","data":{"message":"Tokens fetched successfully","dataType":"object"}}
+{"timestamp":"2025-09-12T18:01:57.619Z","level":"INFO","message":"::1 - - [12/Sep/2025:18:01:57 +0000] \"GET /api/tokens/wallet/0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0?chain=56 HTTP/1.1\" 200 551 \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-12T18:01:57.624Z","level":"INFO","message":"Fetching tokens for wallet: 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0 on chain: 56"}
+{"timestamp":"2025-09-12T18:01:57.625Z","level":"INFO","message":"Cache hit for wallet tokens: 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0 on chain 56"}
+{"timestamp":"2025-09-12T18:01:57.625Z","level":"INFO","message":"Successfully returning 1 tokens with total value $0.00"}
+{"timestamp":"2025-09-12T18:01:57.628Z","level":"INFO","message":"Success response: 200","data":{"message":"Tokens fetched successfully","dataType":"object"}}
+{"timestamp":"2025-09-12T18:01:57.630Z","level":"INFO","message":"::1 - - [12/Sep/2025:18:01:57 +0000] \"GET /api/tokens/wallet/0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0?chain=56 HTTP/1.1\" 200 551 \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-12T18:01:57.638Z","level":"INFO","message":"Fetching tokens for wallet: 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0 on chain: 56"}
+{"timestamp":"2025-09-12T18:01:57.639Z","level":"INFO","message":"Cache hit for wallet tokens: 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0 on chain 56"}
+{"timestamp":"2025-09-12T18:01:57.639Z","level":"INFO","message":"Successfully returning 1 tokens with total value $0.00"}
+{"timestamp":"2025-09-12T18:01:57.639Z","level":"INFO","message":"Success response: 200","data":{"message":"Tokens fetched successfully","dataType":"object"}}
+{"timestamp":"2025-09-12T18:01:57.643Z","level":"INFO","message":"::1 - - [12/Sep/2025:18:01:57 +0000] \"GET /api/tokens/wallet/0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0?chain=56 HTTP/1.1\" 200 551 \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-12T18:01:57.656Z","level":"INFO","message":"Fetching tokens for wallet: 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0 on chain: 56"}
+{"timestamp":"2025-09-12T18:01:57.657Z","level":"INFO","message":"Cache hit for wallet tokens: 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0 on chain 56"}
+{"timestamp":"2025-09-12T18:01:57.658Z","level":"INFO","message":"Successfully returning 1 tokens with total value $0.00"}
+{"timestamp":"2025-09-12T18:01:57.658Z","level":"INFO","message":"Success response: 200","data":{"message":"Tokens fetched successfully","dataType":"object"}}
+{"timestamp":"2025-09-12T18:01:57.660Z","level":"INFO","message":"::1 - - [12/Sep/2025:18:01:57 +0000] \"GET /api/tokens/wallet/0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0?chain=56 HTTP/1.1\" 200 551 \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-12T18:02:00.067Z","level":"INFO","message":"Fetching tokens for wallet: 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0 on chain: 1"}
+{"timestamp":"2025-09-12T18:02:00.068Z","level":"INFO","message":"Cache hit for wallet tokens: 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0 on chain 1"}
+{"timestamp":"2025-09-12T18:02:00.069Z","level":"INFO","message":"Successfully returning 10 tokens with total value $0.00"}
+{"timestamp":"2025-09-12T18:02:00.069Z","level":"INFO","message":"Success response: 200","data":{"message":"Tokens fetched successfully","dataType":"object"}}
+{"timestamp":"2025-09-12T18:02:00.073Z","level":"INFO","message":"::1 - - [12/Sep/2025:18:02:00 +0000] \"GET /api/tokens/wallet/0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0?chain=1 HTTP/1.1\" 200 - \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-12T18:02:00.078Z","level":"INFO","message":"Fetching tokens for wallet: 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0 on chain: 1"}
+{"timestamp":"2025-09-12T18:02:00.079Z","level":"INFO","message":"Cache hit for wallet tokens: 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0 on chain 1"}
+{"timestamp":"2025-09-12T18:02:00.090Z","level":"INFO","message":"Successfully returning 10 tokens with total value $0.00"}
+{"timestamp":"2025-09-12T18:02:00.103Z","level":"INFO","message":"Success response: 200","data":{"message":"Tokens fetched successfully","dataType":"object"}}
+{"timestamp":"2025-09-12T18:02:00.112Z","level":"INFO","message":"::1 - - [12/Sep/2025:18:02:00 +0000] \"GET /api/tokens/wallet/0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0?chain=1 HTTP/1.1\" 200 - \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-12T18:02:00.124Z","level":"INFO","message":"Fetching tokens for wallet: 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0 on chain: 1"}
+{"timestamp":"2025-09-12T18:02:00.125Z","level":"INFO","message":"Cache hit for wallet tokens: 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0 on chain 1"}
+{"timestamp":"2025-09-12T18:02:00.125Z","level":"INFO","message":"Successfully returning 10 tokens with total value $0.00"}
+{"timestamp":"2025-09-12T18:02:00.129Z","level":"INFO","message":"Success response: 200","data":{"message":"Tokens fetched successfully","dataType":"object"}}
+{"timestamp":"2025-09-12T18:02:00.135Z","level":"INFO","message":"::1 - - [12/Sep/2025:18:02:00 +0000] \"GET /api/tokens/wallet/0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0?chain=1 HTTP/1.1\" 200 - \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-12T18:02:00.144Z","level":"INFO","message":"Fetching tokens for wallet: 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0 on chain: 1"}
+{"timestamp":"2025-09-12T18:02:00.146Z","level":"INFO","message":"Cache hit for wallet tokens: 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0 on chain 1"}
+{"timestamp":"2025-09-12T18:02:00.151Z","level":"INFO","message":"Successfully returning 10 tokens with total value $0.00"}
+{"timestamp":"2025-09-12T18:02:00.151Z","level":"INFO","message":"Success response: 200","data":{"message":"Tokens fetched successfully","dataType":"object"}}
+{"timestamp":"2025-09-12T18:02:00.158Z","level":"INFO","message":"::1 - - [12/Sep/2025:18:02:00 +0000] \"GET /api/tokens/wallet/0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0?chain=1 HTTP/1.1\" 200 - \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-12T18:03:20.992Z","level":"INFO","message":"Fetching tokens for wallet: 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0 on chain: 1"}
+{"timestamp":"2025-09-12T18:03:20.993Z","level":"INFO","message":"Cache hit for wallet tokens: 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0 on chain 1"}
+{"timestamp":"2025-09-12T18:03:20.993Z","level":"INFO","message":"Successfully returning 10 tokens with total value $0.00"}
+{"timestamp":"2025-09-12T18:03:20.994Z","level":"INFO","message":"Success response: 200","data":{"message":"Tokens fetched successfully","dataType":"object"}}
+{"timestamp":"2025-09-12T18:03:20.998Z","level":"INFO","message":"::1 - - [12/Sep/2025:18:03:20 +0000] \"GET /api/tokens/wallet/0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0?chain=1 HTTP/1.1\" 200 - \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-12T18:03:21.006Z","level":"INFO","message":"Fetching tokens for wallet: 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0 on chain: 1"}
+{"timestamp":"2025-09-12T18:03:21.007Z","level":"INFO","message":"Cache hit for wallet tokens: 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0 on chain 1"}
+{"timestamp":"2025-09-12T18:03:21.008Z","level":"INFO","message":"Successfully returning 10 tokens with total value $0.00"}
+{"timestamp":"2025-09-12T18:03:21.008Z","level":"INFO","message":"Success response: 200","data":{"message":"Tokens fetched successfully","dataType":"object"}}
+{"timestamp":"2025-09-12T18:03:21.015Z","level":"INFO","message":"::1 - - [12/Sep/2025:18:03:21 +0000] \"GET /api/tokens/wallet/0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0?chain=1 HTTP/1.1\" 200 - \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-12T18:03:30.293Z","level":"INFO","message":"Fetching tokens for wallet: 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0 on chain: 1"}
+{"timestamp":"2025-09-12T18:03:30.294Z","level":"INFO","message":"Cache hit for wallet tokens: 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0 on chain 1"}
+{"timestamp":"2025-09-12T18:03:30.296Z","level":"INFO","message":"Successfully returning 10 tokens with total value $0.00"}
+{"timestamp":"2025-09-12T18:03:30.296Z","level":"INFO","message":"Success response: 200","data":{"message":"Tokens fetched successfully","dataType":"object"}}
+{"timestamp":"2025-09-12T18:03:30.299Z","level":"INFO","message":"::1 - - [12/Sep/2025:18:03:30 +0000] \"GET /api/tokens/wallet/0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0?chain=1 HTTP/1.1\" 200 - \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-12T18:03:30.303Z","level":"INFO","message":"Fetching tokens for wallet: 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0 on chain: 1"}
+{"timestamp":"2025-09-12T18:03:30.304Z","level":"INFO","message":"Cache hit for wallet tokens: 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0 on chain 1"}
+{"timestamp":"2025-09-12T18:03:30.305Z","level":"INFO","message":"Successfully returning 10 tokens with total value $0.00"}
+{"timestamp":"2025-09-12T18:03:30.305Z","level":"INFO","message":"Success response: 200","data":{"message":"Tokens fetched successfully","dataType":"object"}}
+{"timestamp":"2025-09-12T18:03:30.307Z","level":"INFO","message":"::1 - - [12/Sep/2025:18:03:30 +0000] \"GET /api/tokens/wallet/0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0?chain=1 HTTP/1.1\" 200 - \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-12T18:03:30.310Z","level":"INFO","message":"Fetching tokens for wallet: 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0 on chain: 1"}
+{"timestamp":"2025-09-12T18:03:30.311Z","level":"INFO","message":"Cache hit for wallet tokens: 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0 on chain 1"}
+{"timestamp":"2025-09-12T18:03:30.312Z","level":"INFO","message":"Successfully returning 10 tokens with total value $0.00"}
+{"timestamp":"2025-09-12T18:03:30.312Z","level":"INFO","message":"Success response: 200","data":{"message":"Tokens fetched successfully","dataType":"object"}}
+{"timestamp":"2025-09-12T18:03:30.314Z","level":"INFO","message":"::1 - - [12/Sep/2025:18:03:30 +0000] \"GET /api/tokens/wallet/0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0?chain=1 HTTP/1.1\" 200 - \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-12T18:03:30.318Z","level":"INFO","message":"Fetching tokens for wallet: 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0 on chain: 1"}
+{"timestamp":"2025-09-12T18:03:30.319Z","level":"INFO","message":"Cache hit for wallet tokens: 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0 on chain 1"}
+{"timestamp":"2025-09-12T18:03:30.320Z","level":"INFO","message":"Successfully returning 10 tokens with total value $0.00"}
+{"timestamp":"2025-09-12T18:03:30.320Z","level":"INFO","message":"Success response: 200","data":{"message":"Tokens fetched successfully","dataType":"object"}}
+{"timestamp":"2025-09-12T18:03:30.324Z","level":"INFO","message":"::1 - - [12/Sep/2025:18:03:30 +0000] \"GET /api/tokens/wallet/0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0?chain=1 HTTP/1.1\" 200 - \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-12T18:04:15.579Z","level":"INFO","message":"Fetching tokens for wallet: 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0 on chain: 1"}
+{"timestamp":"2025-09-12T18:04:15.579Z","level":"INFO","message":"Cache hit for wallet tokens: 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0 on chain 1"}
+{"timestamp":"2025-09-12T18:04:15.580Z","level":"INFO","message":"Successfully returning 10 tokens with total value $0.00"}
+{"timestamp":"2025-09-12T18:04:15.580Z","level":"INFO","message":"Success response: 200","data":{"message":"Tokens fetched successfully","dataType":"object"}}
+{"timestamp":"2025-09-12T18:04:15.582Z","level":"INFO","message":"::1 - - [12/Sep/2025:18:04:15 +0000] \"GET /api/tokens/wallet/0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0?chain=1 HTTP/1.1\" 200 - \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-12T18:04:15.585Z","level":"INFO","message":"Fetching tokens for wallet: 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0 on chain: 1"}
+{"timestamp":"2025-09-12T18:04:15.586Z","level":"INFO","message":"Cache hit for wallet tokens: 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0 on chain 1"}
+{"timestamp":"2025-09-12T18:04:15.586Z","level":"INFO","message":"Successfully returning 10 tokens with total value $0.00"}
+{"timestamp":"2025-09-12T18:04:15.587Z","level":"INFO","message":"Success response: 200","data":{"message":"Tokens fetched successfully","dataType":"object"}}
+{"timestamp":"2025-09-12T18:04:15.590Z","level":"INFO","message":"::1 - - [12/Sep/2025:18:04:15 +0000] \"GET /api/tokens/wallet/0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0?chain=1 HTTP/1.1\" 200 - \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-12T18:04:26.371Z","level":"INFO","message":"Fetching tokens for wallet: 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0 on chain: 1"}
+{"timestamp":"2025-09-12T18:04:26.372Z","level":"INFO","message":"Cache hit for wallet tokens: 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0 on chain 1"}
+{"timestamp":"2025-09-12T18:04:26.375Z","level":"INFO","message":"Successfully returning 10 tokens with total value $0.00"}
+{"timestamp":"2025-09-12T18:04:26.379Z","level":"INFO","message":"Success response: 200","data":{"message":"Tokens fetched successfully","dataType":"object"}}
+{"timestamp":"2025-09-12T18:04:26.386Z","level":"INFO","message":"::1 - - [12/Sep/2025:18:04:26 +0000] \"GET /api/tokens/wallet/0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0?chain=1 HTTP/1.1\" 200 - \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-12T18:04:26.396Z","level":"INFO","message":"Fetching tokens for wallet: 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0 on chain: 1"}
+{"timestamp":"2025-09-12T18:04:26.398Z","level":"INFO","message":"Cache hit for wallet tokens: 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0 on chain 1"}
+{"timestamp":"2025-09-12T18:04:26.399Z","level":"INFO","message":"Successfully returning 10 tokens with total value $0.00"}
+{"timestamp":"2025-09-12T18:04:26.400Z","level":"INFO","message":"Success response: 200","data":{"message":"Tokens fetched successfully","dataType":"object"}}
+{"timestamp":"2025-09-12T18:04:26.407Z","level":"INFO","message":"::1 - - [12/Sep/2025:18:04:26 +0000] \"GET /api/tokens/wallet/0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0?chain=1 HTTP/1.1\" 200 - \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-12T18:04:27.526Z","level":"INFO","message":"Fetching tokens for wallet: 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0 on chain: 1"}
+{"timestamp":"2025-09-12T18:04:27.527Z","level":"INFO","message":"Cache hit for wallet tokens: 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0 on chain 1"}
+{"timestamp":"2025-09-12T18:04:27.527Z","level":"INFO","message":"Successfully returning 10 tokens with total value $0.00"}
+{"timestamp":"2025-09-12T18:04:27.528Z","level":"INFO","message":"Success response: 200","data":{"message":"Tokens fetched successfully","dataType":"object"}}
+{"timestamp":"2025-09-12T18:04:27.530Z","level":"INFO","message":"::1 - - [12/Sep/2025:18:04:27 +0000] \"GET /api/tokens/wallet/0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0?chain=1 HTTP/1.1\" 200 - \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-12T18:04:27.536Z","level":"INFO","message":"Fetching tokens for wallet: 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0 on chain: 1"}
+{"timestamp":"2025-09-12T18:04:27.537Z","level":"INFO","message":"Cache hit for wallet tokens: 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0 on chain 1"}
+{"timestamp":"2025-09-12T18:04:27.538Z","level":"INFO","message":"Successfully returning 10 tokens with total value $0.00"}
+{"timestamp":"2025-09-12T18:04:27.539Z","level":"INFO","message":"Success response: 200","data":{"message":"Tokens fetched successfully","dataType":"object"}}
+{"timestamp":"2025-09-12T18:04:27.543Z","level":"INFO","message":"::1 - - [12/Sep/2025:18:04:27 +0000] \"GET /api/tokens/wallet/0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0?chain=1 HTTP/1.1\" 200 - \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}

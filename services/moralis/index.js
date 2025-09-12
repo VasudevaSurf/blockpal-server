@@ -1,4 +1,4 @@
-// services/moralis/index.js - FIXED with hardcoded API key and better debugging
+// services/moralis/index.js - FIXED VERSION with better token processing
 const Moralis = require("moralis").default;
 const NodeCache = require("node-cache");
 const { logger } = require("../../utils/logger");
@@ -13,7 +13,6 @@ const cache = new NodeCache({
 class MoralisService {
   constructor() {
     this.initialized = false;
-    // Hardcode your API key directly here as fallback
     this.apiKey =
       process.env.MORALIS_API_KEY ||
       "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6IjcxN2EyZTI3LWM1YjItNDRlMC05MGE3LWRjNGFiMGEzOTliYyIsIm9yZ0lkIjoiNDY4MzYzIiwidXNlcklkIjoiNDgxODIwIiwidHlwZUlkIjoiNTcwMjhhMzQtMzc0OC00NWRlLTg4NTktNjlmNzU5ODEzNTM2IiwidHlwZSI6IlBST0pFQ1QiLCJpYXQiOjE3NTY2MjE2NjAsImV4cCI6NDkxMjM4MTY2MH0.H2IkylE8uOgFiZodaezRSpN9nYE-D0GnF0SoMbbXCFQ";
@@ -69,7 +68,7 @@ class MoralisService {
 
       logger.info(`🔗 Using chain hex: ${chainHex} for chain ID: ${chainId}`);
 
-      // First, get ALL tokens without specifying token addresses
+      // Get all tokens with better error handling
       logger.info("🔄 Making Moralis API call for ALL tokens...");
 
       let allTokensResponse;
@@ -81,99 +80,117 @@ class MoralisService {
           });
 
         logger.info("✅ Moralis ALL tokens API call successful");
-        logger.info(
-          "📋 Full Raw Response:",
-          JSON.stringify(allTokensResponse, null, 2)
-        );
 
-        if (allTokensResponse.raw) {
-          logger.info(
-            "📋 Raw Data:",
-            JSON.stringify(allTokensResponse.raw, null, 2)
-          );
+        // Better response logging
+        if (allTokensResponse?.result || allTokensResponse?.raw?.result) {
+          const tokenResults =
+            allTokensResponse.result ||
+            allTokensResponse.raw.result ||
+            allTokensResponse.raw ||
+            [];
+          logger.info(`📊 Found ${tokenResults.length} tokens in response`);
 
-          if (allTokensResponse.raw.result) {
-            logger.info(
-              `📊 Found ${allTokensResponse.raw.result.length} tokens in raw result`
-            );
-
-            // Log first few tokens for debugging
-            allTokensResponse.raw.result.slice(0, 3).forEach((token, index) => {
-              logger.info(`🪙 Token ${index + 1}:`, {
-                symbol: token.symbol,
-                name: token.name,
-                balance: token.balance,
-                balance_formatted: token.balance_formatted,
-                usd_value: token.usd_value,
-                native_token: token.native_token,
-                token_address: token.token_address,
-              });
+          // Log first few tokens for debugging
+          tokenResults.slice(0, 3).forEach((token, index) => {
+            logger.info(`🪙 Token ${index + 1}:`, {
+              symbol: token.symbol,
+              name: token.name,
+              balance: token.balance,
+              balance_formatted: token.balance_formatted,
+              usd_value: token.usd_value,
+              usd_price: token.usd_price,
+              native_token: token.native_token,
+              token_address: token.token_address,
             });
-          } else {
-            logger.warn("⚠️ No 'result' field in raw response");
-          }
+          });
         } else {
-          logger.warn("⚠️ No 'raw' field in response");
+          logger.warn("⚠️ No token results found in response structure");
+          logger.info(
+            "📋 Full response structure:",
+            JSON.stringify(allTokensResponse, null, 2)
+          );
         }
       } catch (moralisError) {
-        logger.error("❌ Moralis ALL tokens API call failed:", {
+        logger.error("❌ Moralis API call failed:", {
           message: moralisError.message,
           code: moralisError.code,
           details: moralisError.details,
-          stack: moralisError.stack,
         });
         throw moralisError;
       }
 
-      // Process the response
-      let allTokens = allTokensResponse.raw?.result || [];
+      // FIXED: Better response parsing
+      let allTokens = [];
+
+      // Try multiple response structures
+      if (allTokensResponse?.result) {
+        allTokens = allTokensResponse.result;
+      } else if (allTokensResponse?.raw?.result) {
+        allTokens = allTokensResponse.raw.result;
+      } else if (
+        allTokensResponse?.raw &&
+        Array.isArray(allTokensResponse.raw)
+      ) {
+        allTokens = allTokensResponse.raw;
+      } else if (Array.isArray(allTokensResponse)) {
+        allTokens = allTokensResponse;
+      } else {
+        logger.warn("⚠️ Could not parse token results from response");
+        allTokens = [];
+      }
+
       logger.info(
         `📊 Processing ${allTokens.length} tokens from Moralis response`
       );
 
       if (allTokens.length === 0) {
-        logger.warn(
-          "⚠️ No tokens returned from Moralis API - this might indicate:"
-        );
+        logger.warn("⚠️ No tokens returned - this might indicate:");
         logger.warn("   1. Empty wallet");
-        logger.warn("   2. API key issues");
-        logger.warn("   3. Invalid wallet address");
-        logger.warn("   4. Network/chain issues");
+        logger.warn("   2. All tokens have zero balance");
+        logger.warn("   3. API response parsing issue");
 
-        // Try a test call with a known wallet that has tokens
-        logger.info("🧪 Testing with known wallet that has tokens...");
-        try {
-          const testResponse =
-            await Moralis.EvmApi.wallets.getWalletTokenBalancesPrice({
-              chain: chainHex,
-              address: "0xcB1C1FdE09f811B294172696404e88E658659905", // Known wallet with tokens
-            });
+        // Still process what we have - even if it's empty
+        const tokens = await this.processTokenBalances([], chainId);
 
-          logger.info(
-            `🧪 Test wallet returned ${
-              testResponse.raw?.result?.length || 0
-            } tokens`
-          );
-          if (testResponse.raw?.result?.length > 0) {
-            logger.info("✅ API is working - your wallet might be empty");
-          } else {
-            logger.warn(
-              "❌ Even test wallet returns no tokens - API issue suspected"
-            );
+        // For wallets with zero balance, still return native token with 0 balance
+        if (tokens.length === 0) {
+          const chainInfo = chainConfig[chainId];
+          if (chainInfo) {
+            const nativeToken = {
+              id: `native-${chainId}`,
+              symbol: chainInfo.symbol,
+              name: chainInfo.name,
+              contractAddress: "native",
+              decimals: 18,
+              balance: 0,
+              balanceWei: "0",
+              value: 0,
+              change24h: 0,
+              price: 0,
+              isNative: true,
+              logoUrl: this.getNativeTokenLogo(chainInfo.symbol),
+              isPopular: true,
+              possibleSpam: false,
+              verifiedContract: true,
+            };
+            tokens.push(nativeToken);
+            logger.info("✅ Added zero-balance native token for display");
           }
-        } catch (testError) {
-          logger.error("❌ Test call also failed:", testError.message);
         }
+
+        // Cache even empty results
+        cache.set(cacheKey, tokens);
+        return tokens;
       }
 
-      // Process the combined response
+      // Process the tokens
       const tokens = await this.processTokenBalances(allTokens, chainId);
 
       // Cache the result
       cache.set(cacheKey, tokens);
 
       logger.info(
-        `Successfully fetched ${tokens.length} tokens for wallet ${walletAddress}`
+        `✅ Successfully fetched ${tokens.length} tokens for wallet ${walletAddress}`
       );
       return tokens;
     } catch (error) {
@@ -183,17 +200,21 @@ class MoralisService {
         error: error.message,
         stack: error.stack,
       });
-      throw error;
+
+      // Return empty array instead of throwing to prevent UI breakage
+      logger.warn("🔄 Returning empty token array due to error");
+      return [];
     }
   }
 
   /**
-   * Process token balances from Moralis API response
+   * FIXED: Process token balances with corrected logic
    */
   async processTokenBalances(tokenData, chainId) {
     const chainInfo = chainConfig[chainId];
     if (!chainInfo) {
-      throw new Error(`Chain ${chainId} not supported`);
+      logger.error(`Chain ${chainId} not supported`);
+      return [];
     }
 
     logger.info(`🔄 Processing ${tokenData.length} raw tokens from Moralis`);
@@ -209,72 +230,131 @@ class MoralisService {
           balance: token.balance,
           balance_formatted: token.balance_formatted,
           usd_value: token.usd_value,
+          usd_price: token.usd_price,
           native_token: token.native_token,
           possible_spam: token.possible_spam,
+          decimals: token.decimals,
         });
 
-        // Get balance value
-        const balance = parseFloat(token.balance_formatted || "0");
-        logger.info(`💰 Token ${token.symbol} balance: ${balance}`);
-
-        // Skip tokens with zero balance
-        if (balance <= 0) {
-          logger.info(
-            `⏭️ Skipping ${token.symbol} - zero balance (${balance})`
-          );
-          continue;
+        // FIXED: Better balance parsing
+        let balance = 0;
+        if (token.balance_formatted) {
+          balance = parseFloat(token.balance_formatted);
+        } else if (token.balance) {
+          // Try to parse raw balance
+          const rawBalance = token.balance.toString();
+          if (token.decimals) {
+            balance =
+              parseFloat(rawBalance) / Math.pow(10, parseInt(token.decimals));
+          } else {
+            balance = parseFloat(rawBalance) / 1e18; // Default to 18 decimals
+          }
         }
 
-        // Skip possible spam tokens (unless they're popular)
-        if (token.possible_spam) {
+        logger.info(`💰 Token ${token.symbol} parsed balance: ${balance}`);
+
+        // FIXED: Better token identification
+        const isNativeToken =
+          token.native_token ||
+          token.token_address ===
+            "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE" ||
+          token.token_address ===
+            "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee" ||
+          !token.token_address; // Native tokens might not have token_address
+
+        // FIXED: More lenient filtering - include more tokens
+        if (balance <= 0) {
+          // Only skip if it's not native AND not a popular token AND has truly zero balance
+          if (!isNativeToken) {
+            const isPopularToken = chainInfo.popularTokens.find(
+              (pt) =>
+                pt.address.toLowerCase() === token.token_address?.toLowerCase()
+            );
+
+            if (!isPopularToken && balance === 0) {
+              logger.info(
+                `⏭️ Skipping ${token.symbol} - zero balance and not popular`
+              );
+              continue;
+            }
+          }
+          logger.info(
+            `✅ Including ${token.symbol} despite low balance (native or popular token)`
+          );
+        }
+
+        // FIXED: Less aggressive spam filtering - only skip obvious spam
+        if (token.possible_spam && balance < 0.001 && !isNativeToken) {
           const isPopularToken = chainInfo.popularTokens.find(
             (pt) =>
               pt.address.toLowerCase() === token.token_address?.toLowerCase()
           );
 
           if (!isPopularToken) {
-            logger.info(
-              `⏭️ Skipping ${token.symbol} - marked as possible spam`
-            );
+            logger.info(`⏭️ Skipping ${token.symbol} - low-value spam token`);
             continue;
           }
         }
 
-        // Handle native token
+        // FIXED: Better price and value parsing
+        let price = 0;
+        let value = 0;
+        let change24h = 0;
+
+        // Parse price and value
+        if (token.usd_price !== null && token.usd_price !== undefined) {
+          price = parseFloat(token.usd_price) || 0;
+          value = balance * price;
+        }
+
+        if (token.usd_value !== null && token.usd_value !== undefined) {
+          value = parseFloat(token.usd_value) || value;
+          if (balance > 0 && value > 0) {
+            price = value / balance;
+          }
+        }
+
         if (
-          token.native_token ||
-          token.token_address === "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
+          token.usd_price_24hr_percent_change !== null &&
+          token.usd_price_24hr_percent_change !== undefined
         ) {
+          change24h = parseFloat(token.usd_price_24hr_percent_change) || 0;
+        }
+
+        // Handle native token
+        if (isNativeToken) {
           const processedToken = {
             id: `native-${chainId}`,
             symbol: token.symbol || chainInfo.symbol,
             name: token.name || chainInfo.name,
             contractAddress: "native",
-            decimals: 18,
+            decimals: parseInt(token.decimals) || 18,
             balance: balance,
             balanceWei: token.balance || "0",
-            value: parseFloat(token.usd_value || "0"),
-            change24h: parseFloat(token.usd_price_24hr_percent_change || "0"),
-            price: parseFloat(token.usd_price || "0"),
+            value: value,
+            change24h: change24h,
+            price: price,
             isNative: true,
             logoUrl:
               token.logo ||
               token.thumbnail ||
               this.getNativeTokenLogo(chainInfo.symbol),
+            isPopular: true,
+            possibleSpam: false,
+            verifiedContract: token.verified_contract !== false,
           };
 
           processedTokens.push(processedToken);
           logger.info(
             `✅ Added native token: ${
               token.symbol
-            } - Balance: ${balance}, USD: $${token.usd_value || "0"}`
+            } - Balance: ${balance}, USD: $${value.toFixed(2)}`
           );
           continue;
         }
 
         // Handle ERC-20 tokens
         if (token.token_address) {
-          // Check if token is in our popular tokens list (case-insensitive)
           const popularToken = chainInfo.popularTokens.find(
             (pt) =>
               pt.address.toLowerCase() === token.token_address.toLowerCase()
@@ -295,59 +375,144 @@ class MoralisService {
             decimals,
             balance: balance,
             balanceWei: token.balance || "0",
-            value: parseFloat(token.usd_value || "0"),
-            change24h: parseFloat(token.usd_price_24hr_percent_change || "0"),
-            price: parseFloat(token.usd_price || "0"),
+            value: value,
+            change24h: change24h,
+            price: price,
             isNative: false,
             logoUrl:
               token.logo || token.thumbnail || this.getTokenLogo(token.symbol),
             isPopular: !!popularToken,
             possibleSpam: token.possible_spam || false,
-            verifiedContract: token.verified_contract || false,
+            verifiedContract: token.verified_contract !== false,
           };
 
           processedTokens.push(processedToken);
           logger.info(
             `✅ Added ERC-20 token: ${
               token.symbol
-            } - Balance: ${balance}, USD: $${token.usd_value || "0"}`
+            } - Balance: ${balance}, USD: $${value.toFixed(2)}`
+          );
+        } else {
+          logger.warn(
+            `⚠️ Token ${token.symbol} has no contract address, treating as native`
+          );
+
+          // Handle tokens without contract address as native-like
+          const processedToken = {
+            id: `unknown-${token.symbol}-${chainId}`,
+            symbol: token.symbol || "UNKNOWN",
+            name: token.name || "Unknown Token",
+            contractAddress: "unknown",
+            decimals: parseInt(token.decimals) || 18,
+            balance: balance,
+            balanceWei: token.balance || "0",
+            value: value,
+            change24h: change24h,
+            price: price,
+            isNative: false,
+            logoUrl:
+              token.logo || token.thumbnail || this.getTokenLogo(token.symbol),
+            isPopular: false,
+            possibleSpam: token.possible_spam || false,
+            verifiedContract: token.verified_contract !== false,
+          };
+
+          processedTokens.push(processedToken);
+          logger.info(
+            `✅ Added unknown token: ${
+              token.symbol
+            } - Balance: ${balance}, USD: $${value.toFixed(2)}`
           );
         }
       } catch (error) {
         logger.warn(
-          `⚠️ Error processing token ${token.token_address}:`,
+          `⚠️ Error processing token ${token.token_address || token.symbol}:`,
           error.message
         );
         continue;
       }
     }
 
-    // Sort by USD value descending
-    processedTokens.sort((a, b) => b.value - a.value);
+    // Sort by USD value descending, then by balance descending
+    processedTokens.sort((a, b) => {
+      if (b.value !== a.value) {
+        return b.value - a.value;
+      }
+      return b.balance - a.balance;
+    });
+
+    // Calculate total value
+    const totalValue = processedTokens.reduce(
+      (sum, t) => sum + (t.value || 0),
+      0
+    );
 
     logger.info(
       `✅ Successfully processed ${processedTokens.length} tokens with balances`
     );
-
-    // Log summary
-    const totalValue = processedTokens.reduce((sum, t) => sum + t.value, 0);
     logger.info(`💰 Total portfolio value: $${totalValue.toFixed(2)}`);
+
+    // Log each processed token for debugging
+    processedTokens.forEach((token, index) => {
+      logger.info(
+        `📋 Processed Token ${index + 1}: ${token.symbol} - Balance: ${
+          token.balance
+        }, Value: $${token.value.toFixed(2)}, Native: ${token.isNative}`
+      );
+    });
 
     return processedTokens;
   }
 
   /**
-   * Get chain hex from decimal ID
+   * FIXED: Get native balance separately
    */
+  async getNativeBalance(walletAddress, chainId) {
+    try {
+      await this.initialize();
+
+      const chainHex = this.getChainHex(chainId);
+      if (!chainHex) {
+        throw new Error(`Unsupported chain ID: ${chainId}`);
+      }
+
+      logger.info(
+        `💎 Fetching native balance for ${walletAddress} on chain ${chainId}`
+      );
+
+      const response = await Moralis.EvmApi.balance.getNativeBalance({
+        chain: chainHex,
+        address: walletAddress,
+      });
+
+      const balanceWei = response.result?.balance || "0";
+      const balanceFormatted = parseFloat(balanceWei) / 1e18;
+
+      logger.info(
+        `✅ Native balance: ${balanceFormatted} ${
+          chainConfig[chainId]?.symbol || "ETH"
+        }`
+      );
+
+      return {
+        balance: balanceFormatted,
+        balanceWei: balanceWei,
+      };
+    } catch (error) {
+      logger.error("Error fetching native balance:", error);
+      return {
+        balance: 0,
+        balanceWei: "0",
+      };
+    }
+  }
+
   getChainHex(chainId) {
     const chainIdNum = parseInt(chainId);
     const chainInfo = chainConfig[chainIdNum];
     return chainInfo ? chainInfo.chainId : null;
   }
 
-  /**
-   * Get native token logo URL
-   */
   getNativeTokenLogo(symbol) {
     const logos = {
       ETH: "https://cdn.moralis.io/eth/0x.png",
@@ -359,16 +524,10 @@ class MoralisService {
     return logos[symbol] || "https://cdn.moralis.io/eth/0x.png";
   }
 
-  /**
-   * Get token logo URL
-   */
   getTokenLogo(symbol) {
     return `https://tokens.1inch.io/generic.png`;
   }
 
-  /**
-   * Get supported chains
-   */
   getSupportedChains() {
     return Object.keys(chainConfig).map((chainId) => ({
       chainId: parseInt(chainId),
@@ -378,17 +537,11 @@ class MoralisService {
     }));
   }
 
-  /**
-   * Get popular tokens for a chain
-   */
   getPopularTokens(chainId) {
     const chainInfo = chainConfig[chainId];
     return chainInfo ? chainInfo.popularTokens : [];
   }
 
-  /**
-   * Clear cache for a wallet
-   */
   clearWalletCache(walletAddress) {
     const keys = cache.keys();
     const walletKeys = keys.filter((key) => key.includes(walletAddress));
@@ -400,9 +553,6 @@ class MoralisService {
     );
   }
 
-  /**
-   * Get cache statistics
-   */
   getCacheStats() {
     return {
       keys: cache.keys().length,
@@ -410,50 +560,6 @@ class MoralisService {
       misses: cache.getStats().misses,
       ttl: cache.options.stdTTL,
     };
-  }
-
-  /**
-   * Test method to debug Moralis API calls
-   */
-  async testMoralisCall(walletAddress, chainId) {
-    try {
-      await this.initialize();
-
-      const chainHex = this.getChainHex(chainId);
-
-      logger.info("🧪 Testing Moralis API call with parameters:", {
-        chain: chainHex,
-        address: walletAddress,
-        apiKey: this.apiKey.substring(0, 20) + "...",
-      });
-
-      // Test call without token addresses (gets all tokens)
-      const allTokensResponse =
-        await Moralis.EvmApi.wallets.getWalletTokenBalancesPrice({
-          chain: chainHex,
-          address: walletAddress,
-        });
-
-      logger.info(
-        "🧪 Raw test response:",
-        JSON.stringify(allTokensResponse.raw, null, 2)
-      );
-
-      return {
-        allTokens: {
-          count: allTokensResponse.raw.result?.length || 0,
-          result: allTokensResponse.raw.result?.slice(0, 3), // First 3 for debug
-          fullRaw: allTokensResponse.raw,
-        },
-      };
-    } catch (error) {
-      logger.error("🧪 Moralis test call failed:", {
-        message: error.message,
-        code: error.code,
-        details: error.details,
-      });
-      throw error;
-    }
   }
 }
 
