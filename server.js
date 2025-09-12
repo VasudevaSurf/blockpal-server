@@ -32,8 +32,19 @@ app.use(
   })
 );
 
-// CORS middleware
+// CORS middleware - MUST BE BEFORE ROUTES
 app.use(corsMiddleware);
+
+// Add request logging middleware
+app.use((req, res, next) => {
+  console.log(`🌐 ${req.method} ${req.path} - Origin: ${req.get("origin")}`);
+  console.log(`🔧 Headers:`, {
+    origin: req.get("origin"),
+    "content-type": req.get("content-type"),
+    "user-agent": req.get("user-agent")?.substring(0, 50) + "...",
+  });
+  next();
+});
 
 // Rate limiting
 const rateLimit = require("express-rate-limit");
@@ -48,6 +59,7 @@ app.use(limiter);
 
 // Health check endpoint
 app.get("/health", (req, res) => {
+  console.log("🏥 Health check requested");
   res.json({
     status: "healthy",
     timestamp: new Date().toISOString(),
@@ -58,7 +70,14 @@ app.get("/health", (req, res) => {
 });
 
 // Service routes
-app.use("/api/wallet", walletConnectService);
+app.use(
+  "/api/wallet",
+  (req, res, next) => {
+    console.log(`🔌 Wallet API Request: ${req.method} ${req.path}`);
+    next();
+  },
+  walletConnectService
+);
 
 // WebSocket handling for real-time updates
 wss.on("connection", (ws, req) => {
@@ -112,16 +131,28 @@ app.use(errorHandler);
 
 // 404 handler
 app.use("*", (req, res) => {
-  res.status(404).json({ error: "Route not found" });
+  console.log(`❌ 404 - Route not found: ${req.method} ${req.originalUrl}`);
+  res.status(404).json({
+    success: false,
+    error: "Route not found",
+    path: req.originalUrl,
+    method: req.method,
+  });
 });
 
-const PORT = process.env.PORT || 5001;
+const PORT = process.env.PORT || 5002;
 
 server.listen(PORT, () => {
   logger.info(`🚀 Blockpal Services running on port ${PORT}`);
   logger.info(`🔗 Health check: http://localhost:${PORT}/health`);
   logger.info(`🔌 WebSocket server running on ws://localhost:${PORT}`);
   logger.info(`📡 Wallet Connect API: http://localhost:${PORT}/api/wallet`);
+
+  // Log CORS configuration
+  const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(",") || [
+    "http://localhost:3000",
+  ];
+  logger.info(`🔒 CORS allowed origins: ${allowedOrigins.join(", ")}`);
 });
 
 // Graceful shutdown
