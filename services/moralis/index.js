@@ -14,7 +14,9 @@ const cache = new NodeCache({
 class MoralisService {
   constructor() {
     this.initialized = false;
-    this.apiKey = process.env.MORALIS_API_KEY;
+    this.apiKey =
+      process.env.MORALIS_API_KEY ||
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6IjcwM2JkNmYwLWE3OTQtNDAzYy1hMTc4LTg4ZmZiYTY0YTVhYyIsIm9yZ0lkIjoiNDQ1NTIyIiwidXNlcklkIjoiNDU4Mzg4IiwidHlwZUlkIjoiNzA0ODUyNzgtNTUxYS00OWMxLTk4ZDktZTMwOTVkYTNiMGQ4IiwidHlwZSI6IlBST0pFQ1QiLCJpYXQiOjE3NDY1MTc1MzAsImV4cCI6NDkwMjI3NzUzMH0.cbvMGGnlu0EFsAFkukRa9i6_NQknx7iidSlfyowgCMg";
     this.baseURL = "https://deep-index.moralis.io/api/v2.2";
   }
 
