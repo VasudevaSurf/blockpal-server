@@ -1,7 +1,7 @@
 {
   "name": "blockpal-server",
   "version": "1.0.0",
-  "description": "Microservices for Blockpal application",
+  "description": "Microservices for Blockpal application with Moralis integration",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
@@ -12,7 +12,8 @@
     "blockchain",
     "wallet",
     "ethereum",
-    "microservices"
+    "microservices",
+    "moralis"
   ],
   "author": "",
   "license": "ISC",
@@ -27,7 +28,10 @@
     "express-rate-limit": "^7.1.5",
     "ws": "^8.14.2",
     "uuid": "^9.0.1",
-    "ethers": "^6.8.1"
+    "ethers": "^6.8.1",
+    "moralis": "^2.24.2",
+    "axios": "^1.6.2",
+    "node-cache": "^5.1.2"
   },
   "devDependencies": {
     "nodemon": "^3.1.10"

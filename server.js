@@ -10,6 +10,10 @@ const { logger } = require("./utils/logger");
 
 // Import services
 const walletConnectService = require("./services/wallet-connect");
+const moralisService = require("./services/moralis");
+
+// Import routes
+const tokenRoutes = require("./routes/tokens");
 
 const app = express();
 const server = http.createServer(app);
@@ -58,15 +62,31 @@ const limiter = rateLimit({
 app.use(limiter);
 
 // Health check endpoint
-app.get("/health", (req, res) => {
+app.get("/health", async (req, res) => {
   console.log("🏥 Health check requested");
-  res.json({
-    status: "healthy",
-    timestamp: new Date().toISOString(),
-    services: {
-      "wallet-connect": "running",
-    },
-  });
+
+  try {
+    const health = {
+      status: "healthy",
+      timestamp: new Date().toISOString(),
+      services: {
+        "wallet-connect": "running",
+        moralis: moralisService.initialized ? "connected" : "initializing",
+        cache: "active",
+      },
+      uptime: process.uptime(),
+      memory: process.memoryUsage(),
+    };
+
+    res.json(health);
+  } catch (error) {
+    logger.error("Health check error", error);
+    res.status(503).json({
+      status: "unhealthy",
+      error: error.message,
+      timestamp: new Date().toISOString(),
+    });
+  }
 });
 
 // Service routes
@@ -77,6 +97,16 @@ app.use(
     next();
   },
   walletConnectService
+);
+
+// Token routes - NEW
+app.use(
+  "/api/tokens",
+  (req, res, next) => {
+    console.log(`🪙 Token API Request: ${req.method} ${req.path}`);
+    next();
+  },
+  tokenRoutes
 );
 
 // WebSocket handling for real-time updates
@@ -95,10 +125,37 @@ wss.on("connection", (ws, req) => {
       switch (data.type) {
         case "wallet_connect":
           // Handle wallet connection events
+          ws.send(
+            JSON.stringify({
+              type: "wallet_connected",
+              message: "Wallet connection acknowledged",
+            })
+          );
           break;
+
         case "chain_switch":
           // Handle chain switching events
+          ws.send(
+            JSON.stringify({
+              type: "chain_switched",
+              message: "Chain switch acknowledged",
+              chainId: data.chainId,
+            })
+          );
           break;
+
+        case "token_refresh":
+          // Handle token refresh requests
+          ws.send(
+            JSON.stringify({
+              type: "token_refresh_started",
+              message: "Token refresh initiated",
+              wallet: data.wallet,
+              chain: data.chain,
+            })
+          );
+          break;
+
         default:
           ws.send(JSON.stringify({ error: "Unknown message type" }));
       }
@@ -122,9 +179,28 @@ wss.on("connection", (ws, req) => {
       type: "connection",
       message: "Connected to Blockpal Services",
       clientId,
+      services: ["wallet-connect", "tokens", "moralis"],
     })
   );
 });
+
+// Initialize services
+async function initializeServices() {
+  try {
+    logger.info("🔄 Initializing services...");
+
+    // Initialize Moralis service
+    await moralisService.initialize();
+    logger.info("✅ Moralis service initialized");
+
+    logger.info("🎉 All services initialized successfully");
+  } catch (error) {
+    logger.error("❌ Failed to initialize services", error);
+
+    // Don't exit the process, but log the error
+    // Some services might still work without all dependencies
+  }
+}
 
 // Error handling middleware (must be last)
 app.use(errorHandler);
@@ -142,17 +218,21 @@ app.use("*", (req, res) => {
 
 const PORT = process.env.PORT || 5002;
 
-server.listen(PORT, () => {
+server.listen(PORT, async () => {
   logger.info(`🚀 Blockpal Services running on port ${PORT}`);
   logger.info(`🔗 Health check: http://localhost:${PORT}/health`);
   logger.info(`🔌 WebSocket server running on ws://localhost:${PORT}`);
   logger.info(`📡 Wallet Connect API: http://localhost:${PORT}/api/wallet`);
+  logger.info(`🪙 Token API: http://localhost:${PORT}/api/tokens`);
 
   // Log CORS configuration
   const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(",") || [
     "http://localhost:3000",
   ];
   logger.info(`🔒 CORS allowed origins: ${allowedOrigins.join(", ")}`);
+
+  // Initialize services after server starts
+  await initializeServices();
 });
 
 // Graceful shutdown
