@@ -1,6 +1,7 @@
-// services/moralis/index.js - FIXED VERSION with better token processing
+// services/moralis/index.js - ENHANCED VERSION with multiple price sources
 const Moralis = require("moralis").default;
 const NodeCache = require("node-cache");
+const axios = require("axios");
 const { logger } = require("../../utils/logger");
 const chainConfig = require("../../config/chains");
 
@@ -10,12 +11,49 @@ const cache = new NodeCache({
   checkperiod: 60,
 });
 
+// Price cache for external APIs
+const priceCache = new NodeCache({
+  stdTTL: 180, // 3 minutes for prices
+  checkperiod: 30,
+});
+
 class MoralisService {
   constructor() {
     this.initialized = false;
     this.apiKey =
       process.env.MORALIS_API_KEY ||
       "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6IjcxN2EyZTI3LWM1YjItNDRlMC05MGE3LWRjNGFiMGEzOTliYyIsIm9yZ0lkIjoiNDY4MzYzIiwidXNlcklkIjoiNDgxODIwIiwidHlwZUlkIjoiNTcwMjhhMzQtMzc0OC00NWRlLTg4NTktNjlmNzU5ODEzNTM2IiwidHlwZSI6IlBST0pFQ1QiLCJpYXQiOjE3NTY2MjE2NjAsImV4cCI6NDkxMjM4MTY2MH0.H2IkylE8uOgFiZodaezRSpN9nYE-D0GnF0SoMbbXCFQ";
+
+    // Fallback price mapping for major tokens
+    this.fallbackPrices = {
+      ETH: 3200,
+      WETH: 3200,
+      BTC: 45000,
+      WBTC: 45000,
+      USDT: 1.0,
+      USDC: 1.0,
+      DAI: 1.0,
+      BUSD: 1.0,
+      MATIC: 0.85,
+      BNB: 310,
+      AVAX: 25,
+      SOL: 98,
+      DOT: 6.5,
+      ADA: 0.45,
+      LINK: 14.5,
+      UNI: 12.8,
+      AAVE: 95,
+      SUSHI: 1.2,
+      CRV: 0.85,
+      COMP: 45,
+      MKR: 1850,
+      YFI: 7200,
+      SNX: 2.1,
+      "1INCH": 0.32,
+      BAL: 3.4,
+      LDO: 1.8,
+      FRAX: 1.0,
+    };
   }
 
   async initialize() {
@@ -33,15 +71,228 @@ class MoralisService {
       });
 
       this.initialized = true;
-      logger.info("Moralis service initialized successfully");
+      logger.info("✅ Moralis service initialized successfully");
+
+      // Initialize price fetching
+      this.startPriceUpdater();
     } catch (error) {
-      logger.error("Failed to initialize Moralis service", error);
+      logger.error("❌ Failed to initialize Moralis service", error);
       throw error;
     }
   }
 
   /**
-   * Get wallet token balances for a specific chain using the correct Moralis API
+   * Start periodic price updates
+   */
+  startPriceUpdater() {
+    // Update prices every 3 minutes
+    setInterval(() => {
+      this.updateTokenPrices();
+    }, 3 * 60 * 1000);
+
+    // Initial price fetch
+    setTimeout(() => {
+      this.updateTokenPrices();
+    }, 5000);
+  }
+
+  /**
+   * Fetch token prices from CoinGecko API
+   */
+  async updateTokenPrices() {
+    try {
+      logger.info("🔄 Updating token prices from CoinGecko...");
+
+      const tokenIds = [
+        "ethereum",
+        "wrapped-bitcoin",
+        "tether",
+        "usd-coin",
+        "dai",
+        "matic-network",
+        "binancecoin",
+        "avalanche-2",
+        "solana",
+        "polkadot",
+        "cardano",
+        "chainlink",
+        "uniswap",
+        "aave",
+        "sushiswap-token",
+        "curve-dao-token",
+        "compound-governance-token",
+        "maker",
+        "yearn-finance",
+        "havven",
+        "1inch",
+        "balancer",
+        "lido-dao",
+        "frax",
+      ];
+
+      const url = `https://api.coingecko.com/api/v3/simple/price?ids=${tokenIds.join(
+        ","
+      )}&vs_currencies=usd&include_24hr_change=true`;
+
+      const response = await axios.get(url, {
+        timeout: 10000,
+        headers: {
+          Accept: "application/json",
+        },
+      });
+
+      if (response.data) {
+        const priceMap = {
+          ETH: response.data.ethereum?.usd || this.fallbackPrices.ETH,
+          WETH: response.data.ethereum?.usd || this.fallbackPrices.WETH,
+          BTC: response.data["wrapped-bitcoin"]?.usd || this.fallbackPrices.BTC,
+          WBTC:
+            response.data["wrapped-bitcoin"]?.usd || this.fallbackPrices.WBTC,
+          USDT: response.data.tether?.usd || this.fallbackPrices.USDT,
+          USDC: response.data["usd-coin"]?.usd || this.fallbackPrices.USDC,
+          DAI: response.data.dai?.usd || this.fallbackPrices.DAI,
+          MATIC:
+            response.data["matic-network"]?.usd || this.fallbackPrices.MATIC,
+          BNB: response.data.binancecoin?.usd || this.fallbackPrices.BNB,
+          AVAX: response.data["avalanche-2"]?.usd || this.fallbackPrices.AVAX,
+          SOL: response.data.solana?.usd || this.fallbackPrices.SOL,
+          DOT: response.data.polkadot?.usd || this.fallbackPrices.DOT,
+          ADA: response.data.cardano?.usd || this.fallbackPrices.ADA,
+          LINK: response.data.chainlink?.usd || this.fallbackPrices.LINK,
+          UNI: response.data.uniswap?.usd || this.fallbackPrices.UNI,
+          AAVE: response.data.aave?.usd || this.fallbackPrices.AAVE,
+          SUSHI:
+            response.data["sushiswap-token"]?.usd || this.fallbackPrices.SUSHI,
+          CRV: response.data["curve-dao-token"]?.usd || this.fallbackPrices.CRV,
+          COMP:
+            response.data["compound-governance-token"]?.usd ||
+            this.fallbackPrices.COMP,
+          MKR: response.data.maker?.usd || this.fallbackPrices.MKR,
+          YFI: response.data["yearn-finance"]?.usd || this.fallbackPrices.YFI,
+          SNX: response.data.havven?.usd || this.fallbackPrices.SNX,
+          "1INCH": response.data["1inch"]?.usd || this.fallbackPrices["1INCH"],
+          BAL: response.data.balancer?.usd || this.fallbackPrices.BAL,
+          LDO: response.data["lido-dao"]?.usd || this.fallbackPrices.LDO,
+          FRAX: response.data.frax?.usd || this.fallbackPrices.FRAX,
+        };
+
+        // Cache the prices
+        priceCache.set("token_prices", priceMap);
+
+        logger.info("✅ Updated token prices from CoinGecko", {
+          ethPrice: priceMap.ETH,
+          usdtPrice: priceMap.USDT,
+          usdcPrice: priceMap.USDC,
+          totalTokens: Object.keys(priceMap).length,
+        });
+
+        return priceMap;
+      }
+    } catch (error) {
+      logger.warn("⚠️ Failed to fetch prices from CoinGecko:", error.message);
+
+      // Return fallback prices if API fails
+      const fallbackMap = { ...this.fallbackPrices };
+      priceCache.set("token_prices", fallbackMap);
+      return fallbackMap;
+    }
+  }
+
+  /**
+   * Get token price with multiple fallback methods
+   */
+  async getTokenPrice(
+    symbol,
+    moralisPrice = null,
+    moralisValue = null,
+    balance = 0
+  ) {
+    try {
+      // 1. Try Moralis price first if available and reasonable
+      if (moralisPrice && moralisPrice > 0 && moralisPrice < 1000000) {
+        logger.info(`💰 Using Moralis price for ${symbol}: $${moralisPrice}`);
+        return moralisPrice;
+      }
+
+      // 2. Try Moralis value / balance calculation
+      if (moralisValue && balance && moralisValue > 0 && balance > 0) {
+        const calculatedPrice = moralisValue / balance;
+        if (calculatedPrice > 0 && calculatedPrice < 1000000) {
+          logger.info(`🧮 Calculated price for ${symbol}: $${calculatedPrice}`);
+          return calculatedPrice;
+        }
+      }
+
+      // 3. Try cached external prices
+      const cachedPrices = priceCache.get("token_prices");
+      if (cachedPrices && cachedPrices[symbol]) {
+        logger.info(
+          `📦 Using cached price for ${symbol}: $${cachedPrices[symbol]}`
+        );
+        return cachedPrices[symbol];
+      }
+
+      // 4. Try fallback prices
+      if (this.fallbackPrices[symbol]) {
+        logger.info(
+          `🔄 Using fallback price for ${symbol}: $${this.fallbackPrices[symbol]}`
+        );
+        return this.fallbackPrices[symbol];
+      }
+
+      // 5. Try to fetch live price for this specific token
+      const livePrice = await this.fetchLiveTokenPrice(symbol);
+      if (livePrice && livePrice > 0) {
+        logger.info(`🌐 Fetched live price for ${symbol}: $${livePrice}`);
+        return livePrice;
+      }
+
+      // 6. Last resort: return 0
+      logger.warn(`⚠️ No price found for ${symbol}, returning 0`);
+      return 0;
+    } catch (error) {
+      logger.warn(`⚠️ Error getting price for ${symbol}:`, error.message);
+      return this.fallbackPrices[symbol] || 0;
+    }
+  }
+
+  /**
+   * Fetch live price for a specific token
+   */
+  async fetchLiveTokenPrice(symbol) {
+    try {
+      const cacheKey = `live_price_${symbol}`;
+      const cached = priceCache.get(cacheKey);
+      if (cached) return cached;
+
+      // Try CoinGecko API for individual token
+      const searchUrl = `https://api.coingecko.com/api/v3/search?query=${symbol}`;
+      const searchResponse = await axios.get(searchUrl, { timeout: 5000 });
+
+      if (searchResponse.data?.coins?.[0]?.id) {
+        const tokenId = searchResponse.data.coins[0].id;
+        const priceUrl = `https://api.coingecko.com/api/v3/simple/price?ids=${tokenId}&vs_currencies=usd`;
+        const priceResponse = await axios.get(priceUrl, { timeout: 5000 });
+
+        const price = priceResponse.data[tokenId]?.usd;
+        if (price && price > 0) {
+          priceCache.set(cacheKey, price, 300); // Cache for 5 minutes
+          return price;
+        }
+      }
+
+      return null;
+    } catch (error) {
+      logger.warn(
+        `⚠️ Failed to fetch live price for ${symbol}:`,
+        error.message
+      );
+      return null;
+    }
+  }
+
+  /**
+   * Enhanced wallet token balances with better price handling
    */
   async getWalletTokenBalances(walletAddress, chainId) {
     try {
@@ -52,13 +303,13 @@ class MoralisService {
 
       if (cached && process.env.ENABLE_CACHE !== "false") {
         logger.info(
-          `Cache hit for wallet tokens: ${walletAddress} on chain ${chainId}`
+          `📦 Cache hit for wallet tokens: ${walletAddress} on chain ${chainId}`
         );
         return cached;
       }
 
       logger.info(
-        `Fetching token balances for wallet: ${walletAddress} on chain: ${chainId}`
+        `🔍 Fetching token balances for wallet: ${walletAddress} on chain: ${chainId}`
       );
 
       const chainHex = this.getChainHex(chainId);
@@ -66,10 +317,13 @@ class MoralisService {
         throw new Error(`Unsupported chain ID: ${chainId}`);
       }
 
+      // Ensure we have updated prices
+      await this.updateTokenPrices();
+
       logger.info(`🔗 Using chain hex: ${chainHex} for chain ID: ${chainId}`);
 
-      // Get all tokens with better error handling
-      logger.info("🔄 Making Moralis API call for ALL tokens...");
+      // Get all tokens with enhanced error handling
+      logger.info("📡 Making Moralis API call for tokens with prices...");
 
       let allTokensResponse;
       try {
@@ -79,50 +333,14 @@ class MoralisService {
             address: walletAddress,
           });
 
-        logger.info("✅ Moralis ALL tokens API call successful");
-
-        // Better response logging
-        if (allTokensResponse?.result || allTokensResponse?.raw?.result) {
-          const tokenResults =
-            allTokensResponse.result ||
-            allTokensResponse.raw.result ||
-            allTokensResponse.raw ||
-            [];
-          logger.info(`📊 Found ${tokenResults.length} tokens in response`);
-
-          // Log first few tokens for debugging
-          tokenResults.slice(0, 3).forEach((token, index) => {
-            logger.info(`🪙 Token ${index + 1}:`, {
-              symbol: token.symbol,
-              name: token.name,
-              balance: token.balance,
-              balance_formatted: token.balance_formatted,
-              usd_value: token.usd_value,
-              usd_price: token.usd_price,
-              native_token: token.native_token,
-              token_address: token.token_address,
-            });
-          });
-        } else {
-          logger.warn("⚠️ No token results found in response structure");
-          logger.info(
-            "📋 Full response structure:",
-            JSON.stringify(allTokensResponse, null, 2)
-          );
-        }
+        logger.info("✅ Moralis API call successful");
       } catch (moralisError) {
-        logger.error("❌ Moralis API call failed:", {
-          message: moralisError.message,
-          code: moralisError.code,
-          details: moralisError.details,
-        });
+        logger.error("❌ Moralis API call failed:", moralisError.message);
         throw moralisError;
       }
 
-      // FIXED: Better response parsing
+      // Parse response with multiple fallback methods
       let allTokens = [];
-
-      // Try multiple response structures
       if (allTokensResponse?.result) {
         allTokens = allTokensResponse.result;
       } else if (allTokensResponse?.raw?.result) {
@@ -134,194 +352,127 @@ class MoralisService {
         allTokens = allTokensResponse.raw;
       } else if (Array.isArray(allTokensResponse)) {
         allTokens = allTokensResponse;
-      } else {
-        logger.warn("⚠️ Could not parse token results from response");
-        allTokens = [];
       }
 
       logger.info(
         `📊 Processing ${allTokens.length} tokens from Moralis response`
       );
 
-      if (allTokens.length === 0) {
-        logger.warn("⚠️ No tokens returned - this might indicate:");
-        logger.warn("   1. Empty wallet");
-        logger.warn("   2. All tokens have zero balance");
-        logger.warn("   3. API response parsing issue");
-
-        // Still process what we have - even if it's empty
-        const tokens = await this.processTokenBalances([], chainId);
-
-        // For wallets with zero balance, still return native token with 0 balance
-        if (tokens.length === 0) {
-          const chainInfo = chainConfig[chainId];
-          if (chainInfo) {
-            const nativeToken = {
-              id: `native-${chainId}`,
-              symbol: chainInfo.symbol,
-              name: chainInfo.name,
-              contractAddress: "native",
-              decimals: 18,
-              balance: 0,
-              balanceWei: "0",
-              value: 0,
-              change24h: 0,
-              price: 0,
-              isNative: true,
-              logoUrl: this.getNativeTokenLogo(chainInfo.symbol),
-              isPopular: true,
-              possibleSpam: false,
-              verifiedContract: true,
-            };
-            tokens.push(nativeToken);
-            logger.info("✅ Added zero-balance native token for display");
-          }
-        }
-
-        // Cache even empty results
-        cache.set(cacheKey, tokens);
-        return tokens;
-      }
-
-      // Process the tokens
-      const tokens = await this.processTokenBalances(allTokens, chainId);
+      // Process tokens with enhanced price handling
+      const tokens = await this.processTokenBalancesEnhanced(
+        allTokens,
+        chainId
+      );
 
       // Cache the result
       cache.set(cacheKey, tokens);
 
       logger.info(
-        `✅ Successfully fetched ${tokens.length} tokens for wallet ${walletAddress}`
+        `✅ Successfully processed ${tokens.length} tokens for wallet ${walletAddress}`
       );
+
+      // Log total value for debugging
+      const totalValue = tokens.reduce((sum, t) => sum + (t.value || 0), 0);
+      logger.info(`💰 Total portfolio value: $${totalValue.toFixed(2)}`);
+
       return tokens;
     } catch (error) {
-      logger.error("Error fetching wallet token balances", {
+      logger.error("❌ Error fetching wallet token balances", {
         wallet: walletAddress,
         chain: chainId,
         error: error.message,
-        stack: error.stack,
       });
 
-      // Return empty array instead of throwing to prevent UI breakage
-      logger.warn("🔄 Returning empty token array due to error");
+      // Return empty array instead of throwing
       return [];
     }
   }
 
   /**
-   * FIXED: Process token balances with corrected logic
+   * Enhanced token processing with better price handling
    */
-  async processTokenBalances(tokenData, chainId) {
+  async processTokenBalancesEnhanced(tokenData, chainId) {
     const chainInfo = chainConfig[chainId];
     if (!chainInfo) {
-      logger.error(`Chain ${chainId} not supported`);
+      logger.error(`❌ Chain ${chainId} not supported`);
       return [];
     }
 
-    logger.info(`🔄 Processing ${tokenData.length} raw tokens from Moralis`);
+    logger.info(
+      `🔄 Processing ${tokenData.length} raw tokens with enhanced pricing`
+    );
 
     const processedTokens = [];
 
     for (const token of tokenData) {
       try {
-        logger.info(`🔍 Processing token:`, {
+        logger.info(`🔍 Processing token: ${token.symbol}`, {
           symbol: token.symbol,
           name: token.name,
-          address: token.token_address,
           balance: token.balance,
           balance_formatted: token.balance_formatted,
           usd_value: token.usd_value,
           usd_price: token.usd_price,
           native_token: token.native_token,
-          possible_spam: token.possible_spam,
           decimals: token.decimals,
         });
 
-        // FIXED: Better balance parsing
+        // Parse balance with multiple methods
         let balance = 0;
         if (token.balance_formatted) {
           balance = parseFloat(token.balance_formatted);
         } else if (token.balance) {
-          // Try to parse raw balance
           const rawBalance = token.balance.toString();
-          if (token.decimals) {
-            balance =
-              parseFloat(rawBalance) / Math.pow(10, parseInt(token.decimals));
-          } else {
-            balance = parseFloat(rawBalance) / 1e18; // Default to 18 decimals
-          }
+          const decimals = parseInt(token.decimals) || 18;
+          balance = parseFloat(rawBalance) / Math.pow(10, decimals);
         }
 
-        logger.info(`💰 Token ${token.symbol} parsed balance: ${balance}`);
+        if (balance <= 0) {
+          logger.info(`⏭️ Skipping ${token.symbol} - zero balance`);
+          continue;
+        }
 
-        // FIXED: Better token identification
+        // Enhanced price calculation
+        const moralisPrice = token.usd_price
+          ? parseFloat(token.usd_price)
+          : null;
+        const moralisValue = token.usd_value
+          ? parseFloat(token.usd_value)
+          : null;
+
+        logger.info(`💰 Price data for ${token.symbol}:`, {
+          moralisPrice,
+          moralisValue,
+          balance,
+        });
+
+        const price = await this.getTokenPrice(
+          token.symbol,
+          moralisPrice,
+          moralisValue,
+          balance
+        );
+        const value = balance * price;
+
+        logger.info(`💰 Final pricing for ${token.symbol}:`, {
+          balance,
+          price,
+          value,
+        });
+
+        // Handle change percentage
+        let change24h = 0;
+        if (token.usd_price_24hr_percent_change) {
+          change24h = parseFloat(token.usd_price_24hr_percent_change);
+        }
+
+        // Determine if native token
         const isNativeToken =
           token.native_token ||
           token.token_address ===
             "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE" ||
-          token.token_address ===
-            "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee" ||
-          !token.token_address; // Native tokens might not have token_address
+          !token.token_address;
 
-        // FIXED: More lenient filtering - include more tokens
-        if (balance <= 0) {
-          // Only skip if it's not native AND not a popular token AND has truly zero balance
-          if (!isNativeToken) {
-            const isPopularToken = chainInfo.popularTokens.find(
-              (pt) =>
-                pt.address.toLowerCase() === token.token_address?.toLowerCase()
-            );
-
-            if (!isPopularToken && balance === 0) {
-              logger.info(
-                `⏭️ Skipping ${token.symbol} - zero balance and not popular`
-              );
-              continue;
-            }
-          }
-          logger.info(
-            `✅ Including ${token.symbol} despite low balance (native or popular token)`
-          );
-        }
-
-        // FIXED: Less aggressive spam filtering - only skip obvious spam
-        if (token.possible_spam && balance < 0.001 && !isNativeToken) {
-          const isPopularToken = chainInfo.popularTokens.find(
-            (pt) =>
-              pt.address.toLowerCase() === token.token_address?.toLowerCase()
-          );
-
-          if (!isPopularToken) {
-            logger.info(`⏭️ Skipping ${token.symbol} - low-value spam token`);
-            continue;
-          }
-        }
-
-        // FIXED: Better price and value parsing
-        let price = 0;
-        let value = 0;
-        let change24h = 0;
-
-        // Parse price and value
-        if (token.usd_price !== null && token.usd_price !== undefined) {
-          price = parseFloat(token.usd_price) || 0;
-          value = balance * price;
-        }
-
-        if (token.usd_value !== null && token.usd_value !== undefined) {
-          value = parseFloat(token.usd_value) || value;
-          if (balance > 0 && value > 0) {
-            price = value / balance;
-          }
-        }
-
-        if (
-          token.usd_price_24hr_percent_change !== null &&
-          token.usd_price_24hr_percent_change !== undefined
-        ) {
-          change24h = parseFloat(token.usd_price_24hr_percent_change) || 0;
-        }
-
-        // Handle native token
         if (isNativeToken) {
           const processedToken = {
             id: `native-${chainId}`,
@@ -341,28 +492,22 @@ class MoralisService {
               this.getNativeTokenLogo(chainInfo.symbol),
             isPopular: true,
             possibleSpam: false,
-            verifiedContract: token.verified_contract !== false,
+            verifiedContract: true,
           };
 
           processedTokens.push(processedToken);
           logger.info(
             `✅ Added native token: ${
               token.symbol
-            } - Balance: ${balance}, USD: $${value.toFixed(2)}`
+            } - Balance: ${balance}, Price: $${price}, Value: $${value.toFixed(
+              2
+            )}`
           );
-          continue;
-        }
-
-        // Handle ERC-20 tokens
-        if (token.token_address) {
+        } else if (token.token_address) {
           const popularToken = chainInfo.popularTokens.find(
             (pt) =>
               pt.address.toLowerCase() === token.token_address.toLowerCase()
           );
-
-          const decimals =
-            parseInt(token.decimals) ||
-            (popularToken ? popularToken.decimals : 18);
 
           const processedToken = {
             id: `${token.token_address.toLowerCase()}-${chainId}`,
@@ -372,7 +517,9 @@ class MoralisService {
               token.name ||
               (popularToken ? popularToken.name : "Unknown Token"),
             contractAddress: token.token_address.toLowerCase(),
-            decimals,
+            decimals:
+              parseInt(token.decimals) ||
+              (popularToken ? popularToken.decimals : 18),
             balance: balance,
             balanceWei: token.balance || "0",
             value: value,
@@ -390,74 +537,39 @@ class MoralisService {
           logger.info(
             `✅ Added ERC-20 token: ${
               token.symbol
-            } - Balance: ${balance}, USD: $${value.toFixed(2)}`
-          );
-        } else {
-          logger.warn(
-            `⚠️ Token ${token.symbol} has no contract address, treating as native`
-          );
-
-          // Handle tokens without contract address as native-like
-          const processedToken = {
-            id: `unknown-${token.symbol}-${chainId}`,
-            symbol: token.symbol || "UNKNOWN",
-            name: token.name || "Unknown Token",
-            contractAddress: "unknown",
-            decimals: parseInt(token.decimals) || 18,
-            balance: balance,
-            balanceWei: token.balance || "0",
-            value: value,
-            change24h: change24h,
-            price: price,
-            isNative: false,
-            logoUrl:
-              token.logo || token.thumbnail || this.getTokenLogo(token.symbol),
-            isPopular: false,
-            possibleSpam: token.possible_spam || false,
-            verifiedContract: token.verified_contract !== false,
-          };
-
-          processedTokens.push(processedToken);
-          logger.info(
-            `✅ Added unknown token: ${
-              token.symbol
-            } - Balance: ${balance}, USD: $${value.toFixed(2)}`
+            } - Balance: ${balance}, Price: $${price}, Value: $${value.toFixed(
+              2
+            )}`
           );
         }
       } catch (error) {
         logger.warn(
-          `⚠️ Error processing token ${token.token_address || token.symbol}:`,
+          `⚠️ Error processing token ${token.symbol}:`,
           error.message
         );
         continue;
       }
     }
 
-    // Sort by USD value descending, then by balance descending
-    processedTokens.sort((a, b) => {
-      if (b.value !== a.value) {
-        return b.value - a.value;
-      }
-      return b.balance - a.balance;
-    });
+    // Sort by USD value descending
+    processedTokens.sort((a, b) => b.value - a.value);
 
-    // Calculate total value
+    // Calculate and log final totals
     const totalValue = processedTokens.reduce(
       (sum, t) => sum + (t.value || 0),
       0
     );
-
     logger.info(
-      `✅ Successfully processed ${processedTokens.length} tokens with balances`
+      `✅ Successfully processed ${processedTokens.length} tokens with enhanced pricing`
     );
     logger.info(`💰 Total portfolio value: $${totalValue.toFixed(2)}`);
 
     // Log each processed token for debugging
     processedTokens.forEach((token, index) => {
       logger.info(
-        `📋 Processed Token ${index + 1}: ${token.symbol} - Balance: ${
+        `📋 Token ${index + 1}: ${token.symbol} - Balance: ${
           token.balance
-        }, Value: $${token.value.toFixed(2)}, Native: ${token.isNative}`
+        }, Price: $${token.price}, Value: $${token.value.toFixed(2)}`
       );
     });
 
@@ -465,7 +577,7 @@ class MoralisService {
   }
 
   /**
-   * FIXED: Get native balance separately
+   * Enhanced native balance with price
    */
   async getNativeBalance(walletAddress, chainId) {
     try {
@@ -488,25 +600,36 @@ class MoralisService {
       const balanceWei = response.result?.balance || "0";
       const balanceFormatted = parseFloat(balanceWei) / 1e18;
 
+      // Get native token price
+      const chainInfo = chainConfig[chainId];
+      const nativeSymbol = chainInfo?.symbol || "ETH";
+      const price = await this.getTokenPrice(nativeSymbol);
+      const value = balanceFormatted * price;
+
       logger.info(
-        `✅ Native balance: ${balanceFormatted} ${
-          chainConfig[chainId]?.symbol || "ETH"
-        }`
+        `✅ Native balance: ${balanceFormatted} ${nativeSymbol}, Price: $${price}, Value: $${value.toFixed(
+          2
+        )}`
       );
 
       return {
         balance: balanceFormatted,
         balanceWei: balanceWei,
+        price: price,
+        value: value,
       };
     } catch (error) {
-      logger.error("Error fetching native balance:", error);
+      logger.error("❌ Error fetching native balance:", error);
       return {
         balance: 0,
         balanceWei: "0",
+        price: 0,
+        value: 0,
       };
     }
   }
 
+  // Keep existing utility methods
   getChainHex(chainId) {
     const chainIdNum = parseInt(chainId);
     const chainInfo = chainConfig[chainIdNum];
@@ -545,21 +668,47 @@ class MoralisService {
   clearWalletCache(walletAddress) {
     const keys = cache.keys();
     const walletKeys = keys.filter((key) => key.includes(walletAddress));
-
     walletKeys.forEach((key) => cache.del(key));
 
+    // Also clear price cache to force refresh
+    priceCache.flushAll();
+
     logger.info(
-      `Cleared cache for wallet: ${walletAddress}, removed ${walletKeys.length} entries`
+      `🗑️ Cleared cache for wallet: ${walletAddress}, removed ${walletKeys.length} entries`
     );
   }
 
   getCacheStats() {
     return {
-      keys: cache.keys().length,
-      hits: cache.getStats().hits,
-      misses: cache.getStats().misses,
-      ttl: cache.options.stdTTL,
+      tokenCache: {
+        keys: cache.keys().length,
+        hits: cache.getStats().hits,
+        misses: cache.getStats().misses,
+        ttl: cache.options.stdTTL,
+      },
+      priceCache: {
+        keys: priceCache.keys().length,
+        hits: priceCache.getStats().hits,
+        misses: priceCache.getStats().misses,
+        ttl: priceCache.options.stdTTL,
+      },
     };
+  }
+
+  /**
+   * Manual price refresh endpoint
+   */
+  async refreshPrices() {
+    logger.info("🔄 Manual price refresh requested");
+    priceCache.flushAll();
+    return await this.updateTokenPrices();
+  }
+
+  /**
+   * Get current cached prices for debugging
+   */
+  getCurrentPrices() {
+    return priceCache.get("token_prices") || this.fallbackPrices;
   }
 }
 
