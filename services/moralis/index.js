@@ -1,4 +1,4 @@
-// services/moralis/index.js - ENHANCED VERSION with percentage changes from Moralis
+// services/moralis/index.js - FIXED VERSION with correct percentage change extraction
 const Moralis = require("moralis").default;
 const NodeCache = require("node-cache");
 const axios = require("axios");
@@ -334,6 +334,26 @@ class MoralisService {
           });
 
         logger.info("✅ Moralis API call successful");
+
+        // IMPORTANT: Log the raw response to debug
+        logger.info("🔍 RAW MORALIS RESPONSE STRUCTURE:", {
+          hasResult: !!allTokensResponse?.result,
+          hasRawResult: !!allTokensResponse?.raw?.result,
+          hasRaw: !!allTokensResponse?.raw,
+          isArray: Array.isArray(allTokensResponse),
+          resultType: typeof allTokensResponse?.result,
+          rawType: typeof allTokensResponse?.raw,
+        });
+
+        // Log first token's raw data for debugging
+        if (allTokensResponse?.result?.[0]) {
+          logger.info("🔍 FIRST TOKEN RAW DATA:", allTokensResponse.result[0]);
+        } else if (allTokensResponse?.raw?.result?.[0]) {
+          logger.info(
+            "🔍 FIRST TOKEN RAW DATA (nested):",
+            allTokensResponse.raw.result[0]
+          );
+        }
       } catch (moralisError) {
         logger.error("❌ Moralis API call failed:", moralisError.message);
         throw moralisError;
@@ -389,7 +409,7 @@ class MoralisService {
   }
 
   /**
-   * Enhanced token processing with better price handling AND percentage changes
+   * MINIMAL FIX: Enhanced token processing with ONLY percentage change field fix
    */
   async processTokenBalancesEnhanced(tokenData, chainId) {
     const chainInfo = chainConfig[chainId];
@@ -406,17 +426,26 @@ class MoralisService {
 
     for (const token of tokenData) {
       try {
+        // Enhanced logging with all available fields (keeping original field names)
         logger.info(`🔍 Processing token: ${token.symbol}`, {
           symbol: token.symbol,
           name: token.name,
+          token_address: token.token_address,
           balance: token.balance,
           balance_formatted: token.balance_formatted,
           usd_value: token.usd_value,
           usd_price: token.usd_price,
-          usd_price_24hr_percent_change: token.usd_price_24hr_percent_change, // NEW: Percentage change from Moralis
-          usd_value_24hr_usd_change: token.usd_value_24hr_usd_change, // NEW: USD value change from Moralis
+          // CRITICAL: Log BOTH possible field name formats for debugging
+          usd_price_24hr_percent_change: token.usd_price_24hr_percent_change,
+          usdPrice24hrPercentChange: token.usdPrice24hrPercentChange,
+          usd_price_24hr_usd_change: token.usd_price_24hr_usd_change,
+          usdPrice24hrUsdChange: token.usdPrice24hrUsdChange,
+          usd_value_24hr_usd_change: token.usd_value_24hr_usd_change,
+          usdValue24hrUsdChange: token.usdValue24hrUsdChange,
           native_token: token.native_token,
           decimals: token.decimals,
+          possible_spam: token.possible_spam,
+          verified_contract: token.verified_contract,
         });
 
         // Parse balance with multiple methods
@@ -434,7 +463,7 @@ class MoralisService {
           continue;
         }
 
-        // Enhanced price calculation
+        // Enhanced price calculation (keeping original field names)
         const moralisPrice = token.usd_price
           ? parseFloat(token.usd_price)
           : null;
@@ -462,25 +491,54 @@ class MoralisService {
           value,
         });
 
-        // NEW: Extract percentage change from Moralis API
+        // FIXED: Try BOTH possible field name formats for percentage change
         let change24h = 0;
-        if (token.usd_price_24hr_percent_change) {
+
+        // First try camelCase (what we see in the available fields log)
+        if (
+          token.usdPrice24hrPercentChange !== null &&
+          token.usdPrice24hrPercentChange !== undefined
+        ) {
+          change24h = parseFloat(token.usdPrice24hrPercentChange);
+          logger.info(
+            `📈 FOUND 24h price change (camelCase) for ${token.symbol}: ${change24h}%`
+          );
+        }
+        // Then try snake_case (what we see in the raw data log)
+        else if (
+          token.usd_price_24hr_percent_change !== null &&
+          token.usd_price_24hr_percent_change !== undefined
+        ) {
           change24h = parseFloat(token.usd_price_24hr_percent_change);
-          logger.info(`📈 24h price change for ${token.symbol}: ${change24h}%`);
+          logger.info(
+            `📈 FOUND 24h price change (snake_case) for ${token.symbol}: ${change24h}%`
+          );
         } else {
-          logger.info(`📈 No 24h price change data for ${token.symbol}`);
+          logger.warn(`📈 Missing 24h price change data for ${token.symbol}`);
+          logger.warn(`📈 Available fields:`, Object.keys(token));
         }
 
-        // Optional: USD value change (can be used for additional UI features)
+        // Optional: USD value change - try both formats
         let usdChange24h = 0;
-        if (token.usd_value_24hr_usd_change) {
+        if (
+          token.usdValue24hrUsdChange !== null &&
+          token.usdValue24hrUsdChange !== undefined
+        ) {
+          usdChange24h = parseFloat(token.usdValue24hrUsdChange);
+          logger.info(
+            `💲 24h USD value change (camelCase) for ${token.symbol}: $${usdChange24h}`
+          );
+        } else if (
+          token.usd_value_24hr_usd_change !== null &&
+          token.usd_value_24hr_usd_change !== undefined
+        ) {
           usdChange24h = parseFloat(token.usd_value_24hr_usd_change);
           logger.info(
-            `💲 24h USD value change for ${token.symbol}: $${usdChange24h}`
+            `💲 24h USD value change (snake_case) for ${token.symbol}: $${usdChange24h}`
           );
         }
 
-        // Determine if native token
+        // Determine if native token (keeping original field names)
         const isNativeToken =
           token.native_token ||
           token.token_address ===
@@ -497,8 +555,8 @@ class MoralisService {
             balance: balance,
             balanceWei: token.balance || "0",
             value: value,
-            change24h: change24h, // NEW: Use Moralis percentage change
-            usdChange24h: usdChange24h, // NEW: Optional USD change
+            change24h: change24h, // FIXED: Now correctly extracted
+            usdChange24h: usdChange24h,
             price: price,
             isNative: true,
             logoUrl:
@@ -538,8 +596,8 @@ class MoralisService {
             balance: balance,
             balanceWei: token.balance || "0",
             value: value,
-            change24h: change24h, // NEW: Use Moralis percentage change
-            usdChange24h: usdChange24h, // NEW: Optional USD change
+            change24h: change24h, // FIXED: Now correctly extracted
+            usdChange24h: usdChange24h,
             price: price,
             isNative: false,
             logoUrl:
