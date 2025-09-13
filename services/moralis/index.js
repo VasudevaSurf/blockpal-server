@@ -1,4 +1,4 @@
-// services/moralis/index.js - ENHANCED VERSION with multiple price sources
+// services/moralis/index.js - ENHANCED VERSION with percentage changes from Moralis
 const Moralis = require("moralis").default;
 const NodeCache = require("node-cache");
 const axios = require("axios");
@@ -292,7 +292,7 @@ class MoralisService {
   }
 
   /**
-   * Enhanced wallet token balances with better price handling
+   * Enhanced wallet token balances with better price handling AND percentage changes
    */
   async getWalletTokenBalances(walletAddress, chainId) {
     try {
@@ -358,7 +358,7 @@ class MoralisService {
         `📊 Processing ${allTokens.length} tokens from Moralis response`
       );
 
-      // Process tokens with enhanced price handling
+      // Process tokens with enhanced price handling AND percentage changes
       const tokens = await this.processTokenBalancesEnhanced(
         allTokens,
         chainId
@@ -389,7 +389,7 @@ class MoralisService {
   }
 
   /**
-   * Enhanced token processing with better price handling
+   * Enhanced token processing with better price handling AND percentage changes
    */
   async processTokenBalancesEnhanced(tokenData, chainId) {
     const chainInfo = chainConfig[chainId];
@@ -399,7 +399,7 @@ class MoralisService {
     }
 
     logger.info(
-      `🔄 Processing ${tokenData.length} raw tokens with enhanced pricing`
+      `🔄 Processing ${tokenData.length} raw tokens with enhanced pricing and percentage changes`
     );
 
     const processedTokens = [];
@@ -413,6 +413,8 @@ class MoralisService {
           balance_formatted: token.balance_formatted,
           usd_value: token.usd_value,
           usd_price: token.usd_price,
+          usd_price_24hr_percent_change: token.usd_price_24hr_percent_change, // NEW: Percentage change from Moralis
+          usd_value_24hr_usd_change: token.usd_value_24hr_usd_change, // NEW: USD value change from Moralis
           native_token: token.native_token,
           decimals: token.decimals,
         });
@@ -460,10 +462,22 @@ class MoralisService {
           value,
         });
 
-        // Handle change percentage
+        // NEW: Extract percentage change from Moralis API
         let change24h = 0;
         if (token.usd_price_24hr_percent_change) {
           change24h = parseFloat(token.usd_price_24hr_percent_change);
+          logger.info(`📈 24h price change for ${token.symbol}: ${change24h}%`);
+        } else {
+          logger.info(`📈 No 24h price change data for ${token.symbol}`);
+        }
+
+        // Optional: USD value change (can be used for additional UI features)
+        let usdChange24h = 0;
+        if (token.usd_value_24hr_usd_change) {
+          usdChange24h = parseFloat(token.usd_value_24hr_usd_change);
+          logger.info(
+            `💲 24h USD value change for ${token.symbol}: $${usdChange24h}`
+          );
         }
 
         // Determine if native token
@@ -483,7 +497,8 @@ class MoralisService {
             balance: balance,
             balanceWei: token.balance || "0",
             value: value,
-            change24h: change24h,
+            change24h: change24h, // NEW: Use Moralis percentage change
+            usdChange24h: usdChange24h, // NEW: Optional USD change
             price: price,
             isNative: true,
             logoUrl:
@@ -501,7 +516,7 @@ class MoralisService {
               token.symbol
             } - Balance: ${balance}, Price: $${price}, Value: $${value.toFixed(
               2
-            )}`
+            )}, Change: ${change24h}%`
           );
         } else if (token.token_address) {
           const popularToken = chainInfo.popularTokens.find(
@@ -523,7 +538,8 @@ class MoralisService {
             balance: balance,
             balanceWei: token.balance || "0",
             value: value,
-            change24h: change24h,
+            change24h: change24h, // NEW: Use Moralis percentage change
+            usdChange24h: usdChange24h, // NEW: Optional USD change
             price: price,
             isNative: false,
             logoUrl:
@@ -539,7 +555,7 @@ class MoralisService {
               token.symbol
             } - Balance: ${balance}, Price: $${price}, Value: $${value.toFixed(
               2
-            )}`
+            )}, Change: ${change24h}%`
           );
         }
       } catch (error) {
@@ -560,7 +576,7 @@ class MoralisService {
       0
     );
     logger.info(
-      `✅ Successfully processed ${processedTokens.length} tokens with enhanced pricing`
+      `✅ Successfully processed ${processedTokens.length} tokens with enhanced pricing and percentage changes`
     );
     logger.info(`💰 Total portfolio value: $${totalValue.toFixed(2)}`);
 
@@ -569,7 +585,9 @@ class MoralisService {
       logger.info(
         `📋 Token ${index + 1}: ${token.symbol} - Balance: ${
           token.balance
-        }, Price: $${token.price}, Value: $${token.value.toFixed(2)}`
+        }, Price: $${token.price}, Value: $${token.value.toFixed(2)}, Change: ${
+          token.change24h
+        }%`
       );
     });
 

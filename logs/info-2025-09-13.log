@@ -695,3 +695,435 @@
 {"timestamp":"2025-09-13T07:29:07.618Z","level":"INFO","message":"Successfully returning 3 tokens with total value $2.33"}
 {"timestamp":"2025-09-13T07:29:07.619Z","level":"INFO","message":"Success response: 200","data":{"message":"Tokens fetched successfully","dataType":"object"}}
 {"timestamp":"2025-09-13T07:29:07.623Z","level":"INFO","message":"::1 - - [13/Sep/2025:07:29:07 +0000] \"GET /api/tokens/wallet/0xB619b19b59FC05a5Dd716283034ae5885E4B78b4?chain=1 HTTP/1.1\" 200 - \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-13T07:31:55.345Z","level":"INFO","message":"🔄 Updating token prices from CoinGecko..."}
+{"timestamp":"2025-09-13T07:31:55.929Z","level":"INFO","message":"✅ Updated token prices from CoinGecko","data":{"ethPrice":4720.9,"usdtPrice":1.001,"usdcPrice":0.9997,"totalTokens":26}}
+{"timestamp":"2025-09-13T07:34:22.697Z","level":"INFO","message":"🚀 Blockpal Services running on port 5002"}
+{"timestamp":"2025-09-13T07:34:22.699Z","level":"INFO","message":"🔗 Health check: http://localhost:5002/health"}
+{"timestamp":"2025-09-13T07:34:22.700Z","level":"INFO","message":"🔌 WebSocket server running on ws://localhost:5002"}
+{"timestamp":"2025-09-13T07:34:22.701Z","level":"INFO","message":"📡 Wallet Connect API: http://localhost:5002/api/wallet"}
+{"timestamp":"2025-09-13T07:34:22.701Z","level":"INFO","message":"🪙 Token API: http://localhost:5002/api/tokens"}
+{"timestamp":"2025-09-13T07:34:22.702Z","level":"INFO","message":"🐛 Debug API: http://localhost:5002/api/debug"}
+{"timestamp":"2025-09-13T07:34:22.702Z","level":"INFO","message":"🧪 Test Moralis: http://localhost:5002/api/debug/test-moralis"}
+{"timestamp":"2025-09-13T07:34:22.703Z","level":"INFO","message":"🔒 CORS allowed origins: http://localhost:3000, http://localhost:3001, http://127.0.0.1:3000, http://127.0.0.1:3001, http://localhost:5173"}
+{"timestamp":"2025-09-13T07:34:22.704Z","level":"INFO","message":"🔄 Initializing services..."}
+{"timestamp":"2025-09-13T07:34:22.704Z","level":"INFO","message":"Environment:","data":{"NODE_ENV":"development","PORT":"5002","MORALIS_API_KEY":"configured","ALLOWED_ORIGINS":"http://localhost:3000,http://localhost:3001,http://127.0.0.1:3000,http://127.0.0.1:3001,http://localhost:5173"}}
+{"timestamp":"2025-09-13T07:34:22.705Z","level":"INFO","message":"🔄 Starting Moralis initialization..."}
+{"timestamp":"2025-09-13T07:34:22.705Z","level":"INFO","message":"🔑 Using API Key:","data":"eyJhbGciOiJIUzI1NiIs..."}
+{"timestamp":"2025-09-13T07:34:22.709Z","level":"INFO","message":"✅ Moralis service initialized successfully"}
+{"timestamp":"2025-09-13T07:34:22.709Z","level":"INFO","message":"✅ Moralis service initialized"}
+{"timestamp":"2025-09-13T07:34:22.710Z","level":"INFO","message":"🎉 All services initialized successfully"}
+{"timestamp":"2025-09-13T07:34:27.710Z","level":"INFO","message":"🔄 Updating token prices from CoinGecko..."}
+{"timestamp":"2025-09-13T07:34:28.622Z","level":"INFO","message":"✅ Updated token prices from CoinGecko","data":{"ethPrice":4724.22,"usdtPrice":1.001,"usdcPrice":0.999721,"totalTokens":26}}
+{"timestamp":"2025-09-13T07:36:12.303Z","level":"INFO","message":"Fetching tokens for wallet: 0xB619b19b59FC05a5Dd716283034ae5885E4B78b4 on chain: 1"}
+{"timestamp":"2025-09-13T07:36:12.303Z","level":"INFO","message":"🔍 Fetching token balances for wallet: 0xB619b19b59FC05a5Dd716283034ae5885E4B78b4 on chain: 1"}
+{"timestamp":"2025-09-13T07:36:12.304Z","level":"INFO","message":"🔄 Updating token prices from CoinGecko..."}
+{"timestamp":"2025-09-13T07:36:12.873Z","level":"INFO","message":"✅ Updated token prices from CoinGecko","data":{"ethPrice":4722.46,"usdtPrice":1.001,"usdcPrice":0.999717,"totalTokens":26}}
+{"timestamp":"2025-09-13T07:36:12.874Z","level":"INFO","message":"🔗 Using chain hex: 0x1 for chain ID: 1"}
+{"timestamp":"2025-09-13T07:36:12.874Z","level":"INFO","message":"📡 Making Moralis API call for tokens with prices..."}
+{"timestamp":"2025-09-13T07:36:14.040Z","level":"INFO","message":"✅ Moralis API call successful"}
+{"timestamp":"2025-09-13T07:36:14.041Z","level":"INFO","message":"📊 Processing 3 tokens from Moralis response"}
+{"timestamp":"2025-09-13T07:36:14.042Z","level":"INFO","message":"🔄 Processing 3 raw tokens with enhanced pricing and percentage changes"}
+{"timestamp":"2025-09-13T07:36:14.043Z","level":"INFO","message":"🔍 Processing token: ETH","data":{"symbol":"ETH","name":"Ether","balance":"16517975034656","decimals":18}}
+{"timestamp":"2025-09-13T07:36:14.043Z","level":"INFO","message":"💰 Price data for ETH:","data":{"moralisPrice":null,"moralisValue":null,"balance":0.000016517975034656}}
+{"timestamp":"2025-09-13T07:36:14.044Z","level":"INFO","message":"📦 Using cached price for ETH: $4722.46"}
+{"timestamp":"2025-09-13T07:36:14.045Z","level":"INFO","message":"💰 Final pricing for ETH:","data":{"balance":0.000016517975034656,"price":4722.46,"value":0.07800547638216157}}
+{"timestamp":"2025-09-13T07:36:14.045Z","level":"INFO","message":"📈 No 24h price change data for ETH"}
+{"timestamp":"2025-09-13T07:36:14.045Z","level":"INFO","message":"✅ Added native token: ETH - Balance: 0.000016517975034656, Price: $4722.46, Value: $0.08, Change: 0%"}
+{"timestamp":"2025-09-13T07:36:14.046Z","level":"INFO","message":"🔍 Processing token: USDT","data":{"symbol":"USDT","name":"Tether USD","balance":"2211802","decimals":6}}
+{"timestamp":"2025-09-13T07:36:14.046Z","level":"INFO","message":"💰 Price data for USDT:","data":{"moralisPrice":null,"moralisValue":null,"balance":2.211802}}
+{"timestamp":"2025-09-13T07:36:14.047Z","level":"INFO","message":"📦 Using cached price for USDT: $1.001"}
+{"timestamp":"2025-09-13T07:36:14.047Z","level":"INFO","message":"💰 Final pricing for USDT:","data":{"balance":2.211802,"price":1.001,"value":2.2140138019999998}}
+{"timestamp":"2025-09-13T07:36:14.047Z","level":"INFO","message":"📈 No 24h price change data for USDT"}
+{"timestamp":"2025-09-13T07:36:14.048Z","level":"INFO","message":"✅ Added native token: USDT - Balance: 2.211802, Price: $1.001, Value: $2.21, Change: 0%"}
+{"timestamp":"2025-09-13T07:36:14.048Z","level":"INFO","message":"🔍 Processing token: USDC","data":{"symbol":"USDC","name":"USD Coin","balance":"41000","decimals":6}}
+{"timestamp":"2025-09-13T07:36:14.049Z","level":"INFO","message":"💰 Price data for USDC:","data":{"moralisPrice":null,"moralisValue":null,"balance":0.041}}
+{"timestamp":"2025-09-13T07:36:14.049Z","level":"INFO","message":"📦 Using cached price for USDC: $0.999717"}
+{"timestamp":"2025-09-13T07:36:14.050Z","level":"INFO","message":"💰 Final pricing for USDC:","data":{"balance":0.041,"price":0.999717,"value":0.040988397}}
+{"timestamp":"2025-09-13T07:36:14.050Z","level":"INFO","message":"📈 No 24h price change data for USDC"}
+{"timestamp":"2025-09-13T07:36:14.051Z","level":"INFO","message":"✅ Added native token: USDC - Balance: 0.041, Price: $0.999717, Value: $0.04, Change: 0%"}
+{"timestamp":"2025-09-13T07:36:14.051Z","level":"INFO","message":"✅ Successfully processed 3 tokens with enhanced pricing and percentage changes"}
+{"timestamp":"2025-09-13T07:36:14.051Z","level":"INFO","message":"💰 Total portfolio value: $2.33"}
+{"timestamp":"2025-09-13T07:36:14.052Z","level":"INFO","message":"📋 Token 1: USDT - Balance: 2.211802, Price: $1.001, Value: $2.21, Change: 0%"}
+{"timestamp":"2025-09-13T07:36:14.052Z","level":"INFO","message":"📋 Token 2: ETH - Balance: 0.000016517975034656, Price: $4722.46, Value: $0.08, Change: 0%"}
+{"timestamp":"2025-09-13T07:36:14.053Z","level":"INFO","message":"📋 Token 3: USDC - Balance: 0.041, Price: $0.999717, Value: $0.04, Change: 0%"}
+{"timestamp":"2025-09-13T07:36:14.053Z","level":"INFO","message":"✅ Successfully processed 3 tokens for wallet 0xB619b19b59FC05a5Dd716283034ae5885E4B78b4"}
+{"timestamp":"2025-09-13T07:36:14.054Z","level":"INFO","message":"💰 Total portfolio value: $2.33"}
+{"timestamp":"2025-09-13T07:36:14.054Z","level":"INFO","message":"Successfully returning 3 tokens with total value $2.33"}
+{"timestamp":"2025-09-13T07:36:14.055Z","level":"INFO","message":"Success response: 200","data":{"message":"Tokens fetched successfully","dataType":"object"}}
+{"timestamp":"2025-09-13T07:36:14.066Z","level":"INFO","message":"::1 - - [13/Sep/2025:07:36:14 +0000] \"GET /api/tokens/wallet/0xB619b19b59FC05a5Dd716283034ae5885E4B78b4?chain=1 HTTP/1.1\" 200 - \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-13T07:36:14.075Z","level":"INFO","message":"Fetching tokens for wallet: 0xB619b19b59FC05a5Dd716283034ae5885E4B78b4 on chain: 1"}
+{"timestamp":"2025-09-13T07:36:14.076Z","level":"INFO","message":"📦 Cache hit for wallet tokens: 0xB619b19b59FC05a5Dd716283034ae5885E4B78b4 on chain 1"}
+{"timestamp":"2025-09-13T07:36:14.077Z","level":"INFO","message":"Successfully returning 3 tokens with total value $2.33"}
+{"timestamp":"2025-09-13T07:36:14.077Z","level":"INFO","message":"Success response: 200","data":{"message":"Tokens fetched successfully","dataType":"object"}}
+{"timestamp":"2025-09-13T07:36:14.080Z","level":"INFO","message":"::1 - - [13/Sep/2025:07:36:14 +0000] \"GET /api/tokens/wallet/0xB619b19b59FC05a5Dd716283034ae5885E4B78b4?chain=1 HTTP/1.1\" 200 - \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-13T07:36:14.084Z","level":"INFO","message":"Fetching tokens for wallet: 0xB619b19b59FC05a5Dd716283034ae5885E4B78b4 on chain: 1"}
+{"timestamp":"2025-09-13T07:36:14.084Z","level":"INFO","message":"📦 Cache hit for wallet tokens: 0xB619b19b59FC05a5Dd716283034ae5885E4B78b4 on chain 1"}
+{"timestamp":"2025-09-13T07:36:14.085Z","level":"INFO","message":"Successfully returning 3 tokens with total value $2.33"}
+{"timestamp":"2025-09-13T07:36:14.085Z","level":"INFO","message":"Success response: 200","data":{"message":"Tokens fetched successfully","dataType":"object"}}
+{"timestamp":"2025-09-13T07:36:14.088Z","level":"INFO","message":"::1 - - [13/Sep/2025:07:36:14 +0000] \"GET /api/tokens/wallet/0xB619b19b59FC05a5Dd716283034ae5885E4B78b4?chain=1 HTTP/1.1\" 200 - \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-13T07:36:14.091Z","level":"INFO","message":"Fetching tokens for wallet: 0xB619b19b59FC05a5Dd716283034ae5885E4B78b4 on chain: 1"}
+{"timestamp":"2025-09-13T07:36:14.092Z","level":"INFO","message":"📦 Cache hit for wallet tokens: 0xB619b19b59FC05a5Dd716283034ae5885E4B78b4 on chain 1"}
+{"timestamp":"2025-09-13T07:36:14.093Z","level":"INFO","message":"Successfully returning 3 tokens with total value $2.33"}
+{"timestamp":"2025-09-13T07:36:14.093Z","level":"INFO","message":"Success response: 200","data":{"message":"Tokens fetched successfully","dataType":"object"}}
+{"timestamp":"2025-09-13T07:36:14.097Z","level":"INFO","message":"::1 - - [13/Sep/2025:07:36:14 +0000] \"GET /api/tokens/wallet/0xB619b19b59FC05a5Dd716283034ae5885E4B78b4?chain=1 HTTP/1.1\" 200 - \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-13T07:36:18.641Z","level":"INFO","message":"Refreshing token data for wallet: 0xB619b19b59FC05a5Dd716283034ae5885E4B78b4"}
+{"timestamp":"2025-09-13T07:36:18.642Z","level":"INFO","message":"🗑️ Cleared cache for wallet: 0xB619b19b59FC05a5Dd716283034ae5885E4B78b4, removed 1 entries"}
+{"timestamp":"2025-09-13T07:36:18.642Z","level":"INFO","message":"Success response: 200","data":{"message":"Token data cache cleared successfully","dataType":null}}
+{"timestamp":"2025-09-13T07:36:18.644Z","level":"INFO","message":"::1 - - [13/Sep/2025:07:36:18 +0000] \"POST /api/tokens/refresh/0xB619b19b59FC05a5Dd716283034ae5885E4B78b4 HTTP/1.1\" 200 117 \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-13T07:36:18.650Z","level":"INFO","message":"🔄 Manual price refresh requested"}
+{"timestamp":"2025-09-13T07:36:18.651Z","level":"INFO","message":"🔄 Manual price refresh requested"}
+{"timestamp":"2025-09-13T07:36:18.651Z","level":"INFO","message":"🔄 Updating token prices from CoinGecko..."}
+{"timestamp":"2025-09-13T07:36:19.146Z","level":"INFO","message":"✅ Updated token prices from CoinGecko","data":{"ethPrice":4722.46,"usdtPrice":1.001,"usdcPrice":0.999717,"totalTokens":26}}
+{"timestamp":"2025-09-13T07:36:19.147Z","level":"INFO","message":"✅ Manual price refresh completed in 496ms"}
+{"timestamp":"2025-09-13T07:36:19.151Z","level":"INFO","message":"Success response: 200","data":{"message":"Prices refreshed successfully","dataType":"object"}}
+{"timestamp":"2025-09-13T07:36:19.157Z","level":"INFO","message":"::1 - - [13/Sep/2025:07:36:19 +0000] \"POST /api/debug/refresh-prices HTTP/1.1\" 200 598 \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-13T07:36:19.164Z","level":"INFO","message":"Fetching tokens for wallet: 0xB619b19b59FC05a5Dd716283034ae5885E4B78b4 on chain: 1"}
+{"timestamp":"2025-09-13T07:36:19.165Z","level":"INFO","message":"🔍 Fetching token balances for wallet: 0xB619b19b59FC05a5Dd716283034ae5885E4B78b4 on chain: 1"}
+{"timestamp":"2025-09-13T07:36:19.167Z","level":"INFO","message":"🔄 Updating token prices from CoinGecko..."}
+{"timestamp":"2025-09-13T07:36:19.318Z","level":"INFO","message":"✅ Updated token prices from CoinGecko","data":{"ethPrice":4722.46,"usdtPrice":1.001,"usdcPrice":0.999717,"totalTokens":26}}
+{"timestamp":"2025-09-13T07:36:19.319Z","level":"INFO","message":"🔗 Using chain hex: 0x1 for chain ID: 1"}
+{"timestamp":"2025-09-13T07:36:19.319Z","level":"INFO","message":"📡 Making Moralis API call for tokens with prices..."}
+{"timestamp":"2025-09-13T07:36:20.142Z","level":"INFO","message":"✅ Moralis API call successful"}
+{"timestamp":"2025-09-13T07:36:20.143Z","level":"INFO","message":"📊 Processing 3 tokens from Moralis response"}
+{"timestamp":"2025-09-13T07:36:20.144Z","level":"INFO","message":"🔄 Processing 3 raw tokens with enhanced pricing and percentage changes"}
+{"timestamp":"2025-09-13T07:36:20.145Z","level":"INFO","message":"🔍 Processing token: ETH","data":{"symbol":"ETH","name":"Ether","balance":"16517975034656","decimals":18}}
+{"timestamp":"2025-09-13T07:36:20.145Z","level":"INFO","message":"💰 Price data for ETH:","data":{"moralisPrice":null,"moralisValue":null,"balance":0.000016517975034656}}
+{"timestamp":"2025-09-13T07:36:20.146Z","level":"INFO","message":"📦 Using cached price for ETH: $4722.46"}
+{"timestamp":"2025-09-13T07:36:20.146Z","level":"INFO","message":"💰 Final pricing for ETH:","data":{"balance":0.000016517975034656,"price":4722.46,"value":0.07800547638216157}}
+{"timestamp":"2025-09-13T07:36:20.148Z","level":"INFO","message":"📈 No 24h price change data for ETH"}
+{"timestamp":"2025-09-13T07:36:20.149Z","level":"INFO","message":"✅ Added native token: ETH - Balance: 0.000016517975034656, Price: $4722.46, Value: $0.08, Change: 0%"}
+{"timestamp":"2025-09-13T07:36:20.150Z","level":"INFO","message":"🔍 Processing token: USDT","data":{"symbol":"USDT","name":"Tether USD","balance":"2211802","decimals":6}}
+{"timestamp":"2025-09-13T07:36:20.151Z","level":"INFO","message":"💰 Price data for USDT:","data":{"moralisPrice":null,"moralisValue":null,"balance":2.211802}}
+{"timestamp":"2025-09-13T07:36:20.151Z","level":"INFO","message":"📦 Using cached price for USDT: $1.001"}
+{"timestamp":"2025-09-13T07:36:20.152Z","level":"INFO","message":"💰 Final pricing for USDT:","data":{"balance":2.211802,"price":1.001,"value":2.2140138019999998}}
+{"timestamp":"2025-09-13T07:36:20.152Z","level":"INFO","message":"📈 No 24h price change data for USDT"}
+{"timestamp":"2025-09-13T07:36:20.152Z","level":"INFO","message":"✅ Added native token: USDT - Balance: 2.211802, Price: $1.001, Value: $2.21, Change: 0%"}
+{"timestamp":"2025-09-13T07:36:20.153Z","level":"INFO","message":"🔍 Processing token: USDC","data":{"symbol":"USDC","name":"USD Coin","balance":"41000","decimals":6}}
+{"timestamp":"2025-09-13T07:36:20.153Z","level":"INFO","message":"💰 Price data for USDC:","data":{"moralisPrice":null,"moralisValue":null,"balance":0.041}}
+{"timestamp":"2025-09-13T07:36:20.156Z","level":"INFO","message":"📦 Using cached price for USDC: $0.999717"}
+{"timestamp":"2025-09-13T07:36:20.156Z","level":"INFO","message":"💰 Final pricing for USDC:","data":{"balance":0.041,"price":0.999717,"value":0.040988397}}
+{"timestamp":"2025-09-13T07:36:20.157Z","level":"INFO","message":"📈 No 24h price change data for USDC"}
+{"timestamp":"2025-09-13T07:36:20.158Z","level":"INFO","message":"✅ Added native token: USDC - Balance: 0.041, Price: $0.999717, Value: $0.04, Change: 0%"}
+{"timestamp":"2025-09-13T07:36:20.158Z","level":"INFO","message":"✅ Successfully processed 3 tokens with enhanced pricing and percentage changes"}
+{"timestamp":"2025-09-13T07:36:20.158Z","level":"INFO","message":"💰 Total portfolio value: $2.33"}
+{"timestamp":"2025-09-13T07:36:20.159Z","level":"INFO","message":"📋 Token 1: USDT - Balance: 2.211802, Price: $1.001, Value: $2.21, Change: 0%"}
+{"timestamp":"2025-09-13T07:36:20.160Z","level":"INFO","message":"📋 Token 2: ETH - Balance: 0.000016517975034656, Price: $4722.46, Value: $0.08, Change: 0%"}
+{"timestamp":"2025-09-13T07:36:20.160Z","level":"INFO","message":"📋 Token 3: USDC - Balance: 0.041, Price: $0.999717, Value: $0.04, Change: 0%"}
+{"timestamp":"2025-09-13T07:36:20.161Z","level":"INFO","message":"✅ Successfully processed 3 tokens for wallet 0xB619b19b59FC05a5Dd716283034ae5885E4B78b4"}
+{"timestamp":"2025-09-13T07:36:20.163Z","level":"INFO","message":"💰 Total portfolio value: $2.33"}
+{"timestamp":"2025-09-13T07:36:20.164Z","level":"INFO","message":"Successfully returning 3 tokens with total value $2.33"}
+{"timestamp":"2025-09-13T07:36:20.164Z","level":"INFO","message":"Success response: 200","data":{"message":"Tokens fetched successfully","dataType":"object"}}
+{"timestamp":"2025-09-13T07:36:20.166Z","level":"INFO","message":"::1 - - [13/Sep/2025:07:36:20 +0000] \"GET /api/tokens/wallet/0xB619b19b59FC05a5Dd716283034ae5885E4B78b4?chain=1 HTTP/1.1\" 200 - \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-13T07:37:22.715Z","level":"INFO","message":"🔄 Updating token prices from CoinGecko..."}
+{"timestamp":"2025-09-13T07:37:23.318Z","level":"INFO","message":"✅ Updated token prices from CoinGecko","data":{"ethPrice":4722.29,"usdtPrice":1.001,"usdcPrice":0.999724,"totalTokens":26}}
+{"timestamp":"2025-09-13T07:38:19.258Z","level":"INFO","message":"Fetching tokens for wallet: 0xB619b19b59FC05a5Dd716283034ae5885E4B78b4 on chain: 1"}
+{"timestamp":"2025-09-13T07:38:19.259Z","level":"INFO","message":"📦 Cache hit for wallet tokens: 0xB619b19b59FC05a5Dd716283034ae5885E4B78b4 on chain 1"}
+{"timestamp":"2025-09-13T07:38:19.261Z","level":"INFO","message":"Successfully returning 3 tokens with total value $2.33"}
+{"timestamp":"2025-09-13T07:38:19.263Z","level":"INFO","message":"Success response: 200","data":{"message":"Tokens fetched successfully","dataType":"object"}}
+{"timestamp":"2025-09-13T07:38:19.268Z","level":"INFO","message":"::1 - - [13/Sep/2025:07:38:19 +0000] \"GET /api/tokens/wallet/0xB619b19b59FC05a5Dd716283034ae5885E4B78b4?chain=1 HTTP/1.1\" 200 - \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-13T07:38:19.280Z","level":"INFO","message":"Fetching tokens for wallet: 0xB619b19b59FC05a5Dd716283034ae5885E4B78b4 on chain: 1"}
+{"timestamp":"2025-09-13T07:38:19.281Z","level":"INFO","message":"📦 Cache hit for wallet tokens: 0xB619b19b59FC05a5Dd716283034ae5885E4B78b4 on chain 1"}
+{"timestamp":"2025-09-13T07:38:19.281Z","level":"INFO","message":"Successfully returning 3 tokens with total value $2.33"}
+{"timestamp":"2025-09-13T07:38:19.283Z","level":"INFO","message":"Success response: 200","data":{"message":"Tokens fetched successfully","dataType":"object"}}
+{"timestamp":"2025-09-13T07:38:19.288Z","level":"INFO","message":"::1 - - [13/Sep/2025:07:38:19 +0000] \"GET /api/tokens/wallet/0xB619b19b59FC05a5Dd716283034ae5885E4B78b4?chain=1 HTTP/1.1\" 200 - \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-13T07:38:40.773Z","level":"INFO","message":"Refreshing token data for wallet: 0xB619b19b59FC05a5Dd716283034ae5885E4B78b4"}
+{"timestamp":"2025-09-13T07:38:40.773Z","level":"INFO","message":"🗑️ Cleared cache for wallet: 0xB619b19b59FC05a5Dd716283034ae5885E4B78b4, removed 1 entries"}
+{"timestamp":"2025-09-13T07:38:40.774Z","level":"INFO","message":"Success response: 200","data":{"message":"Token data cache cleared successfully","dataType":null}}
+{"timestamp":"2025-09-13T07:38:40.777Z","level":"INFO","message":"::1 - - [13/Sep/2025:07:38:40 +0000] \"POST /api/tokens/refresh/0xB619b19b59FC05a5Dd716283034ae5885E4B78b4 HTTP/1.1\" 200 117 \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-13T07:38:40.787Z","level":"INFO","message":"🔄 Manual price refresh requested"}
+{"timestamp":"2025-09-13T07:38:40.787Z","level":"INFO","message":"🔄 Manual price refresh requested"}
+{"timestamp":"2025-09-13T07:38:40.788Z","level":"INFO","message":"🔄 Updating token prices from CoinGecko..."}
+{"timestamp":"2025-09-13T07:38:41.699Z","level":"INFO","message":"✅ Updated token prices from CoinGecko","data":{"ethPrice":4720.25,"usdtPrice":1.001,"usdcPrice":0.999727,"totalTokens":26}}
+{"timestamp":"2025-09-13T07:38:41.701Z","level":"INFO","message":"✅ Manual price refresh completed in 914ms"}
+{"timestamp":"2025-09-13T07:38:41.701Z","level":"INFO","message":"Success response: 200","data":{"message":"Prices refreshed successfully","dataType":"object"}}
+{"timestamp":"2025-09-13T07:38:41.703Z","level":"INFO","message":"::1 - - [13/Sep/2025:07:38:41 +0000] \"POST /api/debug/refresh-prices HTTP/1.1\" 200 602 \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-13T07:38:41.709Z","level":"INFO","message":"Fetching tokens for wallet: 0xB619b19b59FC05a5Dd716283034ae5885E4B78b4 on chain: 1"}
+{"timestamp":"2025-09-13T07:38:41.709Z","level":"INFO","message":"🔍 Fetching token balances for wallet: 0xB619b19b59FC05a5Dd716283034ae5885E4B78b4 on chain: 1"}
+{"timestamp":"2025-09-13T07:38:41.710Z","level":"INFO","message":"🔄 Updating token prices from CoinGecko..."}
+{"timestamp":"2025-09-13T07:38:42.113Z","level":"INFO","message":"✅ Updated token prices from CoinGecko","data":{"ethPrice":4720.25,"usdtPrice":1.001,"usdcPrice":0.999727,"totalTokens":26}}
+{"timestamp":"2025-09-13T07:38:42.114Z","level":"INFO","message":"🔗 Using chain hex: 0x1 for chain ID: 1"}
+{"timestamp":"2025-09-13T07:38:42.114Z","level":"INFO","message":"📡 Making Moralis API call for tokens with prices..."}
+{"timestamp":"2025-09-13T07:38:43.763Z","level":"INFO","message":"✅ Moralis API call successful"}
+{"timestamp":"2025-09-13T07:38:43.763Z","level":"INFO","message":"📊 Processing 3 tokens from Moralis response"}
+{"timestamp":"2025-09-13T07:38:43.764Z","level":"INFO","message":"🔄 Processing 3 raw tokens with enhanced pricing and percentage changes"}
+{"timestamp":"2025-09-13T07:38:43.765Z","level":"INFO","message":"🔍 Processing token: ETH","data":{"symbol":"ETH","name":"Ether","balance":"16517975034656","decimals":18}}
+{"timestamp":"2025-09-13T07:38:43.765Z","level":"INFO","message":"💰 Price data for ETH:","data":{"moralisPrice":null,"moralisValue":null,"balance":0.000016517975034656}}
+{"timestamp":"2025-09-13T07:38:43.766Z","level":"INFO","message":"📦 Using cached price for ETH: $4720.25"}
+{"timestamp":"2025-09-13T07:38:43.766Z","level":"INFO","message":"💰 Final pricing for ETH:","data":{"balance":0.000016517975034656,"price":4720.25,"value":0.07796897165733498}}
+{"timestamp":"2025-09-13T07:38:43.767Z","level":"INFO","message":"📈 No 24h price change data for ETH"}
+{"timestamp":"2025-09-13T07:38:43.767Z","level":"INFO","message":"✅ Added native token: ETH - Balance: 0.000016517975034656, Price: $4720.25, Value: $0.08, Change: 0%"}
+{"timestamp":"2025-09-13T07:38:43.768Z","level":"INFO","message":"🔍 Processing token: USDT","data":{"symbol":"USDT","name":"Tether USD","balance":"2211802","decimals":6}}
+{"timestamp":"2025-09-13T07:38:43.769Z","level":"INFO","message":"💰 Price data for USDT:","data":{"moralisPrice":null,"moralisValue":null,"balance":2.211802}}
+{"timestamp":"2025-09-13T07:38:43.769Z","level":"INFO","message":"📦 Using cached price for USDT: $1.001"}
+{"timestamp":"2025-09-13T07:38:43.770Z","level":"INFO","message":"💰 Final pricing for USDT:","data":{"balance":2.211802,"price":1.001,"value":2.2140138019999998}}
+{"timestamp":"2025-09-13T07:38:43.771Z","level":"INFO","message":"📈 No 24h price change data for USDT"}
+{"timestamp":"2025-09-13T07:38:43.771Z","level":"INFO","message":"✅ Added native token: USDT - Balance: 2.211802, Price: $1.001, Value: $2.21, Change: 0%"}
+{"timestamp":"2025-09-13T07:38:43.772Z","level":"INFO","message":"🔍 Processing token: USDC","data":{"symbol":"USDC","name":"USD Coin","balance":"41000","decimals":6}}
+{"timestamp":"2025-09-13T07:38:43.772Z","level":"INFO","message":"💰 Price data for USDC:","data":{"moralisPrice":null,"moralisValue":null,"balance":0.041}}
+{"timestamp":"2025-09-13T07:38:43.773Z","level":"INFO","message":"📦 Using cached price for USDC: $0.999727"}
+{"timestamp":"2025-09-13T07:38:43.773Z","level":"INFO","message":"💰 Final pricing for USDC:","data":{"balance":0.041,"price":0.999727,"value":0.040988807}}
+{"timestamp":"2025-09-13T07:38:43.774Z","level":"INFO","message":"📈 No 24h price change data for USDC"}
+{"timestamp":"2025-09-13T07:38:43.774Z","level":"INFO","message":"✅ Added native token: USDC - Balance: 0.041, Price: $0.999727, Value: $0.04, Change: 0%"}
+{"timestamp":"2025-09-13T07:38:43.775Z","level":"INFO","message":"✅ Successfully processed 3 tokens with enhanced pricing and percentage changes"}
+{"timestamp":"2025-09-13T07:38:43.775Z","level":"INFO","message":"💰 Total portfolio value: $2.33"}
+{"timestamp":"2025-09-13T07:38:43.775Z","level":"INFO","message":"📋 Token 1: USDT - Balance: 2.211802, Price: $1.001, Value: $2.21, Change: 0%"}
+{"timestamp":"2025-09-13T07:38:43.776Z","level":"INFO","message":"📋 Token 2: ETH - Balance: 0.000016517975034656, Price: $4720.25, Value: $0.08, Change: 0%"}
+{"timestamp":"2025-09-13T07:38:43.776Z","level":"INFO","message":"📋 Token 3: USDC - Balance: 0.041, Price: $0.999727, Value: $0.04, Change: 0%"}
+{"timestamp":"2025-09-13T07:38:43.777Z","level":"INFO","message":"✅ Successfully processed 3 tokens for wallet 0xB619b19b59FC05a5Dd716283034ae5885E4B78b4"}
+{"timestamp":"2025-09-13T07:38:43.777Z","level":"INFO","message":"💰 Total portfolio value: $2.33"}
+{"timestamp":"2025-09-13T07:38:43.778Z","level":"INFO","message":"Successfully returning 3 tokens with total value $2.33"}
+{"timestamp":"2025-09-13T07:38:43.778Z","level":"INFO","message":"Success response: 200","data":{"message":"Tokens fetched successfully","dataType":"object"}}
+{"timestamp":"2025-09-13T07:38:43.780Z","level":"INFO","message":"::1 - - [13/Sep/2025:07:38:43 +0000] \"GET /api/tokens/wallet/0xB619b19b59FC05a5Dd716283034ae5885E4B78b4?chain=1 HTTP/1.1\" 200 - \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-13T07:39:53.588Z","level":"INFO","message":"Fetching tokens for wallet: 0xB619b19b59FC05a5Dd716283034ae5885E4B78b4 on chain: 8453"}
+{"timestamp":"2025-09-13T07:39:53.589Z","level":"INFO","message":"🔍 Fetching token balances for wallet: 0xB619b19b59FC05a5Dd716283034ae5885E4B78b4 on chain: 8453"}
+{"timestamp":"2025-09-13T07:39:53.591Z","level":"INFO","message":"🔄 Updating token prices from CoinGecko..."}
+{"timestamp":"2025-09-13T07:39:54.218Z","level":"INFO","message":"✅ Updated token prices from CoinGecko","data":{"ethPrice":4718.63,"usdtPrice":1.001,"usdcPrice":0.999728,"totalTokens":26}}
+{"timestamp":"2025-09-13T07:39:54.218Z","level":"INFO","message":"🔗 Using chain hex: 0x2105 for chain ID: 8453"}
+{"timestamp":"2025-09-13T07:39:54.219Z","level":"INFO","message":"📡 Making Moralis API call for tokens with prices..."}
+{"timestamp":"2025-09-13T07:39:55.534Z","level":"INFO","message":"✅ Moralis API call successful"}
+{"timestamp":"2025-09-13T07:39:55.535Z","level":"INFO","message":"📊 Processing 1 tokens from Moralis response"}
+{"timestamp":"2025-09-13T07:39:55.535Z","level":"INFO","message":"🔄 Processing 1 raw tokens with enhanced pricing and percentage changes"}
+{"timestamp":"2025-09-13T07:39:55.535Z","level":"INFO","message":"🔍 Processing token: ETH","data":{"symbol":"ETH","name":"Ether","balance":"0","decimals":18}}
+{"timestamp":"2025-09-13T07:39:55.536Z","level":"INFO","message":"⏭️ Skipping ETH - zero balance"}
+{"timestamp":"2025-09-13T07:39:55.536Z","level":"INFO","message":"✅ Successfully processed 0 tokens with enhanced pricing and percentage changes"}
+{"timestamp":"2025-09-13T07:39:55.537Z","level":"INFO","message":"💰 Total portfolio value: $0.00"}
+{"timestamp":"2025-09-13T07:39:55.537Z","level":"INFO","message":"✅ Successfully processed 0 tokens for wallet 0xB619b19b59FC05a5Dd716283034ae5885E4B78b4"}
+{"timestamp":"2025-09-13T07:39:55.537Z","level":"INFO","message":"💰 Total portfolio value: $0.00"}
+{"timestamp":"2025-09-13T07:39:55.538Z","level":"INFO","message":"Successfully returning 0 tokens with total value $0.00"}
+{"timestamp":"2025-09-13T07:39:55.538Z","level":"INFO","message":"Success response: 200","data":{"message":"Tokens fetched successfully","dataType":"object"}}
+{"timestamp":"2025-09-13T07:39:55.540Z","level":"INFO","message":"::1 - - [13/Sep/2025:07:39:55 +0000] \"GET /api/tokens/wallet/0xB619b19b59FC05a5Dd716283034ae5885E4B78b4?chain=8453 HTTP/1.1\" 200 256 \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-13T07:39:55.545Z","level":"INFO","message":"Fetching tokens for wallet: 0xB619b19b59FC05a5Dd716283034ae5885E4B78b4 on chain: 8453"}
+{"timestamp":"2025-09-13T07:39:55.546Z","level":"INFO","message":"📦 Cache hit for wallet tokens: 0xB619b19b59FC05a5Dd716283034ae5885E4B78b4 on chain 8453"}
+{"timestamp":"2025-09-13T07:39:55.546Z","level":"INFO","message":"Successfully returning 0 tokens with total value $0.00"}
+{"timestamp":"2025-09-13T07:39:55.547Z","level":"INFO","message":"Success response: 200","data":{"message":"Tokens fetched successfully","dataType":"object"}}
+{"timestamp":"2025-09-13T07:39:55.550Z","level":"INFO","message":"::1 - - [13/Sep/2025:07:39:55 +0000] \"GET /api/tokens/wallet/0xB619b19b59FC05a5Dd716283034ae5885E4B78b4?chain=8453 HTTP/1.1\" 200 256 \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-13T07:39:55.554Z","level":"INFO","message":"Fetching tokens for wallet: 0xB619b19b59FC05a5Dd716283034ae5885E4B78b4 on chain: 8453"}
+{"timestamp":"2025-09-13T07:39:55.556Z","level":"INFO","message":"📦 Cache hit for wallet tokens: 0xB619b19b59FC05a5Dd716283034ae5885E4B78b4 on chain 8453"}
+{"timestamp":"2025-09-13T07:39:55.557Z","level":"INFO","message":"Successfully returning 0 tokens with total value $0.00"}
+{"timestamp":"2025-09-13T07:39:55.557Z","level":"INFO","message":"Success response: 200","data":{"message":"Tokens fetched successfully","dataType":"object"}}
+{"timestamp":"2025-09-13T07:39:55.559Z","level":"INFO","message":"::1 - - [13/Sep/2025:07:39:55 +0000] \"GET /api/tokens/wallet/0xB619b19b59FC05a5Dd716283034ae5885E4B78b4?chain=8453 HTTP/1.1\" 200 256 \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-13T07:39:55.563Z","level":"INFO","message":"Fetching tokens for wallet: 0xB619b19b59FC05a5Dd716283034ae5885E4B78b4 on chain: 8453"}
+{"timestamp":"2025-09-13T07:39:55.565Z","level":"INFO","message":"📦 Cache hit for wallet tokens: 0xB619b19b59FC05a5Dd716283034ae5885E4B78b4 on chain 8453"}
+{"timestamp":"2025-09-13T07:39:55.565Z","level":"INFO","message":"Successfully returning 0 tokens with total value $0.00"}
+{"timestamp":"2025-09-13T07:39:55.566Z","level":"INFO","message":"Success response: 200","data":{"message":"Tokens fetched successfully","dataType":"object"}}
+{"timestamp":"2025-09-13T07:39:55.567Z","level":"INFO","message":"::1 - - [13/Sep/2025:07:39:55 +0000] \"GET /api/tokens/wallet/0xB619b19b59FC05a5Dd716283034ae5885E4B78b4?chain=8453 HTTP/1.1\" 200 256 \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-13T07:39:59.855Z","level":"INFO","message":"Fetching tokens for wallet: 0xB619b19b59FC05a5Dd716283034ae5885E4B78b4 on chain: 1"}
+{"timestamp":"2025-09-13T07:39:59.856Z","level":"INFO","message":"📦 Cache hit for wallet tokens: 0xB619b19b59FC05a5Dd716283034ae5885E4B78b4 on chain 1"}
+{"timestamp":"2025-09-13T07:39:59.856Z","level":"INFO","message":"Successfully returning 3 tokens with total value $2.33"}
+{"timestamp":"2025-09-13T07:39:59.857Z","level":"INFO","message":"Success response: 200","data":{"message":"Tokens fetched successfully","dataType":"object"}}
+{"timestamp":"2025-09-13T07:39:59.860Z","level":"INFO","message":"::1 - - [13/Sep/2025:07:39:59 +0000] \"GET /api/tokens/wallet/0xB619b19b59FC05a5Dd716283034ae5885E4B78b4?chain=1 HTTP/1.1\" 200 - \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-13T07:39:59.870Z","level":"INFO","message":"Fetching tokens for wallet: 0xB619b19b59FC05a5Dd716283034ae5885E4B78b4 on chain: 1"}
+{"timestamp":"2025-09-13T07:39:59.871Z","level":"INFO","message":"📦 Cache hit for wallet tokens: 0xB619b19b59FC05a5Dd716283034ae5885E4B78b4 on chain 1"}
+{"timestamp":"2025-09-13T07:39:59.871Z","level":"INFO","message":"Successfully returning 3 tokens with total value $2.33"}
+{"timestamp":"2025-09-13T07:39:59.872Z","level":"INFO","message":"Success response: 200","data":{"message":"Tokens fetched successfully","dataType":"object"}}
+{"timestamp":"2025-09-13T07:39:59.880Z","level":"INFO","message":"::1 - - [13/Sep/2025:07:39:59 +0000] \"GET /api/tokens/wallet/0xB619b19b59FC05a5Dd716283034ae5885E4B78b4?chain=1 HTTP/1.1\" 200 - \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-13T07:39:59.887Z","level":"INFO","message":"Fetching tokens for wallet: 0xB619b19b59FC05a5Dd716283034ae5885E4B78b4 on chain: 1"}
+{"timestamp":"2025-09-13T07:39:59.891Z","level":"INFO","message":"📦 Cache hit for wallet tokens: 0xB619b19b59FC05a5Dd716283034ae5885E4B78b4 on chain 1"}
+{"timestamp":"2025-09-13T07:39:59.892Z","level":"INFO","message":"Successfully returning 3 tokens with total value $2.33"}
+{"timestamp":"2025-09-13T07:39:59.893Z","level":"INFO","message":"Success response: 200","data":{"message":"Tokens fetched successfully","dataType":"object"}}
+{"timestamp":"2025-09-13T07:39:59.898Z","level":"INFO","message":"::1 - - [13/Sep/2025:07:39:59 +0000] \"GET /api/tokens/wallet/0xB619b19b59FC05a5Dd716283034ae5885E4B78b4?chain=1 HTTP/1.1\" 200 - \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-13T07:39:59.907Z","level":"INFO","message":"Fetching tokens for wallet: 0xB619b19b59FC05a5Dd716283034ae5885E4B78b4 on chain: 1"}
+{"timestamp":"2025-09-13T07:39:59.907Z","level":"INFO","message":"📦 Cache hit for wallet tokens: 0xB619b19b59FC05a5Dd716283034ae5885E4B78b4 on chain 1"}
+{"timestamp":"2025-09-13T07:39:59.908Z","level":"INFO","message":"Successfully returning 3 tokens with total value $2.33"}
+{"timestamp":"2025-09-13T07:39:59.911Z","level":"INFO","message":"Success response: 200","data":{"message":"Tokens fetched successfully","dataType":"object"}}
+{"timestamp":"2025-09-13T07:39:59.913Z","level":"INFO","message":"::1 - - [13/Sep/2025:07:39:59 +0000] \"GET /api/tokens/wallet/0xB619b19b59FC05a5Dd716283034ae5885E4B78b4?chain=1 HTTP/1.1\" 200 - \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-13T07:40:19.283Z","level":"INFO","message":"Fetching tokens for wallet: 0xB619b19b59FC05a5Dd716283034ae5885E4B78b4 on chain: 1"}
+{"timestamp":"2025-09-13T07:40:19.284Z","level":"INFO","message":"📦 Cache hit for wallet tokens: 0xB619b19b59FC05a5Dd716283034ae5885E4B78b4 on chain 1"}
+{"timestamp":"2025-09-13T07:40:19.285Z","level":"INFO","message":"Successfully returning 3 tokens with total value $2.33"}
+{"timestamp":"2025-09-13T07:40:19.287Z","level":"INFO","message":"Success response: 200","data":{"message":"Tokens fetched successfully","dataType":"object"}}
+{"timestamp":"2025-09-13T07:40:19.290Z","level":"INFO","message":"::1 - - [13/Sep/2025:07:40:19 +0000] \"GET /api/tokens/wallet/0xB619b19b59FC05a5Dd716283034ae5885E4B78b4?chain=1 HTTP/1.1\" 200 - \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-13T07:40:19.294Z","level":"INFO","message":"Fetching tokens for wallet: 0xB619b19b59FC05a5Dd716283034ae5885E4B78b4 on chain: 1"}
+{"timestamp":"2025-09-13T07:40:19.295Z","level":"INFO","message":"📦 Cache hit for wallet tokens: 0xB619b19b59FC05a5Dd716283034ae5885E4B78b4 on chain 1"}
+{"timestamp":"2025-09-13T07:40:19.296Z","level":"INFO","message":"Successfully returning 3 tokens with total value $2.33"}
+{"timestamp":"2025-09-13T07:40:19.300Z","level":"INFO","message":"Success response: 200","data":{"message":"Tokens fetched successfully","dataType":"object"}}
+{"timestamp":"2025-09-13T07:40:19.304Z","level":"INFO","message":"::1 - - [13/Sep/2025:07:40:19 +0000] \"GET /api/tokens/wallet/0xB619b19b59FC05a5Dd716283034ae5885E4B78b4?chain=1 HTTP/1.1\" 200 - \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-13T07:40:22.717Z","level":"INFO","message":"🔄 Updating token prices from CoinGecko..."}
+{"timestamp":"2025-09-13T07:40:23.063Z","level":"INFO","message":"✅ Updated token prices from CoinGecko","data":{"ethPrice":4718.63,"usdtPrice":1.001,"usdcPrice":0.999728,"totalTokens":26}}
+{"timestamp":"2025-09-13T07:43:22.725Z","level":"INFO","message":"🔄 Updating token prices from CoinGecko..."}
+{"timestamp":"2025-09-13T07:43:23.327Z","level":"INFO","message":"✅ Updated token prices from CoinGecko","data":{"ethPrice":4716.63,"usdtPrice":1.001,"usdcPrice":0.999735,"totalTokens":26}}
+{"timestamp":"2025-09-13T07:46:22.726Z","level":"INFO","message":"🔄 Updating token prices from CoinGecko..."}
+{"timestamp":"2025-09-13T07:46:23.560Z","level":"INFO","message":"✅ Updated token prices from CoinGecko","data":{"ethPrice":4716.96,"usdtPrice":1.001,"usdcPrice":0.999718,"totalTokens":26}}
+{"timestamp":"2025-09-13T07:49:22.729Z","level":"INFO","message":"🔄 Updating token prices from CoinGecko..."}
+{"timestamp":"2025-09-13T07:49:23.305Z","level":"INFO","message":"✅ Updated token prices from CoinGecko","data":{"ethPrice":4716.5,"usdtPrice":1.001,"usdcPrice":0.999711,"totalTokens":26}}
+{"timestamp":"2025-09-13T07:49:44.949Z","level":"INFO","message":"Fetching tokens for wallet: 0xB619b19b59FC05a5Dd716283034ae5885E4B78b4 on chain: 1"}
+{"timestamp":"2025-09-13T07:49:44.950Z","level":"INFO","message":"🔍 Fetching token balances for wallet: 0xB619b19b59FC05a5Dd716283034ae5885E4B78b4 on chain: 1"}
+{"timestamp":"2025-09-13T07:49:44.952Z","level":"INFO","message":"🔄 Updating token prices from CoinGecko..."}
+{"timestamp":"2025-09-13T07:49:45.329Z","level":"INFO","message":"✅ Updated token prices from CoinGecko","data":{"ethPrice":4716.5,"usdtPrice":1.001,"usdcPrice":0.999711,"totalTokens":26}}
+{"timestamp":"2025-09-13T07:49:45.330Z","level":"INFO","message":"🔗 Using chain hex: 0x1 for chain ID: 1"}
+{"timestamp":"2025-09-13T07:49:45.331Z","level":"INFO","message":"📡 Making Moralis API call for tokens with prices..."}
+{"timestamp":"2025-09-13T07:49:46.752Z","level":"INFO","message":"✅ Moralis API call successful"}
+{"timestamp":"2025-09-13T07:49:46.753Z","level":"INFO","message":"📊 Processing 3 tokens from Moralis response"}
+{"timestamp":"2025-09-13T07:49:46.753Z","level":"INFO","message":"🔄 Processing 3 raw tokens with enhanced pricing and percentage changes"}
+{"timestamp":"2025-09-13T07:49:46.754Z","level":"INFO","message":"🔍 Processing token: ETH","data":{"symbol":"ETH","name":"Ether","balance":"16517975034656","decimals":18}}
+{"timestamp":"2025-09-13T07:49:46.755Z","level":"INFO","message":"💰 Price data for ETH:","data":{"moralisPrice":null,"moralisValue":null,"balance":0.000016517975034656}}
+{"timestamp":"2025-09-13T07:49:46.755Z","level":"INFO","message":"📦 Using cached price for ETH: $4716.5"}
+{"timestamp":"2025-09-13T07:49:46.756Z","level":"INFO","message":"💰 Final pricing for ETH:","data":{"balance":0.000016517975034656,"price":4716.5,"value":0.07790702925095502}}
+{"timestamp":"2025-09-13T07:49:46.757Z","level":"INFO","message":"📈 No 24h price change data for ETH"}
+{"timestamp":"2025-09-13T07:49:46.758Z","level":"INFO","message":"✅ Added native token: ETH - Balance: 0.000016517975034656, Price: $4716.5, Value: $0.08, Change: 0%"}
+{"timestamp":"2025-09-13T07:49:46.759Z","level":"INFO","message":"🔍 Processing token: USDT","data":{"symbol":"USDT","name":"Tether USD","balance":"2211802","decimals":6}}
+{"timestamp":"2025-09-13T07:49:46.760Z","level":"INFO","message":"💰 Price data for USDT:","data":{"moralisPrice":null,"moralisValue":null,"balance":2.211802}}
+{"timestamp":"2025-09-13T07:49:46.761Z","level":"INFO","message":"📦 Using cached price for USDT: $1.001"}
+{"timestamp":"2025-09-13T07:49:46.761Z","level":"INFO","message":"💰 Final pricing for USDT:","data":{"balance":2.211802,"price":1.001,"value":2.2140138019999998}}
+{"timestamp":"2025-09-13T07:49:46.762Z","level":"INFO","message":"📈 No 24h price change data for USDT"}
+{"timestamp":"2025-09-13T07:49:46.763Z","level":"INFO","message":"✅ Added native token: USDT - Balance: 2.211802, Price: $1.001, Value: $2.21, Change: 0%"}
+{"timestamp":"2025-09-13T07:49:46.765Z","level":"INFO","message":"🔍 Processing token: USDC","data":{"symbol":"USDC","name":"USD Coin","balance":"41000","decimals":6}}
+{"timestamp":"2025-09-13T07:49:46.766Z","level":"INFO","message":"💰 Price data for USDC:","data":{"moralisPrice":null,"moralisValue":null,"balance":0.041}}
+{"timestamp":"2025-09-13T07:49:46.767Z","level":"INFO","message":"📦 Using cached price for USDC: $0.999711"}
+{"timestamp":"2025-09-13T07:49:46.767Z","level":"INFO","message":"💰 Final pricing for USDC:","data":{"balance":0.041,"price":0.999711,"value":0.040988151}}
+{"timestamp":"2025-09-13T07:49:46.768Z","level":"INFO","message":"📈 No 24h price change data for USDC"}
+{"timestamp":"2025-09-13T07:49:46.768Z","level":"INFO","message":"✅ Added native token: USDC - Balance: 0.041, Price: $0.999711, Value: $0.04, Change: 0%"}
+{"timestamp":"2025-09-13T07:49:46.769Z","level":"INFO","message":"✅ Successfully processed 3 tokens with enhanced pricing and percentage changes"}
+{"timestamp":"2025-09-13T07:49:46.770Z","level":"INFO","message":"💰 Total portfolio value: $2.33"}
+{"timestamp":"2025-09-13T07:49:46.771Z","level":"INFO","message":"📋 Token 1: USDT - Balance: 2.211802, Price: $1.001, Value: $2.21, Change: 0%"}
+{"timestamp":"2025-09-13T07:49:46.771Z","level":"INFO","message":"📋 Token 2: ETH - Balance: 0.000016517975034656, Price: $4716.5, Value: $0.08, Change: 0%"}
+{"timestamp":"2025-09-13T07:49:46.772Z","level":"INFO","message":"📋 Token 3: USDC - Balance: 0.041, Price: $0.999711, Value: $0.04, Change: 0%"}
+{"timestamp":"2025-09-13T07:49:46.773Z","level":"INFO","message":"✅ Successfully processed 3 tokens for wallet 0xB619b19b59FC05a5Dd716283034ae5885E4B78b4"}
+{"timestamp":"2025-09-13T07:49:46.773Z","level":"INFO","message":"💰 Total portfolio value: $2.33"}
+{"timestamp":"2025-09-13T07:49:46.773Z","level":"INFO","message":"Successfully returning 3 tokens with total value $2.33"}
+{"timestamp":"2025-09-13T07:49:46.774Z","level":"INFO","message":"Success response: 200","data":{"message":"Tokens fetched successfully","dataType":"object"}}
+{"timestamp":"2025-09-13T07:49:46.776Z","level":"INFO","message":"::1 - - [13/Sep/2025:07:49:46 +0000] \"GET /api/tokens/wallet/0xB619b19b59FC05a5Dd716283034ae5885E4B78b4?chain=1 HTTP/1.1\" 200 - \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-13T07:49:46.781Z","level":"INFO","message":"Fetching tokens for wallet: 0xB619b19b59FC05a5Dd716283034ae5885E4B78b4 on chain: 1"}
+{"timestamp":"2025-09-13T07:49:46.782Z","level":"INFO","message":"📦 Cache hit for wallet tokens: 0xB619b19b59FC05a5Dd716283034ae5885E4B78b4 on chain 1"}
+{"timestamp":"2025-09-13T07:49:46.782Z","level":"INFO","message":"Successfully returning 3 tokens with total value $2.33"}
+{"timestamp":"2025-09-13T07:49:46.782Z","level":"INFO","message":"Success response: 200","data":{"message":"Tokens fetched successfully","dataType":"object"}}
+{"timestamp":"2025-09-13T07:49:46.786Z","level":"INFO","message":"::1 - - [13/Sep/2025:07:49:46 +0000] \"GET /api/tokens/wallet/0xB619b19b59FC05a5Dd716283034ae5885E4B78b4?chain=1 HTTP/1.1\" 200 - \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-13T07:49:46.791Z","level":"INFO","message":"Fetching tokens for wallet: 0xB619b19b59FC05a5Dd716283034ae5885E4B78b4 on chain: 1"}
+{"timestamp":"2025-09-13T07:49:46.793Z","level":"INFO","message":"📦 Cache hit for wallet tokens: 0xB619b19b59FC05a5Dd716283034ae5885E4B78b4 on chain 1"}
+{"timestamp":"2025-09-13T07:49:46.793Z","level":"INFO","message":"Successfully returning 3 tokens with total value $2.33"}
+{"timestamp":"2025-09-13T07:49:46.794Z","level":"INFO","message":"Success response: 200","data":{"message":"Tokens fetched successfully","dataType":"object"}}
+{"timestamp":"2025-09-13T07:49:46.797Z","level":"INFO","message":"::1 - - [13/Sep/2025:07:49:46 +0000] \"GET /api/tokens/wallet/0xB619b19b59FC05a5Dd716283034ae5885E4B78b4?chain=1 HTTP/1.1\" 200 - \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-13T07:49:46.802Z","level":"INFO","message":"Fetching tokens for wallet: 0xB619b19b59FC05a5Dd716283034ae5885E4B78b4 on chain: 1"}
+{"timestamp":"2025-09-13T07:49:46.803Z","level":"INFO","message":"📦 Cache hit for wallet tokens: 0xB619b19b59FC05a5Dd716283034ae5885E4B78b4 on chain 1"}
+{"timestamp":"2025-09-13T07:49:46.803Z","level":"INFO","message":"Successfully returning 3 tokens with total value $2.33"}
+{"timestamp":"2025-09-13T07:49:46.804Z","level":"INFO","message":"Success response: 200","data":{"message":"Tokens fetched successfully","dataType":"object"}}
+{"timestamp":"2025-09-13T07:49:46.808Z","level":"INFO","message":"::1 - - [13/Sep/2025:07:49:46 +0000] \"GET /api/tokens/wallet/0xB619b19b59FC05a5Dd716283034ae5885E4B78b4?chain=1 HTTP/1.1\" 200 - \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-13T07:50:00.593Z","level":"INFO","message":"Fetching tokens for wallet: 0xB619b19b59FC05a5Dd716283034ae5885E4B78b4 on chain: 1"}
+{"timestamp":"2025-09-13T07:50:00.594Z","level":"INFO","message":"📦 Cache hit for wallet tokens: 0xB619b19b59FC05a5Dd716283034ae5885E4B78b4 on chain 1"}
+{"timestamp":"2025-09-13T07:50:00.598Z","level":"INFO","message":"Successfully returning 3 tokens with total value $2.33"}
+{"timestamp":"2025-09-13T07:50:00.600Z","level":"INFO","message":"Success response: 200","data":{"message":"Tokens fetched successfully","dataType":"object"}}
+{"timestamp":"2025-09-13T07:50:00.609Z","level":"INFO","message":"::1 - - [13/Sep/2025:07:50:00 +0000] \"GET /api/tokens/wallet/0xB619b19b59FC05a5Dd716283034ae5885E4B78b4?chain=1 HTTP/1.1\" 200 - \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-13T07:50:00.615Z","level":"INFO","message":"Fetching tokens for wallet: 0xB619b19b59FC05a5Dd716283034ae5885E4B78b4 on chain: 1"}
+{"timestamp":"2025-09-13T07:50:00.616Z","level":"INFO","message":"📦 Cache hit for wallet tokens: 0xB619b19b59FC05a5Dd716283034ae5885E4B78b4 on chain 1"}
+{"timestamp":"2025-09-13T07:50:00.616Z","level":"INFO","message":"Successfully returning 3 tokens with total value $2.33"}
+{"timestamp":"2025-09-13T07:50:00.619Z","level":"INFO","message":"Success response: 200","data":{"message":"Tokens fetched successfully","dataType":"object"}}
+{"timestamp":"2025-09-13T07:50:00.648Z","level":"INFO","message":"::1 - - [13/Sep/2025:07:50:00 +0000] \"GET /api/tokens/wallet/0xB619b19b59FC05a5Dd716283034ae5885E4B78b4?chain=1 HTTP/1.1\" 200 - \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-13T07:50:00.662Z","level":"INFO","message":"Fetching tokens for wallet: 0xB619b19b59FC05a5Dd716283034ae5885E4B78b4 on chain: 1"}
+{"timestamp":"2025-09-13T07:50:00.663Z","level":"INFO","message":"📦 Cache hit for wallet tokens: 0xB619b19b59FC05a5Dd716283034ae5885E4B78b4 on chain 1"}
+{"timestamp":"2025-09-13T07:50:00.664Z","level":"INFO","message":"Successfully returning 3 tokens with total value $2.33"}
+{"timestamp":"2025-09-13T07:50:00.665Z","level":"INFO","message":"Success response: 200","data":{"message":"Tokens fetched successfully","dataType":"object"}}
+{"timestamp":"2025-09-13T07:50:00.668Z","level":"INFO","message":"::1 - - [13/Sep/2025:07:50:00 +0000] \"GET /api/tokens/wallet/0xB619b19b59FC05a5Dd716283034ae5885E4B78b4?chain=1 HTTP/1.1\" 200 - \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-13T07:50:00.671Z","level":"INFO","message":"Fetching tokens for wallet: 0xB619b19b59FC05a5Dd716283034ae5885E4B78b4 on chain: 1"}
+{"timestamp":"2025-09-13T07:50:00.672Z","level":"INFO","message":"📦 Cache hit for wallet tokens: 0xB619b19b59FC05a5Dd716283034ae5885E4B78b4 on chain 1"}
+{"timestamp":"2025-09-13T07:50:00.674Z","level":"INFO","message":"Successfully returning 3 tokens with total value $2.33"}
+{"timestamp":"2025-09-13T07:50:00.675Z","level":"INFO","message":"Success response: 200","data":{"message":"Tokens fetched successfully","dataType":"object"}}
+{"timestamp":"2025-09-13T07:50:00.678Z","level":"INFO","message":"::1 - - [13/Sep/2025:07:50:00 +0000] \"GET /api/tokens/wallet/0xB619b19b59FC05a5Dd716283034ae5885E4B78b4?chain=1 HTTP/1.1\" 200 - \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-13T07:50:05.292Z","level":"INFO","message":"Fetching tokens for wallet: 0xB619b19b59FC05a5Dd716283034ae5885E4B78b4 on chain: 1"}
+{"timestamp":"2025-09-13T07:50:05.293Z","level":"INFO","message":"📦 Cache hit for wallet tokens: 0xB619b19b59FC05a5Dd716283034ae5885E4B78b4 on chain 1"}
+{"timestamp":"2025-09-13T07:50:05.294Z","level":"INFO","message":"Successfully returning 3 tokens with total value $2.33"}
+{"timestamp":"2025-09-13T07:50:05.296Z","level":"INFO","message":"Success response: 200","data":{"message":"Tokens fetched successfully","dataType":"object"}}
+{"timestamp":"2025-09-13T07:50:05.306Z","level":"INFO","message":"::1 - - [13/Sep/2025:07:50:05 +0000] \"GET /api/tokens/wallet/0xB619b19b59FC05a5Dd716283034ae5885E4B78b4?chain=1 HTTP/1.1\" 200 - \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-13T07:50:05.311Z","level":"INFO","message":"Fetching tokens for wallet: 0xB619b19b59FC05a5Dd716283034ae5885E4B78b4 on chain: 1"}
+{"timestamp":"2025-09-13T07:50:05.314Z","level":"INFO","message":"📦 Cache hit for wallet tokens: 0xB619b19b59FC05a5Dd716283034ae5885E4B78b4 on chain 1"}
+{"timestamp":"2025-09-13T07:50:05.315Z","level":"INFO","message":"Successfully returning 3 tokens with total value $2.33"}
+{"timestamp":"2025-09-13T07:50:05.315Z","level":"INFO","message":"Success response: 200","data":{"message":"Tokens fetched successfully","dataType":"object"}}
+{"timestamp":"2025-09-13T07:50:05.317Z","level":"INFO","message":"::1 - - [13/Sep/2025:07:50:05 +0000] \"GET /api/tokens/wallet/0xB619b19b59FC05a5Dd716283034ae5885E4B78b4?chain=1 HTTP/1.1\" 200 - \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-13T07:50:05.322Z","level":"INFO","message":"Fetching tokens for wallet: 0xB619b19b59FC05a5Dd716283034ae5885E4B78b4 on chain: 1"}
+{"timestamp":"2025-09-13T07:50:05.322Z","level":"INFO","message":"📦 Cache hit for wallet tokens: 0xB619b19b59FC05a5Dd716283034ae5885E4B78b4 on chain 1"}
+{"timestamp":"2025-09-13T07:50:05.323Z","level":"INFO","message":"Successfully returning 3 tokens with total value $2.33"}
+{"timestamp":"2025-09-13T07:50:05.323Z","level":"INFO","message":"Success response: 200","data":{"message":"Tokens fetched successfully","dataType":"object"}}
+{"timestamp":"2025-09-13T07:50:05.329Z","level":"INFO","message":"::1 - - [13/Sep/2025:07:50:05 +0000] \"GET /api/tokens/wallet/0xB619b19b59FC05a5Dd716283034ae5885E4B78b4?chain=1 HTTP/1.1\" 200 - \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-13T07:50:05.333Z","level":"INFO","message":"Fetching tokens for wallet: 0xB619b19b59FC05a5Dd716283034ae5885E4B78b4 on chain: 1"}
+{"timestamp":"2025-09-13T07:50:05.335Z","level":"INFO","message":"📦 Cache hit for wallet tokens: 0xB619b19b59FC05a5Dd716283034ae5885E4B78b4 on chain 1"}
+{"timestamp":"2025-09-13T07:50:05.335Z","level":"INFO","message":"Successfully returning 3 tokens with total value $2.33"}
+{"timestamp":"2025-09-13T07:50:05.336Z","level":"INFO","message":"Success response: 200","data":{"message":"Tokens fetched successfully","dataType":"object"}}
+{"timestamp":"2025-09-13T07:50:05.338Z","level":"INFO","message":"::1 - - [13/Sep/2025:07:50:05 +0000] \"GET /api/tokens/wallet/0xB619b19b59FC05a5Dd716283034ae5885E4B78b4?chain=1 HTTP/1.1\" 200 - \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-13T07:50:25.159Z","level":"INFO","message":"Fetching tokens for wallet: 0xB619b19b59FC05a5Dd716283034ae5885E4B78b4 on chain: 1"}
+{"timestamp":"2025-09-13T07:50:25.160Z","level":"INFO","message":"📦 Cache hit for wallet tokens: 0xB619b19b59FC05a5Dd716283034ae5885E4B78b4 on chain 1"}
+{"timestamp":"2025-09-13T07:50:25.160Z","level":"INFO","message":"Successfully returning 3 tokens with total value $2.33"}
+{"timestamp":"2025-09-13T07:50:25.161Z","level":"INFO","message":"Success response: 200","data":{"message":"Tokens fetched successfully","dataType":"object"}}
+{"timestamp":"2025-09-13T07:50:25.163Z","level":"INFO","message":"::1 - - [13/Sep/2025:07:50:25 +0000] \"GET /api/tokens/wallet/0xB619b19b59FC05a5Dd716283034ae5885E4B78b4?chain=1 HTTP/1.1\" 200 - \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-13T07:50:25.166Z","level":"INFO","message":"Fetching tokens for wallet: 0xB619b19b59FC05a5Dd716283034ae5885E4B78b4 on chain: 1"}
+{"timestamp":"2025-09-13T07:50:25.167Z","level":"INFO","message":"📦 Cache hit for wallet tokens: 0xB619b19b59FC05a5Dd716283034ae5885E4B78b4 on chain 1"}
+{"timestamp":"2025-09-13T07:50:25.168Z","level":"INFO","message":"Successfully returning 3 tokens with total value $2.33"}
+{"timestamp":"2025-09-13T07:50:25.168Z","level":"INFO","message":"Success response: 200","data":{"message":"Tokens fetched successfully","dataType":"object"}}
+{"timestamp":"2025-09-13T07:50:25.170Z","level":"INFO","message":"::1 - - [13/Sep/2025:07:50:25 +0000] \"GET /api/tokens/wallet/0xB619b19b59FC05a5Dd716283034ae5885E4B78b4?chain=1 HTTP/1.1\" 200 - \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-13T07:50:25.175Z","level":"INFO","message":"Fetching tokens for wallet: 0xB619b19b59FC05a5Dd716283034ae5885E4B78b4 on chain: 1"}
+{"timestamp":"2025-09-13T07:50:25.175Z","level":"INFO","message":"📦 Cache hit for wallet tokens: 0xB619b19b59FC05a5Dd716283034ae5885E4B78b4 on chain 1"}
+{"timestamp":"2025-09-13T07:50:25.176Z","level":"INFO","message":"Successfully returning 3 tokens with total value $2.33"}
+{"timestamp":"2025-09-13T07:50:25.176Z","level":"INFO","message":"Success response: 200","data":{"message":"Tokens fetched successfully","dataType":"object"}}
+{"timestamp":"2025-09-13T07:50:25.179Z","level":"INFO","message":"::1 - - [13/Sep/2025:07:50:25 +0000] \"GET /api/tokens/wallet/0xB619b19b59FC05a5Dd716283034ae5885E4B78b4?chain=1 HTTP/1.1\" 200 - \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-13T07:50:25.184Z","level":"INFO","message":"Fetching tokens for wallet: 0xB619b19b59FC05a5Dd716283034ae5885E4B78b4 on chain: 1"}
+{"timestamp":"2025-09-13T07:50:25.184Z","level":"INFO","message":"📦 Cache hit for wallet tokens: 0xB619b19b59FC05a5Dd716283034ae5885E4B78b4 on chain 1"}
+{"timestamp":"2025-09-13T07:50:25.185Z","level":"INFO","message":"Successfully returning 3 tokens with total value $2.33"}
+{"timestamp":"2025-09-13T07:50:25.186Z","level":"INFO","message":"Success response: 200","data":{"message":"Tokens fetched successfully","dataType":"object"}}
+{"timestamp":"2025-09-13T07:50:25.188Z","level":"INFO","message":"::1 - - [13/Sep/2025:07:50:25 +0000] \"GET /api/tokens/wallet/0xB619b19b59FC05a5Dd716283034ae5885E4B78b4?chain=1 HTTP/1.1\" 200 - \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-13T07:50:28.767Z","level":"INFO","message":"SIGINT received, shutting down gracefully"}
+{"timestamp":"2025-09-13T07:50:32.177Z","level":"INFO","message":"🚀 Blockpal Services running on port 5002"}
+{"timestamp":"2025-09-13T07:50:32.178Z","level":"INFO","message":"🔗 Health check: http://localhost:5002/health"}
+{"timestamp":"2025-09-13T07:50:32.179Z","level":"INFO","message":"🔌 WebSocket server running on ws://localhost:5002"}
+{"timestamp":"2025-09-13T07:50:32.179Z","level":"INFO","message":"📡 Wallet Connect API: http://localhost:5002/api/wallet"}
+{"timestamp":"2025-09-13T07:50:32.179Z","level":"INFO","message":"🪙 Token API: http://localhost:5002/api/tokens"}
+{"timestamp":"2025-09-13T07:50:32.180Z","level":"INFO","message":"🐛 Debug API: http://localhost:5002/api/debug"}
+{"timestamp":"2025-09-13T07:50:32.181Z","level":"INFO","message":"🧪 Test Moralis: http://localhost:5002/api/debug/test-moralis"}
+{"timestamp":"2025-09-13T07:50:32.181Z","level":"INFO","message":"🔒 CORS allowed origins: http://localhost:3000, http://localhost:3001, http://127.0.0.1:3000, http://127.0.0.1:3001, http://localhost:5173"}
+{"timestamp":"2025-09-13T07:50:32.182Z","level":"INFO","message":"🔄 Initializing services..."}
+{"timestamp":"2025-09-13T07:50:32.183Z","level":"INFO","message":"Environment:","data":{"NODE_ENV":"development","PORT":"5002","MORALIS_API_KEY":"configured","ALLOWED_ORIGINS":"http://localhost:3000,http://localhost:3001,http://127.0.0.1:3000,http://127.0.0.1:3001,http://localhost:5173"}}
+{"timestamp":"2025-09-13T07:50:32.185Z","level":"INFO","message":"🔄 Starting Moralis initialization..."}
+{"timestamp":"2025-09-13T07:50:32.185Z","level":"INFO","message":"🔑 Using API Key:","data":"eyJhbGciOiJIUzI1NiIs..."}
+{"timestamp":"2025-09-13T07:50:32.188Z","level":"INFO","message":"✅ Moralis service initialized successfully"}
+{"timestamp":"2025-09-13T07:50:32.189Z","level":"INFO","message":"✅ Moralis service initialized"}
+{"timestamp":"2025-09-13T07:50:32.189Z","level":"INFO","message":"🎉 All services initialized successfully"}
+{"timestamp":"2025-09-13T07:50:36.206Z","level":"INFO","message":"Fetching tokens for wallet: 0xB619b19b59FC05a5Dd716283034ae5885E4B78b4 on chain: 1"}
+{"timestamp":"2025-09-13T07:50:36.207Z","level":"INFO","message":"🔍 Fetching token balances for wallet: 0xB619b19b59FC05a5Dd716283034ae5885E4B78b4 on chain: 1"}
+{"timestamp":"2025-09-13T07:50:36.209Z","level":"INFO","message":"🔄 Updating token prices from CoinGecko..."}
+{"timestamp":"2025-09-13T07:50:36.897Z","level":"INFO","message":"✅ Updated token prices from CoinGecko","data":{"ethPrice":4715.71,"usdtPrice":1.001,"usdcPrice":0.999719,"totalTokens":26}}
+{"timestamp":"2025-09-13T07:50:36.898Z","level":"INFO","message":"🔗 Using chain hex: 0x1 for chain ID: 1"}
+{"timestamp":"2025-09-13T07:50:36.898Z","level":"INFO","message":"📡 Making Moralis API call for tokens with prices..."}
+{"timestamp":"2025-09-13T07:50:37.198Z","level":"INFO","message":"🔄 Updating token prices from CoinGecko..."}
+{"timestamp":"2025-09-13T07:50:37.332Z","level":"INFO","message":"✅ Updated token prices from CoinGecko","data":{"ethPrice":4715.71,"usdtPrice":1.001,"usdcPrice":0.999719,"totalTokens":26}}
+{"timestamp":"2025-09-13T07:50:38.319Z","level":"INFO","message":"✅ Moralis API call successful"}
+{"timestamp":"2025-09-13T07:50:38.320Z","level":"INFO","message":"📊 Processing 3 tokens from Moralis response"}
+{"timestamp":"2025-09-13T07:50:38.321Z","level":"INFO","message":"🔄 Processing 3 raw tokens with enhanced pricing and percentage changes"}
+{"timestamp":"2025-09-13T07:50:38.322Z","level":"INFO","message":"🔍 Processing token: ETH","data":{"symbol":"ETH","name":"Ether","balance":"16517975034656","decimals":18}}
+{"timestamp":"2025-09-13T07:50:38.322Z","level":"INFO","message":"💰 Price data for ETH:","data":{"moralisPrice":null,"moralisValue":null,"balance":0.000016517975034656}}
+{"timestamp":"2025-09-13T07:50:38.323Z","level":"INFO","message":"📦 Using cached price for ETH: $4715.71"}
+{"timestamp":"2025-09-13T07:50:38.323Z","level":"INFO","message":"💰 Final pricing for ETH:","data":{"balance":0.000016517975034656,"price":4715.71,"value":0.07789398005067764}}
+{"timestamp":"2025-09-13T07:50:38.323Z","level":"INFO","message":"📈 No 24h price change data for ETH"}
+{"timestamp":"2025-09-13T07:50:38.324Z","level":"INFO","message":"✅ Added native token: ETH - Balance: 0.000016517975034656, Price: $4715.71, Value: $0.08, Change: 0%"}
+{"timestamp":"2025-09-13T07:50:38.324Z","level":"INFO","message":"🔍 Processing token: USDT","data":{"symbol":"USDT","name":"Tether USD","balance":"2211802","decimals":6}}
+{"timestamp":"2025-09-13T07:50:38.324Z","level":"INFO","message":"💰 Price data for USDT:","data":{"moralisPrice":null,"moralisValue":null,"balance":2.211802}}
+{"timestamp":"2025-09-13T07:50:38.325Z","level":"INFO","message":"📦 Using cached price for USDT: $1.001"}
+{"timestamp":"2025-09-13T07:50:38.328Z","level":"INFO","message":"💰 Final pricing for USDT:","data":{"balance":2.211802,"price":1.001,"value":2.2140138019999998}}
+{"timestamp":"2025-09-13T07:50:38.328Z","level":"INFO","message":"📈 No 24h price change data for USDT"}
+{"timestamp":"2025-09-13T07:50:38.329Z","level":"INFO","message":"✅ Added native token: USDT - Balance: 2.211802, Price: $1.001, Value: $2.21, Change: 0%"}
+{"timestamp":"2025-09-13T07:50:38.330Z","level":"INFO","message":"🔍 Processing token: USDC","data":{"symbol":"USDC","name":"USD Coin","balance":"41000","decimals":6}}
+{"timestamp":"2025-09-13T07:50:38.330Z","level":"INFO","message":"💰 Price data for USDC:","data":{"moralisPrice":null,"moralisValue":null,"balance":0.041}}
+{"timestamp":"2025-09-13T07:50:38.331Z","level":"INFO","message":"📦 Using cached price for USDC: $0.999719"}
+{"timestamp":"2025-09-13T07:50:38.331Z","level":"INFO","message":"💰 Final pricing for USDC:","data":{"balance":0.041,"price":0.999719,"value":0.040988479}}
+{"timestamp":"2025-09-13T07:50:38.333Z","level":"INFO","message":"📈 No 24h price change data for USDC"}
+{"timestamp":"2025-09-13T07:50:38.334Z","level":"INFO","message":"✅ Added native token: USDC - Balance: 0.041, Price: $0.999719, Value: $0.04, Change: 0%"}
+{"timestamp":"2025-09-13T07:50:38.335Z","level":"INFO","message":"✅ Successfully processed 3 tokens with enhanced pricing and percentage changes"}
+{"timestamp":"2025-09-13T07:50:38.335Z","level":"INFO","message":"💰 Total portfolio value: $2.33"}
+{"timestamp":"2025-09-13T07:50:38.335Z","level":"INFO","message":"📋 Token 1: USDT - Balance: 2.211802, Price: $1.001, Value: $2.21, Change: 0%"}
+{"timestamp":"2025-09-13T07:50:38.336Z","level":"INFO","message":"📋 Token 2: ETH - Balance: 0.000016517975034656, Price: $4715.71, Value: $0.08, Change: 0%"}
+{"timestamp":"2025-09-13T07:50:38.336Z","level":"INFO","message":"📋 Token 3: USDC - Balance: 0.041, Price: $0.999719, Value: $0.04, Change: 0%"}
+{"timestamp":"2025-09-13T07:50:38.337Z","level":"INFO","message":"✅ Successfully processed 3 tokens for wallet 0xB619b19b59FC05a5Dd716283034ae5885E4B78b4"}
+{"timestamp":"2025-09-13T07:50:38.338Z","level":"INFO","message":"💰 Total portfolio value: $2.33"}
+{"timestamp":"2025-09-13T07:50:38.338Z","level":"INFO","message":"Successfully returning 3 tokens with total value $2.33"}
+{"timestamp":"2025-09-13T07:50:38.338Z","level":"INFO","message":"Success response: 200","data":{"message":"Tokens fetched successfully","dataType":"object"}}
+{"timestamp":"2025-09-13T07:50:38.347Z","level":"INFO","message":"::1 - - [13/Sep/2025:07:50:38 +0000] \"GET /api/tokens/wallet/0xB619b19b59FC05a5Dd716283034ae5885E4B78b4?chain=1 HTTP/1.1\" 200 - \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-13T07:50:38.352Z","level":"INFO","message":"Fetching tokens for wallet: 0xB619b19b59FC05a5Dd716283034ae5885E4B78b4 on chain: 1"}
+{"timestamp":"2025-09-13T07:50:38.353Z","level":"INFO","message":"📦 Cache hit for wallet tokens: 0xB619b19b59FC05a5Dd716283034ae5885E4B78b4 on chain 1"}
+{"timestamp":"2025-09-13T07:50:38.355Z","level":"INFO","message":"Successfully returning 3 tokens with total value $2.33"}
+{"timestamp":"2025-09-13T07:50:38.355Z","level":"INFO","message":"Success response: 200","data":{"message":"Tokens fetched successfully","dataType":"object"}}
+{"timestamp":"2025-09-13T07:50:38.358Z","level":"INFO","message":"::1 - - [13/Sep/2025:07:50:38 +0000] \"GET /api/tokens/wallet/0xB619b19b59FC05a5Dd716283034ae5885E4B78b4?chain=1 HTTP/1.1\" 200 - \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-13T07:50:38.365Z","level":"INFO","message":"Fetching tokens for wallet: 0xB619b19b59FC05a5Dd716283034ae5885E4B78b4 on chain: 1"}
+{"timestamp":"2025-09-13T07:50:38.366Z","level":"INFO","message":"📦 Cache hit for wallet tokens: 0xB619b19b59FC05a5Dd716283034ae5885E4B78b4 on chain 1"}
+{"timestamp":"2025-09-13T07:50:38.421Z","level":"INFO","message":"Successfully returning 3 tokens with total value $2.33"}
+{"timestamp":"2025-09-13T07:50:38.422Z","level":"INFO","message":"Success response: 200","data":{"message":"Tokens fetched successfully","dataType":"object"}}
+{"timestamp":"2025-09-13T07:50:38.425Z","level":"INFO","message":"::1 - - [13/Sep/2025:07:50:38 +0000] \"GET /api/tokens/wallet/0xB619b19b59FC05a5Dd716283034ae5885E4B78b4?chain=1 HTTP/1.1\" 200 - \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-13T07:50:38.441Z","level":"INFO","message":"Fetching tokens for wallet: 0xB619b19b59FC05a5Dd716283034ae5885E4B78b4 on chain: 1"}
+{"timestamp":"2025-09-13T07:50:38.442Z","level":"INFO","message":"📦 Cache hit for wallet tokens: 0xB619b19b59FC05a5Dd716283034ae5885E4B78b4 on chain 1"}
+{"timestamp":"2025-09-13T07:50:38.442Z","level":"INFO","message":"Successfully returning 3 tokens with total value $2.33"}
+{"timestamp":"2025-09-13T07:50:38.443Z","level":"INFO","message":"Success response: 200","data":{"message":"Tokens fetched successfully","dataType":"object"}}
+{"timestamp":"2025-09-13T07:50:38.447Z","level":"INFO","message":"::1 - - [13/Sep/2025:07:50:38 +0000] \"GET /api/tokens/wallet/0xB619b19b59FC05a5Dd716283034ae5885E4B78b4?chain=1 HTTP/1.1\" 200 - \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
