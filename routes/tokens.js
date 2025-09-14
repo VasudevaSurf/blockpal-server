@@ -1,4 +1,4 @@
-// routes/tokens.js - Updated token API routes with better error handling
+// routes/tokens.js - COMPLETE REWRITE following wallet-balance.js approach
 const express = require("express");
 const rateLimit = require("express-rate-limit");
 const { logger } = require("../utils/logger");
@@ -20,12 +20,12 @@ router.use(tokenRateLimit);
 
 /**
  * GET /api/tokens/wallet/:address
- * Get token balances for a wallet address on a specific chain
+ * Get token balances with show/hide functionality - EXACT copy of wallet-balance.js logic
  */
 router.get("/wallet/:address", async (req, res) => {
   try {
     const { address } = req.params;
-    const { chain } = req.query;
+    const { chain, showHidden = "false" } = req.query;
 
     // Validation
     if (!address || !address.match(/^0x[a-fA-F0-9]{40}$/)) {
@@ -41,7 +41,11 @@ router.get("/wallet/:address", async (req, res) => {
       return ResponseUtil.validation(res, "Invalid chain ID");
     }
 
-    logger.info(`Fetching tokens for wallet: ${address} on chain: ${chainId}`);
+    const showHiddenTokens = showHidden === "true";
+
+    logger.info(
+      `Fetching tokens for wallet: ${address} on chain: ${chainId}, showHidden: ${showHiddenTokens}`
+    );
 
     // Check if Moralis service is initialized
     if (!moralisService.initialized) {
@@ -56,10 +60,10 @@ router.get("/wallet/:address", async (req, res) => {
       }
     }
 
-    // Get token balances from Moralis
-    let tokens = [];
+    // Get token balances from Moralis - EXACT same approach as wallet-balance.js
+    let result = [];
     try {
-      tokens = await moralisService.getWalletTokenBalances(address, chainId);
+      result = await moralisService.getWalletTokenBalances(address, chainId);
     } catch (moralisError) {
       logger.error("Moralis API error:", moralisError);
 
@@ -80,28 +84,104 @@ router.get("/wallet/:address", async (req, res) => {
       logger.warn(
         `Returning empty result due to Moralis error: ${moralisError.message}`
       );
-      tokens = [];
+      result = {
+        displayedTokens: [],
+        hiddenTokens: [],
+        totalValue: 0,
+        total24hrChange: 0,
+        chainName: "Unknown",
+      };
     }
 
-    // Calculate total portfolio value
-    const totalValue = tokens.reduce(
-      (sum, token) => sum + (token.value || 0),
-      0
-    );
+    // Process tokens into frontend format - EXACT logic from wallet-balance.js
+    const processToken = (token) => {
+      // Parse balance - EXACT same logic
+      let balance = 0;
+      if (token.balance_formatted) {
+        balance = parseFloat(token.balance_formatted);
+      } else if (token.balance) {
+        const rawBalance = token.balance.toString();
+        const decimals = parseInt(token.decimals) || 18;
+        balance = parseFloat(rawBalance) / Math.pow(10, decimals);
+      }
+
+      const usdValue = parseFloat(token.usd_value) || 0;
+      const usdPrice = parseFloat(token.usd_price) || 0;
+      const change24h = parseFloat(token.usd_value_24hr_usd_change) || 0;
+      const priceChange24h =
+        parseFloat(token.usd_price_24hr_percent_change) || 0;
+
+      // Determine if native token - EXACT same logic
+      const isNativeToken =
+        token.native_token ||
+        token.token_address === "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE" ||
+        !token.token_address;
+
+      return {
+        id: isNativeToken
+          ? `native-${chainId}`
+          : `${token.token_address.toLowerCase()}-${chainId}`,
+        symbol: token.symbol || "UNKNOWN",
+        name: token.name || "Unknown Token",
+        contractAddress: isNativeToken
+          ? "native"
+          : token.token_address.toLowerCase(),
+        decimals: parseInt(token.decimals) || 18,
+        balance: balance,
+        balanceWei: token.balance || "0",
+        value: usdValue,
+        change24h: priceChange24h, // Percentage change
+        usdChange24h: change24h, // USD change amount
+        price: usdPrice,
+        isNative: isNativeToken,
+        logoUrl: token.logo || token.thumbnail || null,
+        isPopular: true, // All preset tokens are popular
+        possibleSpam: token.possible_spam || false,
+        verifiedContract: token.verified_contract !== false,
+      };
+    };
+
+    // Process displayed tokens (preset tokens)
+    const displayedTokens = result.displayedTokens.map(processToken);
+
+    // Process hidden tokens (non-preset tokens)
+    const hiddenTokens = result.hiddenTokens.map(processToken);
+
+    // Decide which tokens to return based on showHidden parameter
+    let tokensToReturn = displayedTokens;
+    if (showHiddenTokens) {
+      tokensToReturn = [...displayedTokens, ...hiddenTokens];
+    }
+
+    // Sort by USD value descending
+    tokensToReturn.sort((a, b) => b.value - a.value);
 
     const response = {
       wallet: address,
       chainId,
-      tokens,
-      totalValue,
-      tokenCount: tokens.length,
+      chainName: result.chainName,
+      tokens: tokensToReturn,
+      // Summary data - EXACT same as wallet-balance.js
+      totalValue: result.totalValue,
+      total24hrChange: result.total24hrChange,
+      tokenCount: tokensToReturn.length,
+      // Metadata for show/hide functionality
+      presetTokenCount: displayedTokens.length,
+      hiddenTokenCount: hiddenTokens.length,
+      showingHidden: showHiddenTokens,
+      hasHiddenTokens: hiddenTokens.length > 0,
       lastUpdated: new Date().toISOString(),
     };
 
     logger.info(
       `Successfully returning ${
-        tokens.length
-      } tokens with total value $${totalValue.toFixed(2)}`
+        tokensToReturn.length
+      } tokens with total value $${result.totalValue.toFixed(2)}`
+    );
+    logger.info(
+      `Preset tokens: ${displayedTokens.length}, Hidden tokens: ${
+        hiddenTokens.length
+      }, Showing: ${showHiddenTokens ? "All" : "Preset only"}`
     );
 
     return ResponseUtil.success(res, response, "Tokens fetched successfully");
@@ -109,6 +189,7 @@ router.get("/wallet/:address", async (req, res) => {
     logger.error("Error in /tokens/wallet/:address", {
       address: req.params.address,
       chain: req.query.chain,
+      showHidden: req.query.showHidden,
       error: error.message,
       stack: error.stack,
     });
@@ -118,53 +199,8 @@ router.get("/wallet/:address", async (req, res) => {
 });
 
 /**
- * GET /api/tokens/popular/:chainId
- * Get popular tokens for a specific chain
- */
-router.get("/popular/:chainId", async (req, res) => {
-  try {
-    const { chainId } = req.params;
-
-    const chainIdNum = parseInt(chainId);
-    if (isNaN(chainIdNum)) {
-      return ResponseUtil.validation(res, "Invalid chain ID");
-    }
-
-    logger.info(`Fetching popular tokens for chain: ${chainIdNum}`);
-
-    const popularTokens = moralisService.getPopularTokens(chainIdNum);
-
-    if (!popularTokens || popularTokens.length === 0) {
-      return ResponseUtil.notFound(
-        res,
-        `No popular tokens found for chain ${chainIdNum}`
-      );
-    }
-
-    const response = {
-      chainId: chainIdNum,
-      tokens: popularTokens,
-      count: popularTokens.length,
-    };
-
-    return ResponseUtil.success(
-      res,
-      response,
-      "Popular tokens fetched successfully"
-    );
-  } catch (error) {
-    logger.error("Error in /tokens/popular/:chainId", {
-      chainId: req.params.chainId,
-      error: error.message,
-    });
-
-    return ResponseUtil.serverError(res, "Failed to fetch popular tokens");
-  }
-});
-
-/**
  * GET /api/tokens/chains
- * Get supported chains and their information
+ * Get supported chains with token counts
  */
 router.get("/chains", async (req, res) => {
   try {
@@ -290,7 +326,7 @@ router.get("/stats", async (req, res) => {
 
     const stats = {
       service: "Token Service",
-      version: "1.0.0",
+      version: "2.0.0",
       uptime: process.uptime(),
       cache: moralisService.getCacheStats(),
       supportedChains: moralisService.getSupportedChains().length,
@@ -319,10 +355,11 @@ router.get("/health", async (req, res) => {
 
     const health = {
       status: isHealthy ? "healthy" : "unhealthy",
-      service: "Token Service",
+      service: "Token Service v2.0",
       moralis: isHealthy ? "connected" : "disconnected",
       cache: "active",
       apiKey: process.env.MORALIS_API_KEY ? "configured" : "missing",
+      presetChains: Object.keys(moralisService.PRESET_TOKENS || {}).length,
       timestamp: new Date().toISOString(),
     };
 
