@@ -15,3 +15,11 @@
 {"timestamp":"2025-09-14T08:22:39.865Z","level":"WARN","message":"⚠️ Failed to fetch prices from CoinGecko:","data":"Request failed with status code 429"}
 {"timestamp":"2025-09-14T08:22:40.819Z","level":"WARN","message":"⚠️ Failed to fetch live price for ZENT:","data":"Request failed with status code 429"}
 {"timestamp":"2025-09-14T08:22:40.820Z","level":"WARN","message":"⚠️ No price found for ZENT, returning 0"}
+{"timestamp":"2025-09-14T10:35:06.692Z","level":"WARN","message":"⚠️ CoinGecko service failed to initialize, but continuing:","data":"CoinGecko API error: 400"}
+{"timestamp":"2025-09-14T10:35:22.978Z","level":"WARN","message":"CoinGecko service not initialized, attempting to initialize..."}
+{"timestamp":"2025-09-14T10:35:50.136Z","level":"WARN","message":"CoinGecko service not initialized, attempting to initialize..."}
+{"timestamp":"2025-09-14T10:36:37.056Z","level":"WARN","message":"⚠️ CoinGecko service failed to initialize, but continuing:","data":"CoinGecko API error: 400"}
+{"timestamp":"2025-09-14T10:41:03.696Z","level":"WARN","message":"⚠️ CoinGecko service failed to initialize, but continuing:","data":"CoinGecko API error: 400 - {\"timestamp\":\"2025-09-14T10:41:02.930+00:00\",\"error_code\":10011,\"status\":{\"error_message\":\"If you are using Demo API key, please change your root URL  from pro-api.coingecko.com to api.coingecko.com  Please refer here for more details: https://docs.coingecko.com/v3.0.1/reference/introduction\"}}"}
+{"timestamp":"2025-09-14T10:41:40.520Z","level":"WARN","message":"⚠️ CoinGecko service failed to initialize, but continuing:","data":"CoinGecko API error: 400"}
+{"timestamp":"2025-09-14T10:43:22.633Z","level":"WARN","message":"⚠️ CoinGecko service failed to initialize, but continuing:","data":"CoinGecko API error: 400"}
+{"timestamp":"2025-09-14T10:43:41.847Z","level":"WARN","message":"⚠️ CoinGecko service failed to initialize, but continuing:","data":"CoinGecko API error: 400"}

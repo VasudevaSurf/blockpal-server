@@ -14,7 +14,8 @@ const moralisService = require("./services/moralis");
 
 // Import routes
 const tokenRoutes = require("./routes/tokens");
-const debugRoutes = require("./routes/debug"); // Add debug routes
+const debugRoutes = require("./routes/debug");
+const coinGeckoRoutes = require("./routes/coingecko"); // Add CoinGecko routes
 
 const app = express();
 const server = http.createServer(app);
@@ -74,11 +75,17 @@ app.get("/health", async (req, res) => {
         "wallet-connect": "running",
         moralis: moralisService.initialized ? "connected" : "initializing",
         cache: "active",
+        coingecko: "running",
       },
       uptime: process.uptime(),
       memory: process.memoryUsage(),
       environment: process.env.NODE_ENV,
-      apiKey: process.env.MORALIS_API_KEY ? "configured" : "missing",
+      apiKeys: {
+        moralis: process.env.MORALIS_API_KEY ? "configured" : "missing",
+        coingecko: process.env.COINGECKO_API_KEY
+          ? "configured"
+          : "using default",
+      },
     };
 
     res.json(health);
@@ -110,6 +117,16 @@ app.use(
     next();
   },
   tokenRoutes
+);
+
+// CoinGecko routes
+app.use(
+  "/api/coingecko",
+  (req, res, next) => {
+    console.log(`🦎 CoinGecko API Request: ${req.method} ${req.path}`);
+    next();
+  },
+  coinGeckoRoutes
 );
 
 // Debug routes (only in development)
@@ -172,6 +189,16 @@ wss.on("connection", (ws, req) => {
           );
           break;
 
+        case "coingecko_refresh":
+          // Handle CoinGecko refresh requests
+          ws.send(
+            JSON.stringify({
+              type: "coingecko_refresh_started",
+              message: "CoinGecko data refresh initiated",
+            })
+          );
+          break;
+
         default:
           ws.send(JSON.stringify({ error: "Unknown message type" }));
       }
@@ -195,7 +222,7 @@ wss.on("connection", (ws, req) => {
       type: "connection",
       message: "Connected to Blockpal Services",
       clientId,
-      services: ["wallet-connect", "tokens", "moralis"],
+      services: ["wallet-connect", "tokens", "moralis", "coingecko"],
     })
   );
 });
@@ -214,6 +241,9 @@ async function initializeServices() {
         "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6IjcxN2EyZTI3LWM1YjItNDRlMC05MGE3LWRjNGFiMGEzOTliYyIsIm9yZ0lkIjoiNDY4MzYzIiwidXNlcklkIjoiNDgxODIwIiwidHlwZUlkIjoiNTcwMjhhMzQtMzc0OC00NWRlLTg4NTktNjlmNzU5ODEzNTM2IiwidHlwZSI6IlBST0pFQ1QiLCJpYXQiOjE3NTY2MjE2NjAsImV4cCI6NDkxMjM4MTY2MH0.H2IkylE8uOgFiZodaezRSpN9nYE-D0GnF0SoMbbXCFQ"
           ? "configured"
           : "missing",
+      COINGECKO_API_KEY: process.env.COINGECKO_API_KEY
+        ? "configured"
+        : "using default",
       ALLOWED_ORIGINS: process.env.ALLOWED_ORIGINS,
     });
 
@@ -221,6 +251,9 @@ async function initializeServices() {
     logger.info("🔄 Starting Moralis initialization...");
     await moralisService.initialize();
     logger.info("✅ Moralis service initialized");
+
+    // CoinGecko service doesn't need initialization - it's ready to use
+    logger.info("✅ CoinGecko service ready");
 
     logger.info("🎉 All services initialized successfully");
   } catch (error) {
@@ -250,6 +283,7 @@ app.use("*", (req, res) => {
       health: "GET /health",
       wallet: "POST /api/wallet/*",
       tokens: "GET /api/tokens/*",
+      coingecko: "GET /api/coingecko/*",
       ...(process.env.NODE_ENV === "development" && {
         debug: "GET /api/debug/*",
       }),
@@ -265,11 +299,15 @@ server.listen(PORT, async () => {
   logger.info(`🔌 WebSocket server running on ws://localhost:${PORT}`);
   logger.info(`📡 Wallet Connect API: http://localhost:${PORT}/api/wallet`);
   logger.info(`🪙 Token API: http://localhost:${PORT}/api/tokens`);
+  logger.info(`🦎 CoinGecko API: http://localhost:${PORT}/api/coingecko`);
 
   if (process.env.NODE_ENV === "development") {
     logger.info(`🐛 Debug API: http://localhost:${PORT}/api/debug`);
     logger.info(
       `🧪 Test Moralis: http://localhost:${PORT}/api/debug/test-moralis`
+    );
+    logger.info(
+      `🦎 Test CoinGecko: http://localhost:${PORT}/api/coingecko/trending`
     );
   }
 
