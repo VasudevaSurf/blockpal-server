@@ -1,0 +1,10 @@
+{"timestamp":"2025-09-20T09:55:19.856Z","level":"ERROR","message":"❌ Error fetching trending tokens:","data":{}}
+{"timestamp":"2025-09-20T09:55:19.859Z","level":"ERROR","message":"Error response: 503","data":{"message":"Failed to fetch trending data from CoinGecko","errors":{"originalError":"fetch failed"}}}
+{"timestamp":"2025-09-20T09:55:30.547Z","level":"ERROR","message":"❌ Error fetching trending tokens:","data":{}}
+{"timestamp":"2025-09-20T09:55:30.547Z","level":"ERROR","message":"Error response: 503","data":{"message":"Failed to fetch trending data from CoinGecko","errors":{"originalError":"fetch failed"}}}
+{"timestamp":"2025-09-20T09:55:55.762Z","level":"ERROR","message":"❌ Error fetching trending tokens:","data":{}}
+{"timestamp":"2025-09-20T09:55:55.772Z","level":"ERROR","message":"Error response: 503","data":{"message":"Failed to fetch trending data from CoinGecko","errors":{"originalError":"fetch failed"}}}
+{"timestamp":"2025-09-20T09:55:55.865Z","level":"ERROR","message":"❌ Error fetching wallet token balances","data":{"wallet":"0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0","chain":1,"error":"[C0006] Request failed: getaddrinfo ENOTFOUND deep-index.moralis.io"}}
+{"timestamp":"2025-09-20T09:55:55.896Z","level":"ERROR","message":"❌ Error fetching trending tokens:","data":{}}
+{"timestamp":"2025-09-20T09:55:55.896Z","level":"ERROR","message":"Error response: 503","data":{"message":"Failed to fetch trending data from CoinGecko","errors":{"originalError":"fetch failed"}}}
+{"timestamp":"2025-09-20T09:55:55.899Z","level":"ERROR","message":"❌ Error fetching wallet token balances","data":{"wallet":"0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0","chain":1,"error":"[C0006] Request failed: getaddrinfo ENOTFOUND deep-index.moralis.io"}}

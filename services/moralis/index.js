@@ -1,4 +1,4 @@
-// services/moralis/index.js - COMPLETE REWRITE using wallet-balance.js approach
+// services/moralis/index.js - FIXED to return separate main list and total values
 const Moralis = require("moralis").default;
 const NodeCache = require("node-cache");
 const { logger } = require("../../utils/logger");
@@ -72,7 +72,7 @@ const PRESET_TOKENS = {
       "0xd6df932a45c0f255f85145f286ea0b292b21c90b", // AAVE
       "0x9a71012b13ca4d3d0cdc72a177df3ef03b0e76a3", // BAL
       "0x385eeac5cb85a38a9a07a70c73e0a3271cfb54a7", // GHST
-      "0xbbba073c31bf03b8acf7c28ef0738decf3695683", // SAND
+      "0xbbba073c31bf03b8acf2047067bd4f2c47d9bfd6", // SAND
       "0x61299774020da444af134c82fa83e3810b309991", // RNDR
       "0xa3fa99a148fa48d14ed51d610c367c61876997f1", // MAI
     ],
@@ -192,7 +192,7 @@ class MoralisService {
     return { displayedTokens, hiddenTokens };
   }
 
-  // EXACT COPY: Main wallet token balance function from wallet-balance.js
+  // FIXED: Enhanced wallet token balance function with separate main list and total calculations
   async getWalletTokenBalances(walletAddress, chainId) {
     try {
       await this.initialize();
@@ -243,7 +243,9 @@ class MoralisService {
           displayedTokens: [],
           hiddenTokens: [],
           totalValue: 0,
+          mainListValue: 0, // NEW: Main list value
           total24hrChange: 0,
+          mainList24hrChange: 0, // NEW: Main list 24hr change
         };
         cache.set(cacheKey, emptyResult);
         return emptyResult;
@@ -255,7 +257,20 @@ class MoralisService {
         chainId
       );
 
-      // EXACT COPY: Calculate totals
+      // FIXED: Calculate separate totals for main list vs all tokens
+
+      // Main list calculations (only displayedTokens = preset + user-added)
+      const mainListValue = displayedTokens.reduce((sum, t) => {
+        const value = parseFloat(t.usd_value) || 0;
+        return sum + value;
+      }, 0);
+
+      const mainList24hrChange = displayedTokens.reduce((sum, t) => {
+        const change = parseFloat(t.usd_value_24hr_usd_change) || 0;
+        return sum + change;
+      }, 0);
+
+      // Total calculations (all tokens for reference)
       const totalValue = [...displayedTokens, ...hiddenTokens].reduce(
         (sum, t) => {
           const value = parseFloat(t.usd_value) || 0;
@@ -275,27 +290,49 @@ class MoralisService {
       const finalResult = {
         displayedTokens,
         hiddenTokens,
-        totalValue,
-        total24hrChange,
+        totalValue, // All tokens value
+        mainListValue, // NEW: Only main list (preset + user-added) value
+        total24hrChange: mainList24hrChange, // CHANGED: Return main list change for display
+        mainList24hrChange, // NEW: Explicit main list 24hr change
+        all24hrChange: total24hrChange, // NEW: All tokens 24hr change for reference
         chainName: chainConfig.name,
       };
 
       // Cache the result
       cache.set(cacheKey, finalResult);
 
+      // FIXED: Enhanced logging to show both values
       logger.info(
         `✅ Successfully processed tokens for wallet ${walletAddress}`
       );
-      logger.info(`💰 Total portfolio value: $${totalValue.toFixed(3)}`);
       logger.info(
-        `📈 24hr Portfolio Change: ${
-          total24hrChange >= 0 ? "+" : ""
-        }$${Math.abs(total24hrChange).toFixed(3)}`
+        `💰 Main List Value: $${mainListValue.toFixed(3)} (${
+          displayedTokens.length
+        } tokens)`
       );
-      logger.info(`📊 Showing: ${displayedTokens.length} preset tokens`);
       logger.info(
-        `💡 Found ${hiddenTokens.length} additional token(s) not in preset list.`
+        `📊 Total Portfolio Value: $${totalValue.toFixed(3)} (${
+          displayedTokens.length + hiddenTokens.length
+        } tokens)`
       );
+      logger.info(
+        `📈 24hr Main List Change: ${
+          mainList24hrChange >= 0 ? "+" : ""
+        }$${Math.abs(mainList24hrChange).toFixed(3)}`
+      );
+      logger.info(
+        `📊 24hr Total Change: ${total24hrChange >= 0 ? "+" : ""}$${Math.abs(
+          total24hrChange
+        ).toFixed(3)}`
+      );
+      logger.info(
+        `🎯 Showing: ${displayedTokens.length} preset tokens in main list`
+      );
+      if (hiddenTokens.length > 0) {
+        logger.info(
+          `💡 Found ${hiddenTokens.length} additional token(s) not in main list.`
+        );
+      }
 
       return finalResult;
     } catch (error) {
@@ -310,7 +347,9 @@ class MoralisService {
         displayedTokens: [],
         hiddenTokens: [],
         totalValue: 0,
+        mainListValue: 0,
         total24hrChange: 0,
+        mainList24hrChange: 0,
         chainName: PRESET_TOKENS[chainId]?.name || "Unknown",
       };
     }

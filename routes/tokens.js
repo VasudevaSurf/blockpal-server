@@ -1,4 +1,4 @@
-// routes/tokens.js - COMPLETE REWRITE following wallet-balance.js approach
+// routes/tokens.js - FIXED REWRITE following wallet-balance.js approach
 const express = require("express");
 const rateLimit = require("express-rate-limit");
 const { logger } = require("../utils/logger");
@@ -20,7 +20,7 @@ router.use(tokenRateLimit);
 
 /**
  * GET /api/tokens/wallet/:address
- * Get token balances with show/hide functionality - EXACT copy of wallet-balance.js logic
+ * Get token balances with show/hide functionality - FIXED VERSION
  */
 router.get("/wallet/:address", async (req, res) => {
   try {
@@ -80,7 +80,7 @@ router.get("/wallet/:address", async (req, res) => {
         return ResponseUtil.error(res, "API configuration error", 503);
       }
 
-      // Return empty result for other errors (don't break the UI)
+      // Return empty result for better UX
       logger.warn(
         `Returning empty result due to Moralis error: ${moralisError.message}`
       );
@@ -93,9 +93,9 @@ router.get("/wallet/:address", async (req, res) => {
       };
     }
 
-    // Process tokens into frontend format - EXACT logic from wallet-balance.js
+    // Process tokens into frontend format
     const processToken = (token) => {
-      // Parse balance - EXACT same logic
+      // Parse balance
       let balance = 0;
       if (token.balance_formatted) {
         balance = parseFloat(token.balance_formatted);
@@ -111,7 +111,7 @@ router.get("/wallet/:address", async (req, res) => {
       const priceChange24h =
         parseFloat(token.usd_price_24hr_percent_change) || 0;
 
-      // Determine if native token - EXACT same logic
+      // Determine if native token
       const isNativeToken =
         token.native_token ||
         token.token_address === "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE" ||
@@ -141,47 +141,54 @@ router.get("/wallet/:address", async (req, res) => {
       };
     };
 
-    // Process displayed tokens (preset tokens)
-    const displayedTokens = result.displayedTokens.map(processToken);
+    // FIXED: Process displayed tokens (preset tokens) and sort by value
+    const displayedTokens = result.displayedTokens
+      .map(processToken)
+      .sort((a, b) => b.value - a.value);
 
-    // Process hidden tokens (non-preset tokens)
-    const hiddenTokens = result.hiddenTokens.map(processToken);
+    // FIXED: Process hidden tokens (non-preset tokens) and sort by value
+    const hiddenTokens = result.hiddenTokens
+      .map(processToken)
+      .sort((a, b) => b.value - a.value);
 
-    // Decide which tokens to return based on showHidden parameter
-    let tokensToReturn = displayedTokens;
+    // FIXED: Decide which tokens to return - KEEP SEPARATION
+    let tokensToReturn = [];
+    let actualPresetCount = displayedTokens.length;
+    let actualHiddenCount = hiddenTokens.length;
+
     if (showHiddenTokens) {
+      // FIXED: When showing hidden, send preset tokens FIRST, then hidden tokens
       tokensToReturn = [...displayedTokens, ...hiddenTokens];
+    } else {
+      // When not showing hidden, send only preset tokens
+      tokensToReturn = displayedTokens;
+      actualHiddenCount = hiddenTokens.length; // Still report hidden count
     }
-
-    // Sort by USD value descending
-    tokensToReturn.sort((a, b) => b.value - a.value);
 
     const response = {
       wallet: address,
       chainId,
       chainName: result.chainName,
       tokens: tokensToReturn,
-      // Summary data - EXACT same as wallet-balance.js
+      // FIXED: Summary data
       totalValue: result.totalValue,
       total24hrChange: result.total24hrChange,
       tokenCount: tokensToReturn.length,
-      // Metadata for show/hide functionality
-      presetTokenCount: displayedTokens.length,
-      hiddenTokenCount: hiddenTokens.length,
+      // FIXED: Metadata for show/hide functionality
+      presetTokenCount: actualPresetCount, // Number of preset tokens
+      hiddenTokenCount: actualHiddenCount, // Number of hidden tokens
       showingHidden: showHiddenTokens,
       hasHiddenTokens: hiddenTokens.length > 0,
       lastUpdated: new Date().toISOString(),
     };
 
     logger.info(
-      `Successfully returning ${
-        tokensToReturn.length
-      } tokens with total value $${result.totalValue.toFixed(2)}`
+      `Successfully returning ${tokensToReturn.length} tokens (${actualPresetCount} preset, ${actualHiddenCount} hidden)`
     );
     logger.info(
-      `Preset tokens: ${displayedTokens.length}, Hidden tokens: ${
-        hiddenTokens.length
-      }, Showing: ${showHiddenTokens ? "All" : "Preset only"}`
+      `Total portfolio value: $${result.totalValue.toFixed(2)}, 24hr change: ${
+        result.total24hrChange >= 0 ? "+" : ""
+      }$${result.total24hrChange.toFixed(3)}`
     );
 
     return ResponseUtil.success(res, response, "Tokens fetched successfully");

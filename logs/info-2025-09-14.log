@@ -4013,3 +4013,13 @@
 {"timestamp":"2025-09-14T11:58:05.069Z","level":"INFO","message":"Preset tokens: 7, Hidden tokens: 3, Showing: Preset only"}
 {"timestamp":"2025-09-14T11:58:05.070Z","level":"INFO","message":"Success response: 200","data":{"message":"Tokens fetched successfully","dataType":"object"}}
 {"timestamp":"2025-09-14T11:58:05.073Z","level":"INFO","message":"::1 - - [14/Sep/2025:11:58:05 +0000] \"GET /api/tokens/wallet/0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0?chain=1&showHidden=false HTTP/1.1\" 200 - \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-14T11:58:57.471Z","level":"INFO","message":"🔥 Fetching trending tokens for SwapSection"}
+{"timestamp":"2025-09-14T11:58:57.472Z","level":"INFO","message":"📦 Cache hit for trending tokens"}
+{"timestamp":"2025-09-14T11:58:57.472Z","level":"INFO","message":"✅ Successfully returned trending data: 15 trending, 15 gainers"}
+{"timestamp":"2025-09-14T11:58:57.473Z","level":"INFO","message":"Success response: 200","data":{"message":"Trending tokens fetched successfully","dataType":"object"}}
+{"timestamp":"2025-09-14T11:58:57.475Z","level":"INFO","message":"::1 - - [14/Sep/2025:11:58:57 +0000] \"GET /api/coingecko/trending HTTP/1.1\" 200 - \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-14T11:58:57.478Z","level":"INFO","message":"🔥 Fetching trending tokens for SwapSection"}
+{"timestamp":"2025-09-14T11:58:57.479Z","level":"INFO","message":"📦 Cache hit for trending tokens"}
+{"timestamp":"2025-09-14T11:58:57.479Z","level":"INFO","message":"✅ Successfully returned trending data: 15 trending, 15 gainers"}
+{"timestamp":"2025-09-14T11:58:57.480Z","level":"INFO","message":"Success response: 200","data":{"message":"Trending tokens fetched successfully","dataType":"object"}}
+{"timestamp":"2025-09-14T11:58:57.483Z","level":"INFO","message":"::1 - - [14/Sep/2025:11:58:57 +0000] \"GET /api/coingecko/trending HTTP/1.1\" 200 - \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}

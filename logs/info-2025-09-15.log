@@ -1,0 +1,202 @@
+{"timestamp":"2025-09-15T18:45:44.461Z","level":"INFO","message":"🚀 Blockpal Services running on port 5002"}
+{"timestamp":"2025-09-15T18:45:44.462Z","level":"INFO","message":"🔗 Health check: http://localhost:5002/health"}
+{"timestamp":"2025-09-15T18:45:44.464Z","level":"INFO","message":"🔌 WebSocket server running on ws://localhost:5002"}
+{"timestamp":"2025-09-15T18:45:44.467Z","level":"INFO","message":"📡 Wallet Connect API: http://localhost:5002/api/wallet"}
+{"timestamp":"2025-09-15T18:45:44.468Z","level":"INFO","message":"🪙 Token API: http://localhost:5002/api/tokens"}
+{"timestamp":"2025-09-15T18:45:44.469Z","level":"INFO","message":"🦎 CoinGecko API: http://localhost:5002/api/coingecko"}
+{"timestamp":"2025-09-15T18:45:44.488Z","level":"INFO","message":"🐛 Debug API: http://localhost:5002/api/debug"}
+{"timestamp":"2025-09-15T18:45:44.490Z","level":"INFO","message":"🧪 Test Moralis: http://localhost:5002/api/debug/test-moralis"}
+{"timestamp":"2025-09-15T18:45:44.491Z","level":"INFO","message":"🦎 Test CoinGecko: http://localhost:5002/api/coingecko/trending"}
+{"timestamp":"2025-09-15T18:45:44.497Z","level":"INFO","message":"🔒 CORS allowed origins: http://localhost:3000, http://localhost:3001, http://127.0.0.1:3000, http://127.0.0.1:3001, http://localhost:5173"}
+{"timestamp":"2025-09-15T18:45:44.499Z","level":"INFO","message":"🔄 Initializing services..."}
+{"timestamp":"2025-09-15T18:45:44.505Z","level":"INFO","message":"Environment:","data":{"NODE_ENV":"development","PORT":"5002","MORALIS_API_KEY":"configured","COINGECKO_API_KEY":"configured","ALLOWED_ORIGINS":"http://localhost:3000,http://localhost:3001,http://127.0.0.1:3000,http://127.0.0.1:3001,http://localhost:5173"}}
+{"timestamp":"2025-09-15T18:45:44.510Z","level":"INFO","message":"🔄 Starting Moralis initialization..."}
+{"timestamp":"2025-09-15T18:45:44.525Z","level":"INFO","message":"🔑 Using API Key:","data":"eyJhbGciOiJIUzI1NiIs..."}
+{"timestamp":"2025-09-15T18:45:44.532Z","level":"INFO","message":"✅ Moralis service initialized successfully"}
+{"timestamp":"2025-09-15T18:45:44.536Z","level":"INFO","message":"✅ Moralis service initialized"}
+{"timestamp":"2025-09-15T18:45:44.539Z","level":"INFO","message":"✅ CoinGecko service ready"}
+{"timestamp":"2025-09-15T18:45:44.540Z","level":"INFO","message":"🎉 All services initialized successfully"}
+{"timestamp":"2025-09-15T18:52:49.151Z","level":"INFO","message":"::1 - - [15/Sep/2025:18:52:49 +0000] \"OPTIONS /api/coingecko/trending HTTP/1.1\" 200 0 \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-15T18:52:49.237Z","level":"INFO","message":"🔥 Fetching trending tokens for SwapSection"}
+{"timestamp":"2025-09-15T18:52:49.238Z","level":"INFO","message":"🔍 Fetching trending tokens from CoinGecko..."}
+{"timestamp":"2025-09-15T18:52:49.291Z","level":"INFO","message":"::1 - - [15/Sep/2025:18:52:49 +0000] \"OPTIONS /api/coingecko/trending HTTP/1.1\" 200 0 \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-15T18:52:49.942Z","level":"INFO","message":"✅ Fetched 15 trending tokens and 15 top gainers"}
+{"timestamp":"2025-09-15T18:52:49.942Z","level":"INFO","message":"✅ Successfully returned trending data: 15 trending, 15 gainers"}
+{"timestamp":"2025-09-15T18:52:49.943Z","level":"INFO","message":"Success response: 200","data":{"message":"Trending tokens fetched successfully","dataType":"object"}}
+{"timestamp":"2025-09-15T18:52:49.955Z","level":"INFO","message":"::1 - - [15/Sep/2025:18:52:49 +0000] \"GET /api/coingecko/trending HTTP/1.1\" 200 - \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-15T18:52:49.959Z","level":"INFO","message":"🔥 Fetching trending tokens for SwapSection"}
+{"timestamp":"2025-09-15T18:52:49.960Z","level":"INFO","message":"📦 Cache hit for trending tokens"}
+{"timestamp":"2025-09-15T18:52:49.962Z","level":"INFO","message":"✅ Successfully returned trending data: 15 trending, 15 gainers"}
+{"timestamp":"2025-09-15T18:52:49.964Z","level":"INFO","message":"Success response: 200","data":{"message":"Trending tokens fetched successfully","dataType":"object"}}
+{"timestamp":"2025-09-15T18:52:49.969Z","level":"INFO","message":"::1 - - [15/Sep/2025:18:52:49 +0000] \"GET /api/coingecko/trending HTTP/1.1\" 200 - \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-15T18:53:09.435Z","level":"INFO","message":"🔥 Fetching trending tokens for SwapSection"}
+{"timestamp":"2025-09-15T18:53:09.436Z","level":"INFO","message":"📦 Cache hit for trending tokens"}
+{"timestamp":"2025-09-15T18:53:09.439Z","level":"INFO","message":"✅ Successfully returned trending data: 15 trending, 15 gainers"}
+{"timestamp":"2025-09-15T18:53:09.467Z","level":"INFO","message":"Success response: 200","data":{"message":"Trending tokens fetched successfully","dataType":"object"}}
+{"timestamp":"2025-09-15T18:53:09.492Z","level":"INFO","message":"::1 - - [15/Sep/2025:18:53:09 +0000] \"GET /api/coingecko/trending HTTP/1.1\" 200 - \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-15T18:53:16.319Z","level":"INFO","message":"🔥 Fetching trending tokens for SwapSection"}
+{"timestamp":"2025-09-15T18:53:16.320Z","level":"INFO","message":"📦 Cache hit for trending tokens"}
+{"timestamp":"2025-09-15T18:53:16.321Z","level":"INFO","message":"✅ Successfully returned trending data: 15 trending, 15 gainers"}
+{"timestamp":"2025-09-15T18:53:16.322Z","level":"INFO","message":"Success response: 200","data":{"message":"Trending tokens fetched successfully","dataType":"object"}}
+{"timestamp":"2025-09-15T18:53:16.327Z","level":"INFO","message":"::1 - - [15/Sep/2025:18:53:16 +0000] \"GET /api/coingecko/trending HTTP/1.1\" 200 - \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-15T18:53:18.607Z","level":"INFO","message":"🔥 Fetching trending tokens for SwapSection"}
+{"timestamp":"2025-09-15T18:53:18.607Z","level":"INFO","message":"📦 Cache hit for trending tokens"}
+{"timestamp":"2025-09-15T18:53:18.608Z","level":"INFO","message":"✅ Successfully returned trending data: 15 trending, 15 gainers"}
+{"timestamp":"2025-09-15T18:53:18.609Z","level":"INFO","message":"Success response: 200","data":{"message":"Trending tokens fetched successfully","dataType":"object"}}
+{"timestamp":"2025-09-15T18:53:18.611Z","level":"INFO","message":"::1 - - [15/Sep/2025:18:53:18 +0000] \"GET /api/coingecko/trending HTTP/1.1\" 200 - \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-15T18:53:27.546Z","level":"INFO","message":"🔥 Fetching trending tokens for SwapSection"}
+{"timestamp":"2025-09-15T18:53:27.547Z","level":"INFO","message":"📦 Cache hit for trending tokens"}
+{"timestamp":"2025-09-15T18:53:27.547Z","level":"INFO","message":"✅ Successfully returned trending data: 15 trending, 15 gainers"}
+{"timestamp":"2025-09-15T18:53:27.548Z","level":"INFO","message":"Success response: 200","data":{"message":"Trending tokens fetched successfully","dataType":"object"}}
+{"timestamp":"2025-09-15T18:53:27.551Z","level":"INFO","message":"::1 - - [15/Sep/2025:18:53:27 +0000] \"GET /api/coingecko/trending HTTP/1.1\" 200 - \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-15T18:53:45.498Z","level":"INFO","message":"::1 - - [15/Sep/2025:18:53:45 +0000] \"OPTIONS /api/tokens/wallet/0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0?chain=1&showHidden=false HTTP/1.1\" 200 0 \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-15T18:53:45.512Z","level":"INFO","message":"::1 - - [15/Sep/2025:18:53:45 +0000] \"OPTIONS /api/tokens/wallet/0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0?chain=1&showHidden=false HTTP/1.1\" 200 0 \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-15T18:53:45.532Z","level":"INFO","message":"Fetching tokens for wallet: 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0 on chain: 1, showHidden: false"}
+{"timestamp":"2025-09-15T18:53:45.536Z","level":"INFO","message":"🔍 Fetching token balances for wallet: 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0 on chain: 1"}
+{"timestamp":"2025-09-15T18:53:45.540Z","level":"INFO","message":"🔗 Using chain hex: 0x1 for chain ID: 1"}
+{"timestamp":"2025-09-15T18:53:45.544Z","level":"INFO","message":"📡 Making Moralis API call for tokens with prices..."}
+{"timestamp":"2025-09-15T18:53:45.780Z","level":"INFO","message":"::1 - - [15/Sep/2025:18:53:45 +0000] \"OPTIONS /api/tokens/wallet/0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0?chain=1&showHidden=false HTTP/1.1\" 200 0 \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-15T18:53:45.784Z","level":"INFO","message":"🔥 Fetching trending tokens for SwapSection"}
+{"timestamp":"2025-09-15T18:53:45.787Z","level":"INFO","message":"📦 Cache hit for trending tokens"}
+{"timestamp":"2025-09-15T18:53:45.788Z","level":"INFO","message":"✅ Successfully returned trending data: 15 trending, 15 gainers"}
+{"timestamp":"2025-09-15T18:53:45.789Z","level":"INFO","message":"Success response: 200","data":{"message":"Trending tokens fetched successfully","dataType":"object"}}
+{"timestamp":"2025-09-15T18:53:45.794Z","level":"INFO","message":"::1 - - [15/Sep/2025:18:53:45 +0000] \"OPTIONS /api/tokens/wallet/0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0?chain=1&showHidden=false HTTP/1.1\" 200 0 \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-15T18:53:45.796Z","level":"INFO","message":"::1 - - [15/Sep/2025:18:53:45 +0000] \"GET /api/coingecko/trending HTTP/1.1\" 200 - \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-15T18:53:45.800Z","level":"INFO","message":"🔥 Fetching trending tokens for SwapSection"}
+{"timestamp":"2025-09-15T18:53:45.801Z","level":"INFO","message":"📦 Cache hit for trending tokens"}
+{"timestamp":"2025-09-15T18:53:45.801Z","level":"INFO","message":"✅ Successfully returned trending data: 15 trending, 15 gainers"}
+{"timestamp":"2025-09-15T18:53:45.803Z","level":"INFO","message":"Success response: 200","data":{"message":"Trending tokens fetched successfully","dataType":"object"}}
+{"timestamp":"2025-09-15T18:53:45.807Z","level":"INFO","message":"::1 - - [15/Sep/2025:18:53:45 +0000] \"GET /api/coingecko/trending HTTP/1.1\" 200 - \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-15T18:53:46.791Z","level":"INFO","message":"✅ Successfully processed tokens for wallet 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0"}
+{"timestamp":"2025-09-15T18:53:46.791Z","level":"INFO","message":"💰 Total portfolio value: $2.734"}
+{"timestamp":"2025-09-15T18:53:46.792Z","level":"INFO","message":"📈 24hr Portfolio Change: $0.177"}
+{"timestamp":"2025-09-15T18:53:46.792Z","level":"INFO","message":"📊 Showing: 7 preset tokens"}
+{"timestamp":"2025-09-15T18:53:46.793Z","level":"INFO","message":"💡 Found 3 additional token(s) not in preset list."}
+{"timestamp":"2025-09-15T18:53:46.794Z","level":"INFO","message":"Successfully returning 7 tokens with total value $2.73"}
+{"timestamp":"2025-09-15T18:53:46.795Z","level":"INFO","message":"Preset tokens: 7, Hidden tokens: 3, Showing: Preset only"}
+{"timestamp":"2025-09-15T18:53:46.796Z","level":"INFO","message":"Success response: 200","data":{"message":"Tokens fetched successfully","dataType":"object"}}
+{"timestamp":"2025-09-15T18:53:46.799Z","level":"INFO","message":"::1 - - [15/Sep/2025:18:53:46 +0000] \"GET /api/tokens/wallet/0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0?chain=1&showHidden=false HTTP/1.1\" 200 - \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-15T18:53:46.802Z","level":"INFO","message":"Fetching tokens for wallet: 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0 on chain: 1, showHidden: false"}
+{"timestamp":"2025-09-15T18:53:46.803Z","level":"INFO","message":"🔍 Fetching token balances for wallet: 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0 on chain: 1"}
+{"timestamp":"2025-09-15T18:53:46.803Z","level":"INFO","message":"🔗 Using chain hex: 0x1 for chain ID: 1"}
+{"timestamp":"2025-09-15T18:53:46.804Z","level":"INFO","message":"📡 Making Moralis API call for tokens with prices..."}
+{"timestamp":"2025-09-15T18:53:47.421Z","level":"INFO","message":"✅ Successfully processed tokens for wallet 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0"}
+{"timestamp":"2025-09-15T18:53:47.422Z","level":"INFO","message":"💰 Total portfolio value: $2.734"}
+{"timestamp":"2025-09-15T18:53:47.422Z","level":"INFO","message":"📈 24hr Portfolio Change: $0.177"}
+{"timestamp":"2025-09-15T18:53:47.423Z","level":"INFO","message":"📊 Showing: 7 preset tokens"}
+{"timestamp":"2025-09-15T18:53:47.423Z","level":"INFO","message":"💡 Found 3 additional token(s) not in preset list."}
+{"timestamp":"2025-09-15T18:53:47.424Z","level":"INFO","message":"Successfully returning 7 tokens with total value $2.73"}
+{"timestamp":"2025-09-15T18:53:47.424Z","level":"INFO","message":"Preset tokens: 7, Hidden tokens: 3, Showing: Preset only"}
+{"timestamp":"2025-09-15T18:53:47.424Z","level":"INFO","message":"Success response: 200","data":{"message":"Tokens fetched successfully","dataType":"object"}}
+{"timestamp":"2025-09-15T18:53:47.427Z","level":"INFO","message":"::1 - - [15/Sep/2025:18:53:47 +0000] \"GET /api/tokens/wallet/0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0?chain=1&showHidden=false HTTP/1.1\" 200 - \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-15T18:53:47.432Z","level":"INFO","message":"Fetching tokens for wallet: 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0 on chain: 1, showHidden: false"}
+{"timestamp":"2025-09-15T18:53:47.433Z","level":"INFO","message":"🔍 Fetching token balances for wallet: 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0 on chain: 1"}
+{"timestamp":"2025-09-15T18:53:47.434Z","level":"INFO","message":"🔗 Using chain hex: 0x1 for chain ID: 1"}
+{"timestamp":"2025-09-15T18:53:47.435Z","level":"INFO","message":"📡 Making Moralis API call for tokens with prices..."}
+{"timestamp":"2025-09-15T18:53:47.932Z","level":"INFO","message":"✅ Successfully processed tokens for wallet 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0"}
+{"timestamp":"2025-09-15T18:53:47.933Z","level":"INFO","message":"💰 Total portfolio value: $2.734"}
+{"timestamp":"2025-09-15T18:53:47.933Z","level":"INFO","message":"📈 24hr Portfolio Change: $0.177"}
+{"timestamp":"2025-09-15T18:53:47.936Z","level":"INFO","message":"📊 Showing: 7 preset tokens"}
+{"timestamp":"2025-09-15T18:53:47.937Z","level":"INFO","message":"💡 Found 3 additional token(s) not in preset list."}
+{"timestamp":"2025-09-15T18:53:47.938Z","level":"INFO","message":"Successfully returning 7 tokens with total value $2.73"}
+{"timestamp":"2025-09-15T18:53:47.939Z","level":"INFO","message":"Preset tokens: 7, Hidden tokens: 3, Showing: Preset only"}
+{"timestamp":"2025-09-15T18:53:47.940Z","level":"INFO","message":"Success response: 200","data":{"message":"Tokens fetched successfully","dataType":"object"}}
+{"timestamp":"2025-09-15T18:53:47.946Z","level":"INFO","message":"::1 - - [15/Sep/2025:18:53:47 +0000] \"GET /api/tokens/wallet/0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0?chain=1&showHidden=false HTTP/1.1\" 200 - \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-15T18:53:47.953Z","level":"INFO","message":"Fetching tokens for wallet: 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0 on chain: 1, showHidden: false"}
+{"timestamp":"2025-09-15T18:53:47.953Z","level":"INFO","message":"🔍 Fetching token balances for wallet: 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0 on chain: 1"}
+{"timestamp":"2025-09-15T18:53:47.954Z","level":"INFO","message":"🔗 Using chain hex: 0x1 for chain ID: 1"}
+{"timestamp":"2025-09-15T18:53:47.954Z","level":"INFO","message":"📡 Making Moralis API call for tokens with prices..."}
+{"timestamp":"2025-09-15T18:53:48.466Z","level":"INFO","message":"✅ Successfully processed tokens for wallet 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0"}
+{"timestamp":"2025-09-15T18:53:48.467Z","level":"INFO","message":"💰 Total portfolio value: $2.734"}
+{"timestamp":"2025-09-15T18:53:48.467Z","level":"INFO","message":"📈 24hr Portfolio Change: $0.177"}
+{"timestamp":"2025-09-15T18:53:48.468Z","level":"INFO","message":"📊 Showing: 7 preset tokens"}
+{"timestamp":"2025-09-15T18:53:48.469Z","level":"INFO","message":"💡 Found 3 additional token(s) not in preset list."}
+{"timestamp":"2025-09-15T18:53:48.470Z","level":"INFO","message":"Successfully returning 7 tokens with total value $2.73"}
+{"timestamp":"2025-09-15T18:53:48.471Z","level":"INFO","message":"Preset tokens: 7, Hidden tokens: 3, Showing: Preset only"}
+{"timestamp":"2025-09-15T18:53:48.471Z","level":"INFO","message":"Success response: 200","data":{"message":"Tokens fetched successfully","dataType":"object"}}
+{"timestamp":"2025-09-15T18:53:48.474Z","level":"INFO","message":"::1 - - [15/Sep/2025:18:53:48 +0000] \"GET /api/tokens/wallet/0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0?chain=1&showHidden=false HTTP/1.1\" 200 - \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-15T18:53:57.479Z","level":"INFO","message":"::1 - - [15/Sep/2025:18:53:57 +0000] \"OPTIONS /api/tokens/wallet/0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0?chain=1&showHidden=true HTTP/1.1\" 200 0 \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-15T18:53:57.487Z","level":"INFO","message":"Fetching tokens for wallet: 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0 on chain: 1, showHidden: true"}
+{"timestamp":"2025-09-15T18:53:57.488Z","level":"INFO","message":"🔍 Fetching token balances for wallet: 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0 on chain: 1"}
+{"timestamp":"2025-09-15T18:53:57.489Z","level":"INFO","message":"🔗 Using chain hex: 0x1 for chain ID: 1"}
+{"timestamp":"2025-09-15T18:53:57.492Z","level":"INFO","message":"📡 Making Moralis API call for tokens with prices..."}
+{"timestamp":"2025-09-15T18:53:58.257Z","level":"INFO","message":"✅ Successfully processed tokens for wallet 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0"}
+{"timestamp":"2025-09-15T18:53:58.258Z","level":"INFO","message":"💰 Total portfolio value: $2.734"}
+{"timestamp":"2025-09-15T18:53:58.258Z","level":"INFO","message":"📈 24hr Portfolio Change: $0.177"}
+{"timestamp":"2025-09-15T18:53:58.259Z","level":"INFO","message":"📊 Showing: 7 preset tokens"}
+{"timestamp":"2025-09-15T18:53:58.260Z","level":"INFO","message":"💡 Found 3 additional token(s) not in preset list."}
+{"timestamp":"2025-09-15T18:53:58.260Z","level":"INFO","message":"Successfully returning 10 tokens with total value $2.73"}
+{"timestamp":"2025-09-15T18:53:58.261Z","level":"INFO","message":"Preset tokens: 7, Hidden tokens: 3, Showing: All"}
+{"timestamp":"2025-09-15T18:53:58.262Z","level":"INFO","message":"Success response: 200","data":{"message":"Tokens fetched successfully","dataType":"object"}}
+{"timestamp":"2025-09-15T18:53:58.264Z","level":"INFO","message":"::1 - - [15/Sep/2025:18:53:58 +0000] \"GET /api/tokens/wallet/0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0?chain=1&showHidden=true HTTP/1.1\" 200 - \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-15T18:54:01.621Z","level":"INFO","message":"Fetching tokens for wallet: 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0 on chain: 1, showHidden: false"}
+{"timestamp":"2025-09-15T18:54:01.622Z","level":"INFO","message":"🔍 Fetching token balances for wallet: 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0 on chain: 1"}
+{"timestamp":"2025-09-15T18:54:01.623Z","level":"INFO","message":"🔗 Using chain hex: 0x1 for chain ID: 1"}
+{"timestamp":"2025-09-15T18:54:01.623Z","level":"INFO","message":"📡 Making Moralis API call for tokens with prices..."}
+{"timestamp":"2025-09-15T18:54:02.122Z","level":"INFO","message":"✅ Successfully processed tokens for wallet 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0"}
+{"timestamp":"2025-09-15T18:54:02.123Z","level":"INFO","message":"💰 Total portfolio value: $2.734"}
+{"timestamp":"2025-09-15T18:54:02.125Z","level":"INFO","message":"📈 24hr Portfolio Change: $0.177"}
+{"timestamp":"2025-09-15T18:54:02.127Z","level":"INFO","message":"📊 Showing: 7 preset tokens"}
+{"timestamp":"2025-09-15T18:54:02.131Z","level":"INFO","message":"💡 Found 3 additional token(s) not in preset list."}
+{"timestamp":"2025-09-15T18:54:02.133Z","level":"INFO","message":"Successfully returning 7 tokens with total value $2.73"}
+{"timestamp":"2025-09-15T18:54:02.134Z","level":"INFO","message":"Preset tokens: 7, Hidden tokens: 3, Showing: Preset only"}
+{"timestamp":"2025-09-15T18:54:02.135Z","level":"INFO","message":"Success response: 200","data":{"message":"Tokens fetched successfully","dataType":"object"}}
+{"timestamp":"2025-09-15T18:54:02.140Z","level":"INFO","message":"::1 - - [15/Sep/2025:18:54:02 +0000] \"GET /api/tokens/wallet/0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0?chain=1&showHidden=false HTTP/1.1\" 200 - \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-15T18:54:45.502Z","level":"INFO","message":"🔥 Fetching trending tokens for SwapSection"}
+{"timestamp":"2025-09-15T18:54:45.503Z","level":"INFO","message":"🔍 Fetching trending tokens from CoinGecko..."}
+{"timestamp":"2025-09-15T18:54:45.825Z","level":"INFO","message":"✅ Fetched 15 trending tokens and 15 top gainers"}
+{"timestamp":"2025-09-15T18:54:45.825Z","level":"INFO","message":"✅ Successfully returned trending data: 15 trending, 15 gainers"}
+{"timestamp":"2025-09-15T18:54:45.826Z","level":"INFO","message":"Success response: 200","data":{"message":"Trending tokens fetched successfully","dataType":"object"}}
+{"timestamp":"2025-09-15T18:54:45.829Z","level":"INFO","message":"::1 - - [15/Sep/2025:18:54:45 +0000] \"GET /api/coingecko/trending HTTP/1.1\" 200 - \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-15T18:54:45.834Z","level":"INFO","message":"🔥 Fetching trending tokens for SwapSection"}
+{"timestamp":"2025-09-15T18:54:45.835Z","level":"INFO","message":"📦 Cache hit for trending tokens"}
+{"timestamp":"2025-09-15T18:54:45.836Z","level":"INFO","message":"✅ Successfully returned trending data: 15 trending, 15 gainers"}
+{"timestamp":"2025-09-15T18:54:45.836Z","level":"INFO","message":"Success response: 200","data":{"message":"Trending tokens fetched successfully","dataType":"object"}}
+{"timestamp":"2025-09-15T18:54:45.842Z","level":"INFO","message":"::1 - - [15/Sep/2025:18:54:45 +0000] \"GET /api/coingecko/trending HTTP/1.1\" 200 - \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-15T18:54:58.341Z","level":"INFO","message":"Fetching tokens for wallet: 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0 on chain: 1, showHidden: true"}
+{"timestamp":"2025-09-15T18:54:58.342Z","level":"INFO","message":"🔍 Fetching token balances for wallet: 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0 on chain: 1"}
+{"timestamp":"2025-09-15T18:54:58.343Z","level":"INFO","message":"🔗 Using chain hex: 0x1 for chain ID: 1"}
+{"timestamp":"2025-09-15T18:54:58.343Z","level":"INFO","message":"📡 Making Moralis API call for tokens with prices..."}
+{"timestamp":"2025-09-15T18:54:59.873Z","level":"INFO","message":"✅ Successfully processed tokens for wallet 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0"}
+{"timestamp":"2025-09-15T18:54:59.874Z","level":"INFO","message":"💰 Total portfolio value: $2.734"}
+{"timestamp":"2025-09-15T18:54:59.875Z","level":"INFO","message":"📈 24hr Portfolio Change: $0.177"}
+{"timestamp":"2025-09-15T18:54:59.875Z","level":"INFO","message":"📊 Showing: 7 preset tokens"}
+{"timestamp":"2025-09-15T18:54:59.875Z","level":"INFO","message":"💡 Found 3 additional token(s) not in preset list."}
+{"timestamp":"2025-09-15T18:54:59.876Z","level":"INFO","message":"Successfully returning 10 tokens with total value $2.73"}
+{"timestamp":"2025-09-15T18:54:59.877Z","level":"INFO","message":"Preset tokens: 7, Hidden tokens: 3, Showing: All"}
+{"timestamp":"2025-09-15T18:54:59.877Z","level":"INFO","message":"Success response: 200","data":{"message":"Tokens fetched successfully","dataType":"object"}}
+{"timestamp":"2025-09-15T18:54:59.880Z","level":"INFO","message":"::1 - - [15/Sep/2025:18:54:59 +0000] \"GET /api/tokens/wallet/0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0?chain=1&showHidden=true HTTP/1.1\" 200 - \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-15T18:55:01.850Z","level":"INFO","message":"Fetching tokens for wallet: 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0 on chain: 1, showHidden: false"}
+{"timestamp":"2025-09-15T18:55:01.851Z","level":"INFO","message":"🔍 Fetching token balances for wallet: 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0 on chain: 1"}
+{"timestamp":"2025-09-15T18:55:01.852Z","level":"INFO","message":"🔗 Using chain hex: 0x1 for chain ID: 1"}
+{"timestamp":"2025-09-15T18:55:01.852Z","level":"INFO","message":"📡 Making Moralis API call for tokens with prices..."}
+{"timestamp":"2025-09-15T18:55:02.629Z","level":"INFO","message":"✅ Successfully processed tokens for wallet 0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0"}
+{"timestamp":"2025-09-15T18:55:02.629Z","level":"INFO","message":"💰 Total portfolio value: $2.734"}
+{"timestamp":"2025-09-15T18:55:02.630Z","level":"INFO","message":"📈 24hr Portfolio Change: $0.177"}
+{"timestamp":"2025-09-15T18:55:02.630Z","level":"INFO","message":"📊 Showing: 7 preset tokens"}
+{"timestamp":"2025-09-15T18:55:02.631Z","level":"INFO","message":"💡 Found 3 additional token(s) not in preset list."}
+{"timestamp":"2025-09-15T18:55:02.633Z","level":"INFO","message":"Successfully returning 7 tokens with total value $2.73"}
+{"timestamp":"2025-09-15T18:55:02.633Z","level":"INFO","message":"Preset tokens: 7, Hidden tokens: 3, Showing: Preset only"}
+{"timestamp":"2025-09-15T18:55:02.635Z","level":"INFO","message":"Success response: 200","data":{"message":"Tokens fetched successfully","dataType":"object"}}
+{"timestamp":"2025-09-15T18:55:02.638Z","level":"INFO","message":"::1 - - [15/Sep/2025:18:55:02 +0000] \"GET /api/tokens/wallet/0xbA42BF0fD0B59FF60153cdF1c5937Aa3dA2CABF0?chain=1&showHidden=false HTTP/1.1\" 200 - \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-15T18:55:45.526Z","level":"INFO","message":"🔥 Fetching trending tokens for SwapSection"}
+{"timestamp":"2025-09-15T18:55:45.527Z","level":"INFO","message":"📦 Cache hit for trending tokens"}
+{"timestamp":"2025-09-15T18:55:45.527Z","level":"INFO","message":"✅ Successfully returned trending data: 15 trending, 15 gainers"}
+{"timestamp":"2025-09-15T18:55:45.528Z","level":"INFO","message":"Success response: 200","data":{"message":"Trending tokens fetched successfully","dataType":"object"}}
+{"timestamp":"2025-09-15T18:55:45.531Z","level":"INFO","message":"::1 - - [15/Sep/2025:18:55:45 +0000] \"GET /api/coingecko/trending HTTP/1.1\" 200 - \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-15T18:55:45.536Z","level":"INFO","message":"🔥 Fetching trending tokens for SwapSection"}
+{"timestamp":"2025-09-15T18:55:45.537Z","level":"INFO","message":"📦 Cache hit for trending tokens"}
+{"timestamp":"2025-09-15T18:55:45.538Z","level":"INFO","message":"✅ Successfully returned trending data: 15 trending, 15 gainers"}
+{"timestamp":"2025-09-15T18:55:45.539Z","level":"INFO","message":"Success response: 200","data":{"message":"Trending tokens fetched successfully","dataType":"object"}}
+{"timestamp":"2025-09-15T18:55:45.544Z","level":"INFO","message":"::1 - - [15/Sep/2025:18:55:45 +0000] \"GET /api/coingecko/trending HTTP/1.1\" 200 - \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-15T18:56:45.525Z","level":"INFO","message":"🔥 Fetching trending tokens for SwapSection"}
+{"timestamp":"2025-09-15T18:56:45.526Z","level":"INFO","message":"🔍 Fetching trending tokens from CoinGecko..."}
+{"timestamp":"2025-09-15T18:56:45.866Z","level":"INFO","message":"✅ Fetched 15 trending tokens and 15 top gainers"}
+{"timestamp":"2025-09-15T18:56:45.867Z","level":"INFO","message":"✅ Successfully returned trending data: 15 trending, 15 gainers"}
+{"timestamp":"2025-09-15T18:56:45.868Z","level":"INFO","message":"Success response: 200","data":{"message":"Trending tokens fetched successfully","dataType":"object"}}
+{"timestamp":"2025-09-15T18:56:45.870Z","level":"INFO","message":"::1 - - [15/Sep/2025:18:56:45 +0000] \"GET /api/coingecko/trending HTTP/1.1\" 200 - \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
+{"timestamp":"2025-09-15T18:56:45.873Z","level":"INFO","message":"🔥 Fetching trending tokens for SwapSection"}
+{"timestamp":"2025-09-15T18:56:45.874Z","level":"INFO","message":"📦 Cache hit for trending tokens"}
+{"timestamp":"2025-09-15T18:56:45.875Z","level":"INFO","message":"✅ Successfully returned trending data: 15 trending, 15 gainers"}
+{"timestamp":"2025-09-15T18:56:45.875Z","level":"INFO","message":"Success response: 200","data":{"message":"Trending tokens fetched successfully","dataType":"object"}}
+{"timestamp":"2025-09-15T18:56:45.878Z","level":"INFO","message":"::1 - - [15/Sep/2025:18:56:45 +0000] \"GET /api/coingecko/trending HTTP/1.1\" 200 - \"http://localhost:3000/\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0\""}
