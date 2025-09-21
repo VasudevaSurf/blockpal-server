@@ -5,3 +5,4 @@ logs/
 .DS_Store
 *.log
 npm-debug.log*
+.early.coverage
