@@ -1,6 +1,7 @@
 const express = require("express");
 const http = require("http");
 const WebSocket = require("ws");
+const axios = require("axios");
 require("dotenv").config();
 
 // Import middleware
@@ -15,7 +16,7 @@ const moralisService = require("./services/moralis");
 // Import routes
 const tokenRoutes = require("./routes/tokens");
 const debugRoutes = require("./routes/debug");
-const coinGeckoRoutes = require("./routes/coingecko"); // Add CoinGecko routes
+const coinGeckoRoutes = require("./routes/coingecko");
 
 const app = express();
 const server = http.createServer(app);
@@ -55,13 +56,28 @@ app.use((req, res, next) => {
 // Rate limiting
 const rateLimit = require("express-rate-limit");
 const limiter = rateLimit({
-  windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000, // 15 minutes
-  max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 100, // limit each IP to 100 requests per windowMs
+  windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000,
+  max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 100,
   message: "Too many requests from this IP, please try again later.",
   standardHeaders: true,
   legacyHeaders: false,
 });
 app.use(limiter);
+
+// 1inch API configuration for swap routes
+const ONEINCH_API_KEY =
+  process.env.ONEINCH_API_KEY || "7TD80y4Tuv1jeN0QuUbzUw2NT2N9qTwb";
+const ONEINCH_BASE_URL = "https://api.1inch.dev/swap/v6.1";
+
+// Supported chains for swap
+const SUPPORTED_CHAINS = {
+  1: "Ethereum",
+  137: "Polygon",
+  56: "BSC",
+  43114: "Avalanche",
+  8453: "Base",
+  42161: "Arbitrum",
+};
 
 // Health check endpoint
 app.get("/health", async (req, res) => {
@@ -76,6 +92,7 @@ app.get("/health", async (req, res) => {
         moralis: moralisService.initialized ? "connected" : "initializing",
         cache: "active",
         coingecko: "running",
+        swap: "running",
       },
       uptime: process.uptime(),
       memory: process.memoryUsage(),
@@ -85,6 +102,7 @@ app.get("/health", async (req, res) => {
         coingecko: process.env.COINGECKO_API_KEY
           ? "configured"
           : "using default",
+        oneinch: ONEINCH_API_KEY ? "configured" : "missing",
       },
     };
 
@@ -129,6 +147,516 @@ app.use(
   coinGeckoRoutes
 );
 
+// ============= SWAP ROUTES (1inch Integration) =============
+const swapRouter = express.Router();
+
+// Get gas prices from 1inch
+swapRouter.get("/gas/:chainId", async (req, res) => {
+  const { chainId } = req.params;
+
+  try {
+    console.log(`⛽ Fetching gas prices for chain ${chainId}`);
+
+    const response = await axios.get(
+      `https://api.1inch.dev/gas-price/v1.6/${chainId}`,
+      {
+        headers: {
+          Authorization: `Bearer ${ONEINCH_API_KEY}`,
+          Accept: "application/json",
+        },
+        timeout: 5000,
+      }
+    );
+
+    if (response.data) {
+      const gasData = {
+        low: parseFloat(response.data.low.maxFeePerGas) / 1e9,
+        medium: parseFloat(response.data.medium.maxFeePerGas) / 1e9,
+        high: parseFloat(response.data.high.maxFeePerGas) / 1e9,
+        instant: parseFloat(response.data.instant.maxFeePerGas) / 1e9,
+      };
+
+      console.log(`✅ Gas prices for chain ${chainId} (in Gwei):`, gasData);
+      res.json({ success: true, data: gasData });
+    } else {
+      throw new Error("No data from 1inch gas API");
+    }
+  } catch (error) {
+    console.error("❌ Error fetching gas prices:", error.message);
+    res
+      .status(500)
+      .json({ success: false, error: "Failed to fetch gas prices" });
+  }
+});
+
+// Get native token price for gas USD calculation
+swapRouter.get("/price/:chainId", async (req, res) => {
+  const { chainId } = req.params;
+
+  try {
+    const nativeTokens = {
+      1: "ethereum",
+      137: "matic-network",
+      56: "binancecoin",
+      43114: "avalanche-2",
+      8453: "ethereum",
+      42161: "ethereum",
+    };
+
+    const tokenId = nativeTokens[chainId] || "ethereum";
+
+    try {
+      const response = await axios.get(
+        `https://api.coingecko.com/api/v3/simple/price?ids=${tokenId}&vs_currencies=usd`
+      );
+
+      const price = response.data[tokenId]?.usd || 0;
+      console.log(`💰 Native token price for chain ${chainId}: $${price}`);
+      res.json({ success: true, data: { price, symbol: tokenId } });
+    } catch (err) {
+      const fallbackPrices = {
+        1: 3500,
+        137: 0.8,
+        56: 250,
+        43114: 35,
+        8453: 3500,
+        42161: 3500,
+      };
+
+      res.json({
+        success: true,
+        data: {
+          price: fallbackPrices[chainId] || 100,
+          symbol: tokenId,
+        },
+      });
+    }
+  } catch (error) {
+    console.error("❌ Error fetching token price:", error);
+    res.json({ success: true, data: { price: 100, symbol: "unknown" } });
+  }
+});
+
+// Get tokens for a specific chain
+swapRouter.get("/tokens/:chainId", async (req, res) => {
+  const { chainId } = req.params;
+
+  if (!SUPPORTED_CHAINS[chainId]) {
+    return res.status(400).json({
+      success: false,
+      error: "Unsupported chain",
+      supportedChains: Object.keys(SUPPORTED_CHAINS),
+    });
+  }
+
+  try {
+    console.log(`🪙 Fetching tokens for chain ${chainId}`);
+
+    const response = await axios.get(`${ONEINCH_BASE_URL}/${chainId}/tokens`, {
+      headers: {
+        Authorization: `Bearer ${ONEINCH_API_KEY}`,
+        Accept: "application/json",
+      },
+      timeout: 10000,
+    });
+
+    const tokens = response.data?.tokens || {};
+    res.json({
+      success: true,
+      data: {
+        tokens: tokens,
+        count: Object.keys(tokens).length,
+      },
+    });
+  } catch (error) {
+    console.error("❌ Error fetching tokens:", error.message);
+    res.json({
+      success: false,
+      error: "Failed to fetch tokens",
+      data: { tokens: {}, count: 0 },
+    });
+  }
+});
+
+// Search tokens
+swapRouter.get("/search/:chainId", async (req, res) => {
+  const { chainId } = req.params;
+  const { query } = req.query;
+
+  if (!SUPPORTED_CHAINS[chainId]) {
+    return res.status(400).json({
+      success: false,
+      error: "Unsupported chain",
+      data: [],
+    });
+  }
+
+  try {
+    console.log(`🔍 Searching tokens for "${query}" on chain ${chainId}`);
+
+    if (!query) {
+      // Return popular tokens if no query
+      const response = await axios.get(
+        `${ONEINCH_BASE_URL}/${chainId}/tokens`,
+        {
+          headers: {
+            Authorization: `Bearer ${ONEINCH_API_KEY}`,
+            Accept: "application/json",
+          },
+          timeout: 10000,
+        }
+      );
+
+      const tokens = Object.values(response.data?.tokens || {});
+      const popularSymbols = [
+        "ETH",
+        "WETH",
+        "USDT",
+        "USDC",
+        "DAI",
+        "WBTC",
+        "UNI",
+        "LINK",
+      ];
+
+      const popularTokens = tokens
+        .filter((token) => popularSymbols.includes(token.symbol?.toUpperCase()))
+        .sort((a, b) => {
+          const aIndex = popularSymbols.indexOf(a.symbol?.toUpperCase());
+          const bIndex = popularSymbols.indexOf(b.symbol?.toUpperCase());
+          return aIndex - bIndex;
+        })
+        .slice(0, 20);
+
+      return res.json({ success: true, data: popularTokens });
+    }
+
+    // Try search API first
+    try {
+      const searchResponse = await axios.get(
+        `https://api.1inch.dev/token/v1.2/${chainId}/search`,
+        {
+          headers: {
+            Authorization: `Bearer ${ONEINCH_API_KEY}`,
+            Accept: "application/json",
+          },
+          params: {
+            query: query,
+            limit: 50,
+          },
+          timeout: 5000,
+        }
+      );
+
+      if (searchResponse.data && Array.isArray(searchResponse.data)) {
+        console.log(`✅ Found ${searchResponse.data.length} tokens via search`);
+        return res.json({ success: true, data: searchResponse.data });
+      }
+    } catch (searchError) {
+      console.log("⚠️ Search API failed, using fallback filter");
+    }
+
+    // Fallback: filter from full token list
+    const response = await axios.get(`${ONEINCH_BASE_URL}/${chainId}/tokens`, {
+      headers: {
+        Authorization: `Bearer ${ONEINCH_API_KEY}`,
+        Accept: "application/json",
+      },
+      timeout: 10000,
+    });
+
+    const tokens = Object.values(response.data?.tokens || {});
+    const searchLower = query.toLowerCase();
+
+    const filtered = tokens
+      .filter((token) => {
+        const symbolMatch = token.symbol?.toLowerCase().includes(searchLower);
+        const nameMatch = token.name?.toLowerCase().includes(searchLower);
+        const addressMatch = token.address?.toLowerCase() === searchLower;
+
+        return symbolMatch || nameMatch || addressMatch;
+      })
+      .slice(0, 50);
+
+    res.json({ success: true, data: filtered });
+  } catch (error) {
+    console.error("❌ Error searching tokens:", error.message);
+    res.json({ success: false, data: [] });
+  }
+});
+
+// Get swap quote
+swapRouter.get("/quote/:chainId", async (req, res) => {
+  const { chainId } = req.params;
+  const { src, dst, amount, from, slippage = 1 } = req.query;
+
+  if (!SUPPORTED_CHAINS[chainId]) {
+    return res.status(400).json({
+      success: false,
+      error: "Unsupported chain",
+      data: { dstAmount: "0" },
+    });
+  }
+
+  if (!src || !dst || !amount || !from) {
+    return res.status(400).json({
+      success: false,
+      error: "Missing required parameters",
+      data: { dstAmount: "0" },
+    });
+  }
+
+  try {
+    console.log(
+      `💱 Getting quote: ${amount} of ${src} to ${dst} on chain ${chainId}`
+    );
+
+    const response = await axios.get(`${ONEINCH_BASE_URL}/${chainId}/quote`, {
+      headers: {
+        Authorization: `Bearer ${ONEINCH_API_KEY}`,
+        Accept: "application/json",
+      },
+      params: {
+        src,
+        dst,
+        amount,
+        from,
+        slippage: parseFloat(slippage),
+        includeProtocols: true,
+        includeGas: true,
+        includeTokensInfo: true,
+      },
+      timeout: 15000,
+    });
+
+    const quoteData = response.data;
+
+    if (!quoteData || !quoteData.dstAmount) {
+      throw new Error("Invalid quote response from 1inch");
+    }
+
+    console.log(`✅ Quote successful: ${quoteData.dstAmount} output tokens`);
+    res.json({ success: true, data: quoteData });
+  } catch (error) {
+    console.error("❌ Quote error:", error.response?.data || error.message);
+
+    if (error.response?.data) {
+      return res.json({
+        success: false,
+        error: "Quote failed",
+        message:
+          error.response.data.description ||
+          error.response.data.error ||
+          "Unable to get quote",
+        data: { dstAmount: "0" },
+      });
+    }
+
+    res.json({
+      success: false,
+      error: "Failed to get quote",
+      message: error.message || "Unknown error",
+      data: { dstAmount: "0" },
+    });
+  }
+});
+
+// Get swap transaction
+swapRouter.get("/swap/:chainId", async (req, res) => {
+  const { chainId } = req.params;
+  const { src, dst, amount, from, slippage = 1 } = req.query;
+
+  if (!SUPPORTED_CHAINS[chainId]) {
+    return res.status(400).json({
+      success: false,
+      error: "Unsupported chain",
+      data: { tx: null },
+    });
+  }
+
+  if (!src || !dst || !amount || !from) {
+    return res.status(400).json({
+      success: false,
+      error: "Missing required parameters",
+      data: { tx: null },
+    });
+  }
+
+  try {
+    console.log(
+      `💱 Getting swap tx: ${amount} of ${src} to ${dst} on chain ${chainId}`
+    );
+
+    const params = {
+      src,
+      dst,
+      amount,
+      from,
+      slippage: parseFloat(slippage),
+      origin: from,
+      includeTokensInfo: true,
+    };
+
+    const response = await axios.get(`${ONEINCH_BASE_URL}/${chainId}/swap`, {
+      headers: {
+        Authorization: `Bearer ${ONEINCH_API_KEY}`,
+        Accept: "application/json",
+      },
+      params,
+      timeout: 15000,
+    });
+
+    if (!response.data || !response.data.tx) {
+      throw new Error("Invalid swap response from 1inch");
+    }
+
+    console.log(`✅ Swap tx generated successfully`);
+    res.json({ success: true, data: response.data });
+  } catch (error) {
+    console.error("❌ Swap error:", error.response?.data || error.message);
+
+    if (error.response?.data) {
+      return res.json({
+        success: false,
+        error: "Swap failed",
+        message:
+          error.response.data.description ||
+          error.response.data.error ||
+          "Unable to create swap",
+        data: { tx: null },
+      });
+    }
+
+    res.json({
+      success: false,
+      error: "Failed to get swap transaction",
+      message: error.message || "Unknown error",
+      data: { tx: null },
+    });
+  }
+});
+
+// Get allowance
+swapRouter.get("/allowance/:chainId", async (req, res) => {
+  const { chainId } = req.params;
+  const { tokenAddress, walletAddress } = req.query;
+
+  if (!tokenAddress || !walletAddress) {
+    return res.status(400).json({
+      success: false,
+      error: "Missing required parameters",
+      data: { allowance: "0" },
+    });
+  }
+
+  try {
+    const response = await axios.get(
+      `${ONEINCH_BASE_URL}/${chainId}/approve/allowance`,
+      {
+        headers: {
+          Authorization: `Bearer ${ONEINCH_API_KEY}`,
+          Accept: "application/json",
+        },
+        params: {
+          tokenAddress,
+          walletAddress,
+        },
+        timeout: 10000,
+      }
+    );
+
+    res.json({ success: true, data: response.data || { allowance: "0" } });
+  } catch (error) {
+    console.error("❌ Allowance error:", error.message);
+    res.json({ success: true, data: { allowance: "0" } });
+  }
+});
+
+// Get approve transaction
+swapRouter.get("/approve/:chainId", async (req, res) => {
+  const { chainId } = req.params;
+  const { tokenAddress, amount } = req.query;
+
+  if (!tokenAddress) {
+    return res.status(400).json({
+      success: false,
+      error: "Token address required",
+      data: null,
+    });
+  }
+
+  try {
+    const params = { tokenAddress };
+    if (amount) params.amount = amount;
+
+    const response = await axios.get(
+      `${ONEINCH_BASE_URL}/${chainId}/approve/transaction`,
+      {
+        headers: {
+          Authorization: `Bearer ${ONEINCH_API_KEY}`,
+          Accept: "application/json",
+        },
+        params,
+        timeout: 10000,
+      }
+    );
+
+    res.json({ success: true, data: response.data });
+  } catch (error) {
+    console.error("❌ Approve error:", error.message);
+    res.json({
+      success: false,
+      error: "Failed to get approve transaction",
+      data: null,
+    });
+  }
+});
+
+// Get spender address
+swapRouter.get("/spender/:chainId", async (req, res) => {
+  const { chainId } = req.params;
+
+  if (!SUPPORTED_CHAINS[chainId]) {
+    return res.status(400).json({
+      success: false,
+      error: "Unsupported chain",
+      data: { address: null },
+    });
+  }
+
+  try {
+    const response = await axios.get(
+      `${ONEINCH_BASE_URL}/${chainId}/approve/spender`,
+      {
+        headers: {
+          Authorization: `Bearer ${ONEINCH_API_KEY}`,
+          Accept: "application/json",
+        },
+        timeout: 10000,
+      }
+    );
+
+    res.json({ success: true, data: response.data || { address: null } });
+  } catch (error) {
+    console.error("❌ Spender error:", error.message);
+    res.json({
+      success: false,
+      error: "Failed to get spender address",
+      data: { address: null },
+    });
+  }
+});
+
+// Mount swap router
+app.use(
+  "/api/swap",
+  (req, res, next) => {
+    console.log(`💱 Swap API Request: ${req.method} ${req.path}`);
+    next();
+  },
+  swapRouter
+);
+
 // Debug routes (only in development)
 if (process.env.NODE_ENV === "development") {
   app.use(
@@ -154,10 +682,8 @@ wss.on("connection", (ws, req) => {
       const data = JSON.parse(message);
       logger.info(`Message from ${clientId}:`, data);
 
-      // Handle different message types
       switch (data.type) {
         case "wallet_connect":
-          // Handle wallet connection events
           ws.send(
             JSON.stringify({
               type: "wallet_connected",
@@ -167,7 +693,6 @@ wss.on("connection", (ws, req) => {
           break;
 
         case "chain_switch":
-          // Handle chain switching events
           ws.send(
             JSON.stringify({
               type: "chain_switched",
@@ -178,7 +703,6 @@ wss.on("connection", (ws, req) => {
           break;
 
         case "token_refresh":
-          // Handle token refresh requests
           ws.send(
             JSON.stringify({
               type: "token_refresh_started",
@@ -190,11 +714,20 @@ wss.on("connection", (ws, req) => {
           break;
 
         case "coingecko_refresh":
-          // Handle CoinGecko refresh requests
           ws.send(
             JSON.stringify({
               type: "coingecko_refresh_started",
               message: "CoinGecko data refresh initiated",
+            })
+          );
+          break;
+
+        case "swap_quote":
+          ws.send(
+            JSON.stringify({
+              type: "swap_quote_started",
+              message: "Swap quote calculation initiated",
+              tokens: { from: data.from, to: data.to },
             })
           );
           break;
@@ -222,7 +755,7 @@ wss.on("connection", (ws, req) => {
       type: "connection",
       message: "Connected to Blockpal Services",
       clientId,
-      services: ["wallet-connect", "tokens", "moralis", "coingecko"],
+      services: ["wallet-connect", "tokens", "moralis", "coingecko", "swap"],
     })
   );
 });
@@ -232,18 +765,14 @@ async function initializeServices() {
   try {
     logger.info("🔄 Initializing services...");
 
-    // Log environment info
     logger.info("Environment:", {
       NODE_ENV: process.env.NODE_ENV,
       PORT: process.env.PORT,
-      MORALIS_API_KEY:
-        process.env.MORALIS_API_KEY ||
-        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6IjcxN2EyZTI3LWM1YjItNDRlMC05MGE3LWRjNGFiMGEzOTliYyIsIm9yZ0lkIjoiNDY4MzYzIiwidXNlcklkIjoiNDgxODIwIiwidHlwZUlkIjoiNTcwMjhhMzQtMzc0OC00NWRlLTg4NTktNjlmNzU5ODEzNTM2IiwidHlwZSI6IlBST0pFQ1QiLCJpYXQiOjE3NTY2MjE2NjAsImV4cCI6NDkxMjM4MTY2MH0.H2IkylE8uOgFiZodaezRSpN9nYE-D0GnF0SoMbbXCFQ"
-          ? "configured"
-          : "missing",
+      MORALIS_API_KEY: process.env.MORALIS_API_KEY ? "configured" : "missing",
       COINGECKO_API_KEY: process.env.COINGECKO_API_KEY
         ? "configured"
         : "using default",
+      ONEINCH_API_KEY: ONEINCH_API_KEY ? "configured" : "using default",
       ALLOWED_ORIGINS: process.env.ALLOWED_ORIGINS,
     });
 
@@ -252,8 +781,11 @@ async function initializeServices() {
     await moralisService.initialize();
     logger.info("✅ Moralis service initialized");
 
-    // CoinGecko service doesn't need initialization - it's ready to use
+    // CoinGecko service doesn't need initialization
     logger.info("✅ CoinGecko service ready");
+
+    // Swap service ready
+    logger.info("✅ 1inch Swap service ready");
 
     logger.info("🎉 All services initialized successfully");
   } catch (error) {
@@ -262,8 +794,6 @@ async function initializeServices() {
       stack: error.stack,
     });
 
-    // Don't exit the process, but log the error
-    // Some services might still work without all dependencies
     logger.warn("⚠️ Continuing with partial service initialization");
   }
 }
@@ -284,6 +814,7 @@ app.use("*", (req, res) => {
       wallet: "POST /api/wallet/*",
       tokens: "GET /api/tokens/*",
       coingecko: "GET /api/coingecko/*",
+      swap: "GET /api/swap/*",
       ...(process.env.NODE_ENV === "development" && {
         debug: "GET /api/debug/*",
       }),
@@ -300,15 +831,11 @@ server.listen(PORT, async () => {
   logger.info(`📡 Wallet Connect API: http://localhost:${PORT}/api/wallet`);
   logger.info(`🪙 Token API: http://localhost:${PORT}/api/tokens`);
   logger.info(`🦎 CoinGecko API: http://localhost:${PORT}/api/coingecko`);
+  logger.info(`💱 Swap API: http://localhost:${PORT}/api/swap`);
 
   if (process.env.NODE_ENV === "development") {
     logger.info(`🐛 Debug API: http://localhost:${PORT}/api/debug`);
-    logger.info(
-      `🧪 Test Moralis: http://localhost:${PORT}/api/debug/test-moralis`
-    );
-    logger.info(
-      `🦎 Test CoinGecko: http://localhost:${PORT}/api/coingecko/trending`
-    );
+    logger.info(`🧪 Test Swap: http://localhost:${PORT}/api/swap/tokens/1`);
   }
 
   // Log CORS configuration
@@ -346,7 +873,6 @@ process.on("uncaughtException", (error) => {
 
 process.on("unhandledRejection", (reason, promise) => {
   logger.error("Unhandled Rejection at:", promise, "reason:", reason);
-  // Don't exit on unhandled rejections in production
   if (process.env.NODE_ENV === "development") {
     process.exit(1);
   }
