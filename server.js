@@ -1,3 +1,6 @@
+// Complete updated server.js for blockpal-server
+// This includes ALL the swap endpoints with EXACT logic from your working version
+
 const express = require("express");
 const http = require("http");
 const WebSocket = require("ws");
@@ -12,6 +15,26 @@ const { logger } = require("./utils/logger");
 // Import services
 const walletConnectService = require("./services/wallet-connect");
 const moralisService = require("./services/moralis");
+const swapHistoryRoutes = require("./routes/swapHistory");
+
+const mongoose = require("mongoose");
+
+async function connectMongoDB() {
+  try {
+    const mongoUri =
+      process.env.MONGODB_URI ||
+      "mongodb+srv://greeshmanthedupalli:0hAZ1wIBNxjGkL1v@blockpal-cluster.uldmzku.mongodb.net/BlockPal?retryWrites=true&w=majority&appName=blockpal-cluster";
+
+    await mongoose.connect(mongoUri, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    });
+
+    logger.info("✅ MongoDB connected for swap history");
+  } catch (error) {
+    logger.error("❌ MongoDB connection failed:", error);
+  }
+}
 
 // Import routes
 const tokenRoutes = require("./routes/tokens");
@@ -39,6 +62,15 @@ app.use(
   })
 );
 
+app.use(
+  "/api/swap-history",
+  (req, res, next) => {
+    console.log(`💱 Swap History API Request: ${req.method} ${req.path}`);
+    next();
+  },
+  swapHistoryRoutes
+);
+
 // CORS middleware - MUST BE BEFORE ROUTES
 app.use(corsMiddleware);
 
@@ -64,7 +96,7 @@ const limiter = rateLimit({
 });
 app.use(limiter);
 
-// 1inch API configuration for swap routes
+// 1inch API configuration for swap routes - EXACT FROM WORKING VERSION
 const ONEINCH_API_KEY =
   process.env.ONEINCH_API_KEY || "7TD80y4Tuv1jeN0QuUbzUw2NT2N9qTwb";
 const ONEINCH_BASE_URL = "https://api.1inch.dev/swap/v6.1";
@@ -147,10 +179,10 @@ app.use(
   coinGeckoRoutes
 );
 
-// ============= SWAP ROUTES (1inch Integration) =============
+// ============= SWAP ROUTES (EXACT COPY FROM WORKING VERSION) =============
 const swapRouter = express.Router();
 
-// Get gas prices from 1inch
+// Get gas prices from 1inch - EXACT IMPLEMENTATION
 swapRouter.get("/gas/:chainId", async (req, res) => {
   const { chainId } = req.params;
 
@@ -168,7 +200,10 @@ swapRouter.get("/gas/:chainId", async (req, res) => {
       }
     );
 
+    console.log("Raw 1inch gas response:", response.data);
+
     if (response.data) {
+      // EXACT calculation from working version - convert from wei to Gwei
       const gasData = {
         low: parseFloat(response.data.low.maxFeePerGas) / 1e9,
         medium: parseFloat(response.data.medium.maxFeePerGas) / 1e9,
@@ -177,6 +212,8 @@ swapRouter.get("/gas/:chainId", async (req, res) => {
       };
 
       console.log(`✅ Gas prices for chain ${chainId} (in Gwei):`, gasData);
+
+      // Return in EXACT format expected by frontend
       res.json({ success: true, data: gasData });
     } else {
       throw new Error("No data from 1inch gas API");
@@ -189,7 +226,7 @@ swapRouter.get("/gas/:chainId", async (req, res) => {
   }
 });
 
-// Get native token price for gas USD calculation
+// Get native token price for gas USD calculation - EXACT IMPLEMENTATION
 swapRouter.get("/price/:chainId", async (req, res) => {
   const { chainId } = req.params;
 
@@ -199,8 +236,8 @@ swapRouter.get("/price/:chainId", async (req, res) => {
       137: "matic-network",
       56: "binancecoin",
       43114: "avalanche-2",
-      8453: "ethereum",
-      42161: "ethereum",
+      8453: "ethereum", // Base uses ETH
+      42161: "ethereum", // Arbitrum uses ETH
     };
 
     const tokenId = nativeTokens[chainId] || "ethereum";
@@ -214,6 +251,7 @@ swapRouter.get("/price/:chainId", async (req, res) => {
       console.log(`💰 Native token price for chain ${chainId}: $${price}`);
       res.json({ success: true, data: { price, symbol: tokenId } });
     } catch (err) {
+      // Fallback prices if CoinGecko fails
       const fallbackPrices = {
         1: 3500,
         137: 0.8,
@@ -270,6 +308,7 @@ swapRouter.get("/tokens/:chainId", async (req, res) => {
     });
   } catch (error) {
     console.error("❌ Error fetching tokens:", error.message);
+    // Return empty tokens instead of error
     res.json({
       success: false,
       error: "Failed to fetch tokens",
@@ -317,6 +356,9 @@ swapRouter.get("/search/:chainId", async (req, res) => {
         "WBTC",
         "UNI",
         "LINK",
+        "AAVE",
+        "MATIC",
+        "BNB",
       ];
 
       const popularTokens = tokens
@@ -385,10 +427,10 @@ swapRouter.get("/search/:chainId", async (req, res) => {
   }
 });
 
-// Get swap quote
+// Get quote with EXACT gas calculation - CRITICAL ENDPOINT
 swapRouter.get("/quote/:chainId", async (req, res) => {
   const { chainId } = req.params;
-  const { src, dst, amount, from, slippage = 1 } = req.query;
+  const { src, dst, amount, from, slippage = 1, gasMode = "high" } = req.query;
 
   if (!SUPPORTED_CHAINS[chainId]) {
     return res.status(400).json({
@@ -406,11 +448,22 @@ swapRouter.get("/quote/:chainId", async (req, res) => {
     });
   }
 
+  // Validate amount is a valid number
+  if (isNaN(amount) || parseFloat(amount) <= 0) {
+    return res.status(400).json({
+      success: false,
+      error: "Invalid amount",
+      message: "Amount must be a positive number",
+      data: { dstAmount: "0" },
+    });
+  }
+
   try {
     console.log(
       `💱 Getting quote: ${amount} of ${src} to ${dst} on chain ${chainId}`
     );
 
+    // EXACT parameters from working version - includeGas is CRITICAL
     const response = await axios.get(`${ONEINCH_BASE_URL}/${chainId}/quote`, {
       headers: {
         Authorization: `Bearer ${ONEINCH_API_KEY}`,
@@ -423,23 +476,32 @@ swapRouter.get("/quote/:chainId", async (req, res) => {
         from,
         slippage: parseFloat(slippage),
         includeProtocols: true,
-        includeGas: true,
+        includeGas: true, // THIS IS CRITICAL - ensures gas field is returned
+        allowPartialFill: false,
+        disableEstimate: false,
         includeTokensInfo: true,
+        compatibilityMode: false,
       },
       timeout: 15000,
     });
 
     const quoteData = response.data;
 
+    // Validate quote response
     if (!quoteData || !quoteData.dstAmount) {
       throw new Error("Invalid quote response from 1inch");
     }
 
+    // The 1inch API returns gas in the response when includeGas: true
+    console.log("Quote response gas:", quoteData.gas);
     console.log(`✅ Quote successful: ${quoteData.dstAmount} output tokens`);
+
+    // Return the quote data as-is - the frontend will handle gas calculation
     res.json({ success: true, data: quoteData });
   } catch (error) {
     console.error("❌ Quote error:", error.response?.data || error.message);
 
+    // Always return a valid response structure
     if (error.response?.data) {
       return res.json({
         success: false,
@@ -449,6 +511,7 @@ swapRouter.get("/quote/:chainId", async (req, res) => {
           error.response.data.error ||
           "Unable to get quote",
         data: { dstAmount: "0" },
+        details: error.response.data,
       });
     }
 
@@ -464,7 +527,16 @@ swapRouter.get("/quote/:chainId", async (req, res) => {
 // Get swap transaction
 swapRouter.get("/swap/:chainId", async (req, res) => {
   const { chainId } = req.params;
-  const { src, dst, amount, from, slippage = 1 } = req.query;
+  const {
+    src,
+    dst,
+    amount,
+    from,
+    slippage = 1,
+    gasMode = "high",
+    receiver,
+    referrer,
+  } = req.query;
 
   if (!SUPPORTED_CHAINS[chainId]) {
     return res.status(400).json({
@@ -478,6 +550,16 @@ swapRouter.get("/swap/:chainId", async (req, res) => {
     return res.status(400).json({
       success: false,
       error: "Missing required parameters",
+      data: { tx: null },
+    });
+  }
+
+  // Validate amount
+  if (isNaN(amount) || parseFloat(amount) <= 0) {
+    return res.status(400).json({
+      success: false,
+      error: "Invalid amount",
+      message: "Amount must be a positive number",
       data: { tx: null },
     });
   }
@@ -495,7 +577,12 @@ swapRouter.get("/swap/:chainId", async (req, res) => {
       slippage: parseFloat(slippage),
       origin: from,
       includeTokensInfo: true,
+      allowPartialFill: false,
+      disableEstimate: false,
     };
+
+    if (receiver) params.receiver = receiver;
+    if (referrer) params.referrer = referrer;
 
     const response = await axios.get(`${ONEINCH_BASE_URL}/${chainId}/swap`, {
       headers: {
@@ -506,6 +593,15 @@ swapRouter.get("/swap/:chainId", async (req, res) => {
       timeout: 15000,
     });
 
+    console.log("Swap tx data:", {
+      to: response.data.tx.to,
+      gas: response.data.tx?.gas,
+      gasLimit: response.data.tx?.gasLimit,
+      gasPrice: response.data.tx?.gasPrice,
+      data: response.data.tx.data?.substring(0, 20) + "...",
+    });
+
+    // Validate swap response
     if (!response.data || !response.data.tx) {
       throw new Error("Invalid swap response from 1inch");
     }
@@ -523,6 +619,7 @@ swapRouter.get("/swap/:chainId", async (req, res) => {
           error.response.data.description ||
           error.response.data.error ||
           "Unable to create swap",
+        details: error.response.data,
         data: { tx: null },
       });
     }
@@ -540,6 +637,14 @@ swapRouter.get("/swap/:chainId", async (req, res) => {
 swapRouter.get("/allowance/:chainId", async (req, res) => {
   const { chainId } = req.params;
   const { tokenAddress, walletAddress } = req.query;
+
+  if (!SUPPORTED_CHAINS[chainId]) {
+    return res.status(400).json({
+      success: false,
+      error: "Unsupported chain",
+      data: { allowance: "0" },
+    });
+  }
 
   if (!tokenAddress || !walletAddress) {
     return res.status(400).json({
@@ -568,6 +673,7 @@ swapRouter.get("/allowance/:chainId", async (req, res) => {
     res.json({ success: true, data: response.data || { allowance: "0" } });
   } catch (error) {
     console.error("❌ Allowance error:", error.message);
+    // Return 0 allowance instead of error
     res.json({ success: true, data: { allowance: "0" } });
   }
 });
@@ -576,6 +682,14 @@ swapRouter.get("/allowance/:chainId", async (req, res) => {
 swapRouter.get("/approve/:chainId", async (req, res) => {
   const { chainId } = req.params;
   const { tokenAddress, amount } = req.query;
+
+  if (!SUPPORTED_CHAINS[chainId]) {
+    return res.status(400).json({
+      success: false,
+      error: "Unsupported chain",
+      data: null,
+    });
+  }
 
   if (!tokenAddress) {
     return res.status(400).json({
@@ -607,6 +721,7 @@ swapRouter.get("/approve/:chainId", async (req, res) => {
     res.json({
       success: false,
       error: "Failed to get approve transaction",
+      message: error.response?.data?.description || error.message,
       data: null,
     });
   }
@@ -702,26 +817,6 @@ wss.on("connection", (ws, req) => {
           );
           break;
 
-        case "token_refresh":
-          ws.send(
-            JSON.stringify({
-              type: "token_refresh_started",
-              message: "Token refresh initiated",
-              wallet: data.wallet,
-              chain: data.chain,
-            })
-          );
-          break;
-
-        case "coingecko_refresh":
-          ws.send(
-            JSON.stringify({
-              type: "coingecko_refresh_started",
-              message: "CoinGecko data refresh initiated",
-            })
-          );
-          break;
-
         case "swap_quote":
           ws.send(
             JSON.stringify({
@@ -764,6 +859,8 @@ wss.on("connection", (ws, req) => {
 async function initializeServices() {
   try {
     logger.info("🔄 Initializing services...");
+
+    await connectMongoDB();
 
     logger.info("Environment:", {
       NODE_ENV: process.env.NODE_ENV,
