@@ -1,4 +1,4 @@
-// server.js - Complete updated version with fixed CORS and MongoDB
+// server.js - Complete updated version with CoinLes integration
 const express = require("express");
 const http = require("http");
 const WebSocket = require("ws");
@@ -20,40 +20,34 @@ const mongoose = require("mongoose");
 // Connect to MongoDB with BlockPal database
 async function connectMongoDB() {
   try {
-    // MongoDB URI - explicitly specifying BlockPal database
     const mongoUri =
       process.env.MONGODB_URI ||
       "mongodb+srv://greeshmanthedupalli:0hAZ1wIBNxjGkL1v@blockpal-cluster.uldmzku.mongodb.net/BlockPal?retryWrites=true&w=majority&appName=blockpal-cluster";
 
-    // Connect with explicit database selection
     await mongoose.connect(mongoUri, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
-      dbName: "BlockPal", // Explicitly specify the database name
+      dbName: "BlockPal",
     });
 
-    // Verify we're connected to the right database
     const dbName = mongoose.connection.db.databaseName;
-    logger.info(`✅ MongoDB connected successfully to database: ${dbName}`);
+    logger.info(`MongoDB connected successfully to database: ${dbName}`);
 
-    // List collections to verify
     const collections = await mongoose.connection.db
       .listCollections()
       .toArray();
     logger.info(
-      `📚 Available collections in ${dbName}:`,
+      `Available collections in ${dbName}:`,
       collections.map((c) => c.name)
     );
 
-    // Ensure the swapTransactions collection exists
     const swapTransactionExists = collections.some(
       (c) => c.name === "swapTransactions"
     );
     if (!swapTransactionExists) {
-      logger.info("📝 Creating swapTransactions collection...");
+      logger.info("Creating swapTransactions collection...");
       await mongoose.connection.db.createCollection("swapTransactions");
 
-      // Create indexes for better performance
       const swapTransactions =
         mongoose.connection.db.collection("swapTransactions");
       await swapTransactions.createIndex({ walletAddress: 1, createdAt: -1 });
@@ -65,14 +59,23 @@ async function connectMongoDB() {
       });
       await swapTransactions.createIndex({ txHash: 1 }, { sparse: true });
 
-      logger.info("✅ swapTransactions collection created with indexes");
+      logger.info("swapTransactions collection created with indexes");
     } else {
-      logger.info("✅ swapTransactions collection already exists");
+      logger.info("swapTransactions collection already exists");
+    }
+
+    // Ensure userWatchlists collection exists
+    const userWatchlistExists = collections.some(
+      (c) => c.name === "userWatchlists"
+    );
+    if (!userWatchlistExists) {
+      logger.info("Creating userWatchlists collection...");
+      await mongoose.connection.db.createCollection("userWatchlists");
+      logger.info("userWatchlists collection created");
     }
   } catch (error) {
-    logger.error("❌ MongoDB connection failed:", error);
-    // Don't throw - allow server to start even if DB is down
-    logger.warn("⚠️ Server will continue without database functionality");
+    logger.error("MongoDB connection failed:", error);
+    logger.warn("Server will continue without database functionality");
   }
 }
 
@@ -80,6 +83,8 @@ async function connectMongoDB() {
 const tokenRoutes = require("./routes/tokens");
 const debugRoutes = require("./routes/debug");
 const coinGeckoRoutes = require("./routes/coingecko");
+const coinlesRoutes = require("./routes/coinles");
+const userWatchlistRoutes = require("./routes/user-watchlist");
 
 const app = express();
 const server = http.createServer(app);
@@ -107,7 +112,7 @@ app.use(corsMiddleware);
 
 // Add request logging middleware
 app.use((req, res, next) => {
-  console.log(`🌐 ${req.method} ${req.path} - Origin: ${req.get("origin")}`);
+  console.log(`${req.method} ${req.path} - Origin: ${req.get("origin")}`);
   next();
 });
 
@@ -139,7 +144,7 @@ const SUPPORTED_CHAINS = {
 
 // Health check endpoint
 app.get("/health", async (req, res) => {
-  console.log("🏥 Health check requested");
+  console.log("Health check requested");
 
   try {
     const health = {
@@ -158,6 +163,9 @@ app.get("/health", async (req, res) => {
         coingecko: "running",
         swap: "running",
         "swap-history":
+          mongoose.connection.readyState === 1 ? "running" : "offline",
+        coinles: "running",
+        "user-watchlist":
           mongoose.connection.readyState === 1 ? "running" : "offline",
       },
       uptime: process.uptime(),
@@ -183,16 +191,11 @@ app.get("/health", async (req, res) => {
   }
 });
 
-// Mount swap-history routes BEFORE other routes
+// Mount swap-history routes
 app.use(
   "/api/swap-history",
   (req, res, next) => {
-    console.log(`💱 Swap History API Request: ${req.method} ${req.path}`);
-    console.log(`💱 Origin: ${req.get("origin")}`);
-    console.log(
-      `💱 Body:`,
-      req.body ? JSON.stringify(req.body).substring(0, 200) : "No body"
-    );
+    console.log(`Swap History API Request: ${req.method} ${req.path}`);
     next();
   },
   swapHistoryRoutes
@@ -202,7 +205,7 @@ app.use(
 app.use(
   "/api/wallet",
   (req, res, next) => {
-    console.log(`🔌 Wallet API Request: ${req.method} ${req.path}`);
+    console.log(`Wallet API Request: ${req.method} ${req.path}`);
     next();
   },
   walletConnectService
@@ -212,7 +215,7 @@ app.use(
 app.use(
   "/api/tokens",
   (req, res, next) => {
-    console.log(`🪙 Token API Request: ${req.method} ${req.path}`);
+    console.log(`Token API Request: ${req.method} ${req.path}`);
     next();
   },
   tokenRoutes
@@ -222,10 +225,30 @@ app.use(
 app.use(
   "/api/coingecko",
   (req, res, next) => {
-    console.log(`🦎 CoinGecko API Request: ${req.method} ${req.path}`);
+    console.log(`CoinGecko API Request: ${req.method} ${req.path}`);
     next();
   },
   coinGeckoRoutes
+);
+
+// CoinLes routes
+app.use(
+  "/api/coinles",
+  (req, res, next) => {
+    console.log(`CoinLes API Request: ${req.method} ${req.path}`);
+    next();
+  },
+  coinlesRoutes
+);
+
+// User Watchlist routes
+app.use(
+  "/api/user-watchlist",
+  (req, res, next) => {
+    console.log(`Watchlist API Request: ${req.method} ${req.path}`);
+    next();
+  },
+  userWatchlistRoutes
 );
 
 // ============= SWAP ROUTES =============
@@ -236,7 +259,7 @@ swapRouter.get("/gas/:chainId", async (req, res) => {
   const { chainId } = req.params;
 
   try {
-    console.log(`⛽ Fetching gas prices for chain ${chainId}`);
+    console.log(`Fetching gas prices for chain ${chainId}`);
 
     const response = await axios.get(
       `https://api.1inch.dev/gas-price/v1.6/${chainId}`,
@@ -257,13 +280,13 @@ swapRouter.get("/gas/:chainId", async (req, res) => {
         instant: parseFloat(response.data.instant.maxFeePerGas) / 1e9,
       };
 
-      console.log(`✅ Gas prices for chain ${chainId} (in Gwei):`, gasData);
+      console.log(`Gas prices for chain ${chainId} (in Gwei):`, gasData);
       res.json({ success: true, data: gasData });
     } else {
       throw new Error("No data from 1inch gas API");
     }
   } catch (error) {
-    console.error("❌ Error fetching gas prices:", error.message);
+    console.error("Error fetching gas prices:", error.message);
     res
       .status(500)
       .json({ success: false, error: "Failed to fetch gas prices" });
@@ -292,7 +315,7 @@ swapRouter.get("/price/:chainId", async (req, res) => {
       );
 
       const price = response.data[tokenId]?.usd || 0;
-      console.log(`💰 Native token price for chain ${chainId}: $${price}`);
+      console.log(`Native token price for chain ${chainId}: $${price}`);
       res.json({ success: true, data: { price, symbol: tokenId } });
     } catch (err) {
       const fallbackPrices = {
@@ -313,7 +336,7 @@ swapRouter.get("/price/:chainId", async (req, res) => {
       });
     }
   } catch (error) {
-    console.error("❌ Error fetching token price:", error);
+    console.error("Error fetching token price:", error);
     res.json({ success: true, data: { price: 100, symbol: "unknown" } });
   }
 });
@@ -331,7 +354,7 @@ swapRouter.get("/tokens/:chainId", async (req, res) => {
   }
 
   try {
-    console.log(`🪙 Fetching tokens for chain ${chainId}`);
+    console.log(`Fetching tokens for chain ${chainId}`);
 
     const response = await axios.get(`${ONEINCH_BASE_URL}/${chainId}/tokens`, {
       headers: {
@@ -350,7 +373,7 @@ swapRouter.get("/tokens/:chainId", async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("❌ Error fetching tokens:", error.message);
+    console.error("Error fetching tokens:", error.message);
     res.json({
       success: false,
       error: "Failed to fetch tokens",
@@ -373,7 +396,7 @@ swapRouter.get("/search/:chainId", async (req, res) => {
   }
 
   try {
-    console.log(`🔍 Searching tokens for "${query}" on chain ${chainId}`);
+    console.log(`Searching tokens for "${query}" on chain ${chainId}`);
 
     if (!query) {
       const response = await axios.get(
@@ -431,11 +454,11 @@ swapRouter.get("/search/:chainId", async (req, res) => {
       );
 
       if (searchResponse.data && Array.isArray(searchResponse.data)) {
-        console.log(`✅ Found ${searchResponse.data.length} tokens via search`);
+        console.log(`Found ${searchResponse.data.length} tokens via search`);
         return res.json({ success: true, data: searchResponse.data });
       }
     } catch (searchError) {
-      console.log("⚠️ Search API failed, using fallback filter");
+      console.log("Search API failed, using fallback filter");
     }
 
     const response = await axios.get(`${ONEINCH_BASE_URL}/${chainId}/tokens`, {
@@ -461,7 +484,7 @@ swapRouter.get("/search/:chainId", async (req, res) => {
 
     res.json({ success: true, data: filtered });
   } catch (error) {
-    console.error("❌ Error searching tokens:", error.message);
+    console.error("Error searching tokens:", error.message);
     res.json({ success: false, data: [] });
   }
 });
@@ -498,7 +521,7 @@ swapRouter.get("/quote/:chainId", async (req, res) => {
 
   try {
     console.log(
-      `💱 Getting quote: ${amount} of ${src} to ${dst} on chain ${chainId}`
+      `Getting quote: ${amount} of ${src} to ${dst} on chain ${chainId}`
     );
 
     const response = await axios.get(`${ONEINCH_BASE_URL}/${chainId}/quote`, {
@@ -528,12 +551,11 @@ swapRouter.get("/quote/:chainId", async (req, res) => {
       throw new Error("Invalid quote response from 1inch");
     }
 
-    console.log("Quote response gas:", quoteData.gas);
-    console.log(`✅ Quote successful: ${quoteData.dstAmount} output tokens`);
+    console.log(`Quote successful: ${quoteData.dstAmount} output tokens`);
 
     res.json({ success: true, data: quoteData });
   } catch (error) {
-    console.error("❌ Quote error:", error.response?.data || error.message);
+    console.error("Quote error:", error.response?.data || error.message);
 
     if (error.response?.data) {
       return res.json({
@@ -598,7 +620,7 @@ swapRouter.get("/swap/:chainId", async (req, res) => {
 
   try {
     console.log(
-      `💱 Getting swap tx: ${amount} of ${src} to ${dst} on chain ${chainId}`
+      `Getting swap tx: ${amount} of ${src} to ${dst} on chain ${chainId}`
     );
 
     const params = {
@@ -625,22 +647,14 @@ swapRouter.get("/swap/:chainId", async (req, res) => {
       timeout: 15000,
     });
 
-    console.log("Swap tx data:", {
-      to: response.data.tx.to,
-      gas: response.data.tx?.gas,
-      gasLimit: response.data.tx?.gasLimit,
-      gasPrice: response.data.tx?.gasPrice,
-      data: response.data.tx.data?.substring(0, 20) + "...",
-    });
-
     if (!response.data || !response.data.tx) {
       throw new Error("Invalid swap response from 1inch");
     }
 
-    console.log(`✅ Swap tx generated successfully`);
+    console.log(`Swap tx generated successfully`);
     res.json({ success: true, data: response.data });
   } catch (error) {
-    console.error("❌ Swap error:", error.response?.data || error.message);
+    console.error("Swap error:", error.response?.data || error.message);
 
     if (error.response?.data) {
       return res.json({
@@ -703,7 +717,7 @@ swapRouter.get("/allowance/:chainId", async (req, res) => {
 
     res.json({ success: true, data: response.data || { allowance: "0" } });
   } catch (error) {
-    console.error("❌ Allowance error:", error.message);
+    console.error("Allowance error:", error.message);
     res.json({ success: true, data: { allowance: "0" } });
   }
 });
@@ -747,7 +761,7 @@ swapRouter.get("/approve/:chainId", async (req, res) => {
 
     res.json({ success: true, data: response.data });
   } catch (error) {
-    console.error("❌ Approve error:", error.message);
+    console.error("Approve error:", error.message);
     res.json({
       success: false,
       error: "Failed to get approve transaction",
@@ -783,7 +797,7 @@ swapRouter.get("/spender/:chainId", async (req, res) => {
 
     res.json({ success: true, data: response.data || { address: null } });
   } catch (error) {
-    console.error("❌ Spender error:", error.message);
+    console.error("Spender error:", error.message);
     res.json({
       success: false,
       error: "Failed to get spender address",
@@ -796,7 +810,7 @@ swapRouter.get("/spender/:chainId", async (req, res) => {
 app.use(
   "/api/swap",
   (req, res, next) => {
-    console.log(`💱 Swap API Request: ${req.method} ${req.path}`);
+    console.log(`Swap API Request: ${req.method} ${req.path}`);
     next();
   },
   swapRouter
@@ -807,12 +821,12 @@ if (process.env.NODE_ENV === "development") {
   app.use(
     "/api/debug",
     (req, res, next) => {
-      console.log(`🐛 Debug API Request: ${req.method} ${req.path}`);
+      console.log(`Debug API Request: ${req.method} ${req.path}`);
       next();
     },
     debugRoutes
   );
-  console.log("🐛 Debug routes enabled in development mode");
+  console.log("Debug routes enabled in development mode");
 }
 
 // WebSocket handling for real-time updates
@@ -886,6 +900,8 @@ wss.on("connection", (ws, req) => {
         "coingecko",
         "swap",
         "swap-history",
+        "coinles",
+        "user-watchlist",
       ],
     })
   );
@@ -894,9 +910,8 @@ wss.on("connection", (ws, req) => {
 // Initialize services
 async function initializeServices() {
   try {
-    logger.info("🔄 Initializing services...");
+    logger.info("Initializing services...");
 
-    // Connect to MongoDB first
     await connectMongoDB();
 
     logger.info("Environment:", {
@@ -915,45 +930,44 @@ async function initializeServices() {
           : "N/A",
     });
 
-    // Initialize Moralis service
-    logger.info("🔄 Starting Moralis initialization...");
+    logger.info("Starting Moralis initialization...");
     await moralisService.initialize();
-    logger.info("✅ Moralis service initialized");
+    logger.info("Moralis service initialized");
 
-    // CoinGecko service doesn't need initialization
-    logger.info("✅ CoinGecko service ready");
+    logger.info("CoinGecko service ready");
+    logger.info("1inch Swap service ready");
+    logger.info("CoinLes service ready");
 
-    // Swap service ready
-    logger.info("✅ 1inch Swap service ready");
-
-    // Check MongoDB status
     if (mongoose.connection.readyState === 1) {
       logger.info(
-        `✅ Swap history service ready (MongoDB connected to ${mongoose.connection.db.databaseName})`
+        `Swap history service ready (MongoDB connected to ${mongoose.connection.db.databaseName})`
+      );
+      logger.info(
+        `User watchlist service ready (MongoDB connected to ${mongoose.connection.db.databaseName})`
       );
     } else {
       logger.warn(
-        "⚠️ Swap history service may not work properly (MongoDB not connected)"
+        "Swap history and watchlist services may not work properly (MongoDB not connected)"
       );
     }
 
-    logger.info("🎉 All services initialized successfully");
+    logger.info("All services initialized successfully");
   } catch (error) {
-    logger.error("❌ Failed to initialize services", {
+    logger.error("Failed to initialize services", {
       message: error.message,
       stack: error.stack,
     });
 
-    logger.warn("⚠️ Continuing with partial service initialization");
+    logger.warn("Continuing with partial service initialization");
   }
 }
 
 // Error handling middleware (must be last)
 app.use(errorHandler);
 
-// 404 handler
+// 404 handler - MUST BE LAST
 app.use("*", (req, res) => {
-  console.log(`❌ 404 - Route not found: ${req.method} ${req.originalUrl}`);
+  console.log(`404 - Route not found: ${req.method} ${req.originalUrl}`);
   res.status(404).json({
     success: false,
     error: "Route not found",
@@ -966,6 +980,8 @@ app.use("*", (req, res) => {
       coingecko: "GET /api/coingecko/*",
       swap: "GET /api/swap/*",
       swapHistory: "GET/POST /api/swap-history/*",
+      coinles: "GET /api/coinles/*",
+      userWatchlist: "GET/POST/DELETE /api/user-watchlist/*",
       ...(process.env.NODE_ENV === "development" && {
         debug: "GET /api/debug/*",
       }),
@@ -976,24 +992,25 @@ app.use("*", (req, res) => {
 const PORT = process.env.PORT || 5002;
 
 server.listen(PORT, async () => {
-  logger.info(`🚀 Blockpal Services running on port ${PORT}`);
-  logger.info(`🔗 Health check: http://localhost:${PORT}/health`);
-  logger.info(`🔌 WebSocket server running on ws://localhost:${PORT}`);
-  logger.info(`📡 Wallet Connect API: http://localhost:${PORT}/api/wallet`);
-  logger.info(`🪙 Token API: http://localhost:${PORT}/api/tokens`);
-  logger.info(`🦎 CoinGecko API: http://localhost:${PORT}/api/coingecko`);
-  logger.info(`💱 Swap API: http://localhost:${PORT}/api/swap`);
-  logger.info(`📜 Swap History API: http://localhost:${PORT}/api/swap-history`);
+  logger.info(`Blockpal Services running on port ${PORT}`);
+  logger.info(`Health check: http://localhost:${PORT}/health`);
+  logger.info(`WebSocket server running on ws://localhost:${PORT}`);
+  logger.info(`Wallet Connect API: http://localhost:${PORT}/api/wallet`);
+  logger.info(`Token API: http://localhost:${PORT}/api/tokens`);
+  logger.info(`CoinGecko API: http://localhost:${PORT}/api/coingecko`);
+  logger.info(`Swap API: http://localhost:${PORT}/api/swap`);
+  logger.info(`Swap History API: http://localhost:${PORT}/api/swap-history`);
+  logger.info(`CoinLes API: http://localhost:${PORT}/api/coinles`);
+  logger.info(`Watchlist API: http://localhost:${PORT}/api/user-watchlist`);
 
   if (process.env.NODE_ENV === "development") {
-    logger.info(`🐛 Debug API: http://localhost:${PORT}/api/debug`);
-    logger.info(`🧪 Test Swap: http://localhost:${PORT}/api/swap/tokens/1`);
+    logger.info(`Debug API: http://localhost:${PORT}/api/debug`);
   }
 
   const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(",") || [
     "http://localhost:3000",
   ];
-  logger.info(`🔒 CORS allowed origins: ${allowedOrigins.join(", ")}`);
+  logger.info(`CORS allowed origins: ${allowedOrigins.join(", ")}`);
 
   await initializeServices();
 });
