@@ -21,28 +21,30 @@ router.use(coinlesRateLimit);
  * GET /api/coinles/search
  * Search tokens on a specific chain
  */
+
 router.get("/search", async (req, res) => {
   try {
     const { chain, query } = req.query;
 
-    if (!chain || !query) {
-      return ResponseUtil.validation(
-        res,
-        "Chain and query parameters are required"
-      );
+    // Allow empty query for trending/popular tokens
+    if (!chain) {
+      return ResponseUtil.validation(res, "Chain parameter is required");
     }
 
-    logger.info(`Searching tokens: chain=${chain}, query=${query}`);
+    // If query is empty, search for popular tokens
+    const searchQuery = query && query.trim() !== "" ? query : "eth";
 
-    const results = await coinlesService.searchTokens(chain, query);
+    console.log("Searching tokens:", { chain, query: searchQuery });
+
+    const results = await coinlesService.searchTokens(chain, searchQuery);
 
     return ResponseUtil.success(
       res,
       { results, count: results.length },
-      "Search completed successfully"
+      "Tokens retrieved successfully"
     );
   } catch (error) {
-    logger.error("Error in /coinles/search", { error: error.message });
+    logger.error("Error searching tokens", { error: error.message });
     return ResponseUtil.serverError(res, "Failed to search tokens");
   }
 });

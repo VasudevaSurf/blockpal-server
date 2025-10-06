@@ -1,4 +1,4 @@
-// models/UserWatchlist.js - User watchlist model for CoinLes
+// models/UserWatchlist.js - COMPLETE UPDATED VERSION
 const mongoose = require("mongoose");
 
 const WatchlistTokenSchema = new mongoose.Schema({
@@ -23,6 +23,43 @@ const WatchlistTokenSchema = new mongoose.Schema({
   tokenSymbol: {
     type: String,
     required: true,
+  },
+  // Cached market data
+  cachedPrice: {
+    type: Number,
+    default: 0,
+  },
+  cachedChange24h: {
+    type: Number,
+    default: 0,
+  },
+  cachedVolume24h: {
+    type: Number,
+    default: 0,
+  },
+  cachedMarketCap: {
+    type: Number,
+    default: 0,
+  },
+  cachedLiquidity: {
+    type: Number,
+    default: 0,
+  },
+  cachedBuys24h: {
+    type: Number,
+    default: 0,
+  },
+  cachedSells24h: {
+    type: Number,
+    default: 0,
+  },
+  cachedLogo: {
+    type: String,
+    default: "",
+  },
+  lastDataUpdate: {
+    type: Date,
+    default: Date.now,
   },
   addedAt: {
     type: Date,
@@ -93,7 +130,6 @@ const UserWatchlistSchema = new mongoose.Schema(
   }
 );
 
-// Compound indexes
 UserWatchlistSchema.index({
   email: 1,
   "watchlist.chainId": 1,

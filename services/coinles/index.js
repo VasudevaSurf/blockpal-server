@@ -4,14 +4,13 @@ const NodeCache = require("node-cache");
 const { logger } = require("../../utils/logger");
 
 const cache = new NodeCache({
-  stdTTL: 30, // 30 seconds cache
+  stdTTL: 30,
   checkperiod: 10,
 });
 
 const COINGECKO_BASE_URL = "https://api.coingecko.com/api/v3";
 const API_KEY = process.env.COINGECKO_API_KEY || "CG-oTmQJV3kLe92KcQ2753cxy6j";
 
-// API rate limiting
 let apiCallsThisMinute = 0;
 let lastMinuteReset = Date.now();
 
@@ -57,7 +56,6 @@ function formatAddress(address) {
   )}`;
 }
 
-// Search tokens with grouping (exact copy from server.js)
 async function searchTokens(chain, query) {
   try {
     const cacheKey = `search_${chain}_${query}`;
@@ -164,7 +162,6 @@ async function searchTokens(chain, query) {
   }
 }
 
-// Get token info with holder data
 async function getTokenInfo(network, contractAddress, poolAddress) {
   try {
     const tokenUrl = `${COINGECKO_BASE_URL}/onchain/networks/${network}/tokens/${contractAddress}/info`;
@@ -250,7 +247,7 @@ async function getTokenInfo(network, contractAddress, poolAddress) {
     let cautionNotes = [];
 
     if (attributes.is_honeypot) {
-      riskLevel = "⚠️ HONEYPOT DETECTED";
+      riskLevel = "HONEYPOT DETECTED";
       cautionNotes.push("This token has been flagged as a potential honeypot");
     }
 
@@ -263,15 +260,15 @@ async function getTokenInfo(network, contractAddress, poolAddress) {
     }
 
     if (palScore < 30) {
-      riskLevel = riskLevel || "⚠️ Too Risky";
+      riskLevel = riskLevel || "Too Risky";
       cautionNotes.push("Very low trust score - exercise extreme caution");
     } else if (palScore < 60) {
-      riskLevel = riskLevel || "⚠️ Moderate Risk";
+      riskLevel = riskLevel || "Moderate Risk";
       cautionNotes.push("Moderate trust score - invest carefully");
     } else if (palScore < 80) {
-      riskLevel = riskLevel || "✓ Fine, No Issues";
+      riskLevel = riskLevel || "Fine, No Issues";
     } else {
-      riskLevel = riskLevel || "🚀 Super Bullish";
+      riskLevel = riskLevel || "Super Bullish";
     }
 
     return {
@@ -329,7 +326,6 @@ async function getTokenInfo(network, contractAddress, poolAddress) {
   }
 }
 
-// Get OHLCV data
 async function getOHLCVData(network, poolAddress, timeframe) {
   try {
     const url = `${COINGECKO_BASE_URL}/onchain/networks/${network}/pools/${poolAddress}/ohlcv/${timeframe}`;

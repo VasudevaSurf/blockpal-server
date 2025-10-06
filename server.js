@@ -231,7 +231,7 @@ app.use(
   coinGeckoRoutes
 );
 
-// CoinLes routes
+// Mount CoinLes routes (add this BEFORE your 404 handler)
 app.use(
   "/api/coinles",
   (req, res, next) => {
@@ -241,7 +241,6 @@ app.use(
   coinlesRoutes
 );
 
-// User Watchlist routes
 app.use(
   "/api/user-watchlist",
   (req, res, next) => {
