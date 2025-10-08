@@ -1,4 +1,4 @@
-// services/coinles/index.js - CoinGecko token tracking service
+// services/coinles/index.js - FIXED VERSION WITH PROPER LOGO HANDLING
 const axios = require("axios");
 const NodeCache = require("node-cache");
 const { logger } = require("../../utils/logger");
@@ -56,42 +56,84 @@ function formatAddress(address) {
   )}`;
 }
 
+// FIXED: Exact replication of working searchTokens function
 async function searchTokens(chain, query) {
   try {
     const cacheKey = `search_${chain}_${query}`;
     const cached = cache.get(cacheKey);
-    if (cached) return cached;
+    if (cached) {
+      console.log("✅ Cache hit for search:", {
+        chain,
+        query,
+        results: cached.length,
+      });
+      return cached;
+    }
 
     const url = `${COINGECKO_BASE_URL}/onchain/search/pools`;
-    const data = await makeApiCall(url, { query, network: chain });
+    console.log("🔍 Searching tokens:", { chain, query, url });
 
+    const data = await makeApiCall(url, {
+      query: query,
+      network: chain,
+      include: "base_token", // IMPORTANT: Include base_token data
+    });
+
+    // FIXED: Create a map of token data from included array
     const tokenDataMap = new Map();
-    if (data.included) {
+    if (data.included && Array.isArray(data.included)) {
       data.included.forEach((item) => {
         if (item.type === "token" && item.attributes) {
           const tokenAddress = item.attributes.address?.toLowerCase() || "";
-          tokenDataMap.set(tokenAddress, {
+          const tokenData = {
             name: item.attributes.name,
             symbol: item.attributes.symbol,
-            image_url: item.attributes.image_url,
+            image_url: item.attributes.image_url, // CRITICAL: Get image_url from included data
             decimals: item.attributes.decimals,
-          });
+          };
+
+          // Store by address
+          if (tokenAddress) {
+            tokenDataMap.set(tokenAddress, tokenData);
+          }
+
+          // Also store by full ID (network_address format)
+          if (item.id) {
+            tokenDataMap.set(item.id.toLowerCase(), tokenData);
+          }
         }
       });
     }
 
+    console.log(`📦 Built token data map with ${tokenDataMap.size} entries`);
+
+    // Group pools by token address to avoid duplicates
     const tokenMap = new Map();
 
     (data.data || []).forEach((pool) => {
+      // Get pool address
       const poolAddress = pool.attributes?.address || "";
-      const baseTokenId = pool.relationships?.base_token?.data?.id || "";
-      const baseTokenAddress = baseTokenId.split("_")[1] || "";
 
+      // Get base token address from relationships
+      const baseTokenId = pool.relationships?.base_token?.data?.id || "";
+      if (!baseTokenId) return;
+
+      // Extract the address part after the network prefix
+      const baseTokenAddress = baseTokenId.includes("_")
+        ? baseTokenId.split("_")[1]
+        : baseTokenId;
       if (!baseTokenAddress) return;
 
+      // Get pool attributes
       const attrs = pool.attributes || {};
-      const tokenInfo = tokenDataMap.get(baseTokenAddress.toLowerCase()) || {};
 
+      // FIXED: Try multiple lookup strategies for token info
+      let tokenInfo =
+        tokenDataMap.get(baseTokenId.toLowerCase()) ||
+        tokenDataMap.get(baseTokenAddress.toLowerCase()) ||
+        {};
+
+      // If token already exists, aggregate data
       if (tokenMap.has(baseTokenAddress)) {
         const existing = tokenMap.get(baseTokenAddress);
         existing.liquidity += parseFloat(attrs.reserve_in_usd) || 0;
@@ -100,6 +142,7 @@ async function searchTokens(chain, query) {
         existing.sells24h += attrs.transactions?.h24?.sells || 0;
         existing.poolCount++;
 
+        // Keep the pool with highest liquidity as primary
         if (
           (parseFloat(attrs.reserve_in_usd) || 0) > existing.primaryLiquidity
         ) {
@@ -110,9 +153,11 @@ async function searchTokens(chain, query) {
             parseFloat(attrs.price_change_percentage?.h24) || 0;
         }
       } else {
+        // Extract token name and symbol
         let tokenName = tokenInfo.name || "";
         let tokenSymbol = tokenInfo.symbol || "";
 
+        // Fallback: parse from pool name if token info not available
         if (!tokenName && attrs.name) {
           const parts = attrs.name.split(" / ");
           if (parts.length > 0) {
@@ -121,7 +166,18 @@ async function searchTokens(chain, query) {
           }
         }
 
-        const logo = tokenInfo.image_url || "";
+        // FIXED: Get image URL - prioritize from tokenInfo (included data)
+        let logo =
+          tokenInfo.image_url || // Primary source from included data
+          attrs.base_token_image_url || // Fallback 1
+          attrs.token_image_url || // Fallback 2
+          attrs.image_url || // Fallback 3
+          "";
+
+        console.log(
+          `🖼️ Token logo for ${tokenSymbol}:`,
+          logo ? "✅ Found" : "❌ Missing"
+        );
 
         tokenMap.set(baseTokenAddress, {
           poolAddress: poolAddress,
@@ -130,7 +186,7 @@ async function searchTokens(chain, query) {
           name: tokenName,
           symbol: tokenSymbol,
           price: parseFloat(attrs.base_token_price_usd) || 0,
-          logo: logo,
+          logo: logo, // FIXED: Now properly gets logo from included data
           change24h: parseFloat(attrs.price_change_percentage?.h24) || 0,
           liquidity: parseFloat(attrs.reserve_in_usd) || 0,
           volume24h: parseFloat(attrs.volume_usd?.h24) || 0,
@@ -142,6 +198,7 @@ async function searchTokens(chain, query) {
       }
     });
 
+    // Convert map to array and sort by liquidity
     const results = Array.from(tokenMap.values())
       .sort((a, b) => b.liquidity - a.liquidity)
       .slice(0, 10)
@@ -154,10 +211,19 @@ async function searchTokens(chain, query) {
         return token;
       });
 
+    console.log(`✅ Search complete: Found ${results.length} tokens`);
+    console.log(
+      `🖼️ Tokens with logos: ${results.filter((t) => t.logo).length}/${
+        results.length
+      }`
+    );
+
+    // Cache the results
     cache.set(cacheKey, results);
     return results;
   } catch (error) {
     logger.error("Token search error:", error);
+    console.error("❌ Search failed:", error.message);
     return [];
   }
 }
@@ -275,7 +341,7 @@ async function getTokenInfo(network, contractAddress, poolAddress) {
       metadata: {
         name: attributes.name,
         symbol: attributes.symbol,
-        logo: attributes.image_url,
+        logo: attributes.image_url, // Token logo from attributes
         description: attributes.description || "",
         websites: attributes.websites || [],
         socials: socials,
