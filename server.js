@@ -15,6 +15,9 @@ const walletConnectService = require("./services/wallet-connect");
 const moralisService = require("./services/moralis");
 const swapHistoryRoutes = require("./routes/swapHistory");
 
+const newsScheduler = require("./services/newsScheduler");
+const newsRoutes = require("./routes/news");
+
 const mongoose = require("mongoose");
 
 // Connect to MongoDB with BlockPal database
@@ -167,6 +170,9 @@ app.get("/health", async (req, res) => {
         coinles: "running",
         "user-watchlist":
           mongoose.connection.readyState === 1 ? "running" : "offline",
+
+        "crypto-news": "running",
+        "news-scheduler": newsScheduler.isRunning ? "running" : "stopped",
       },
       uptime: process.uptime(),
       memory: process.memoryUsage(),
@@ -199,6 +205,15 @@ app.use(
     next();
   },
   swapHistoryRoutes
+);
+
+app.use(
+  "/api/news",
+  (req, res, next) => {
+    console.log(`News API Request: ${req.method} ${req.path}`);
+    next();
+  },
+  newsRoutes
 );
 
 // Service routes
@@ -950,6 +965,10 @@ async function initializeServices() {
       );
     }
 
+    logger.info("Starting news ingestion scheduler...");
+    await newsScheduler.start();
+    logger.info("News scheduler initialized");
+
     logger.info("All services initialized successfully");
   } catch (error) {
     logger.error("Failed to initialize services", {
@@ -1007,7 +1026,7 @@ server.listen(PORT, async () => {
   }
 
   const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(",") || [
-    "http://localhost:3000",
+    "http://localhost:3002",
   ];
   logger.info(`CORS allowed origins: ${allowedOrigins.join(", ")}`);
 
@@ -1017,6 +1036,10 @@ server.listen(PORT, async () => {
 // Graceful shutdown
 process.on("SIGTERM", () => {
   logger.info("SIGTERM received, shutting down gracefully");
+
+  // Stop news scheduler
+  newsScheduler.stop();
+
   server.close(() => {
     mongoose.connection.close();
     logger.info("Process terminated");
