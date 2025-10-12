@@ -1,4 +1,4 @@
-// services/coingecko/index.js - CoinGecko service for trending tokens
+// services/coingecko/index.js - FIXED VERSION WITH TOP GAINERS IMAGES
 const NodeCache = require("node-cache");
 const { logger } = require("../../utils/logger");
 
@@ -149,7 +149,7 @@ class CoinGeckoService {
         };
       });
 
-      // Create top gainers from trending data (reuse same data with different format)
+      // FIXED: Create top gainers with proper image URLs
       const topGainers = data.coins.slice(0, 15).map((coin, index) => {
         const item = coin.item;
         const price = this.formatPrice(item.data?.price);
@@ -205,6 +205,11 @@ class CoinGeckoService {
             iconMap[item.symbol?.toUpperCase()] ||
             (item.symbol || "T").charAt(0).toUpperCase(),
           bgColor: colorMap[index % colorMap.length],
+          // FIXED: Add all image URLs just like trending tokens
+          imageUrl: item.thumb || item.small || null,
+          thumbUrl: item.thumb || null,
+          smallUrl: item.small || null,
+          largeUrl: item.large || null,
         };
       });
 
@@ -220,6 +225,11 @@ class CoinGeckoService {
 
       logger.info(
         `✅ Fetched ${trendingTokens.length} trending tokens and ${topGainers.length} top gainers`
+      );
+      logger.info(
+        `🖼️ Top gainers with images: ${
+          topGainers.filter((t) => t.imageUrl).length
+        }/${topGainers.length}`
       );
 
       return result;
