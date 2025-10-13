@@ -1,4 +1,4 @@
-// services/coinles/index.js - FIXED VERSION WITH EXACT TERMINAL APP LOGIC
+// services/coinles/index.js - WITH CORRECT COINGECKO NETWORK IDS
 const axios = require("axios");
 const NodeCache = require("node-cache");
 const { logger } = require("../../utils/logger");
@@ -11,6 +11,43 @@ const cache = new NodeCache({
 const COINGECKO_BASE_URL = "https://api.coingecko.com/api/v3";
 const API_KEY = process.env.COINGECKO_API_KEY || "CG-oTmQJV3kLe92KcQ2753cxy6j";
 
+console.log("🔑 CoinGecko API initialized");
+
+// CRITICAL: CoinGecko onchain API network identifiers
+// Based on actual CoinGecko API documentation
+// Reference: https://docs.coingecko.com/reference/onchain-networks-list
+const CHAIN_ID_MAP = {
+  // Ethereum
+  eth: "eth",
+  ethereum: "eth",
+
+  // Polygon - IMPORTANT: CoinGecko uses 'polygon_pos' not 'matic'!
+  polygon: "polygon_pos",
+  matic: "polygon_pos",
+
+  // BSC
+  bsc: "bsc",
+  binance: "bsc",
+
+  // Arbitrum
+  arbitrum: "arbitrum",
+  arb: "arbitrum",
+
+  // Avalanche - IMPORTANT: CoinGecko uses 'avax' correctly
+  avalanche: "avax",
+  avax: "avax",
+
+  // Base
+  base: "base",
+};
+
+function getCoinGeckoChainId(chainId) {
+  const normalized = chainId.toLowerCase().trim();
+  const mapped = CHAIN_ID_MAP[normalized] || normalized;
+  console.log(`🔗 Chain mapping: ${chainId} -> ${mapped}`);
+  return mapped;
+}
+
 let apiCallsThisMinute = 0;
 let lastMinuteReset = Date.now();
 
@@ -22,30 +59,76 @@ function resetApiCounter() {
   }
 }
 
-async function makeApiCall(url, params = {}) {
+async function makeApiCall(url, params = {}, retries = 2) {
   resetApiCounter();
 
   if (apiCallsThisMinute >= 28) {
+    console.log("⏱️ Rate limit, waiting...");
     await new Promise((resolve) =>
       setTimeout(resolve, 60000 - (Date.now() - lastMinuteReset))
     );
     resetApiCounter();
   }
 
-  try {
-    apiCallsThisMinute++;
-    const response = await axios.get(url, {
-      params: params,
-      headers: {
-        "x-cg-demo-api-key": API_KEY,
-      },
-      timeout: 10000,
-    });
+  for (let attempt = 1; attempt <= retries + 1; attempt++) {
+    try {
+      apiCallsThisMinute++;
+      console.log(`📡 API call ${attempt}/${retries + 1}:`, {
+        endpoint: url.split("/").slice(-2).join("/"),
+        network: params.network,
+        query: params.query,
+      });
 
-    return response.data;
-  } catch (error) {
-    logger.error("CoinGecko API call failed:", error.message);
-    throw error;
+      const response = await axios.get(url, {
+        params: params,
+        headers: {
+          "x-cg-demo-api-key": API_KEY,
+        },
+        timeout: 15000,
+      });
+
+      console.log(`✅ Success (${attempt})`);
+      return response.data;
+    } catch (error) {
+      const isLastAttempt = attempt === retries + 1;
+
+      if (error.code === "ECONNABORTED") {
+        console.error(`⏰ Timeout ${attempt}`);
+        if (!isLastAttempt) {
+          await new Promise((resolve) => setTimeout(resolve, 2000));
+          continue;
+        }
+      } else if (error.response?.status === 429) {
+        console.error(`🚫 Rate limited ${attempt}`);
+        if (!isLastAttempt) {
+          await new Promise((resolve) => setTimeout(resolve, 5000));
+          continue;
+        }
+      } else if (error.response?.status === 404) {
+        console.error(
+          `❌ 404: Network '${params.network}' not found or not supported`
+        );
+        // Don't retry 404s - the network doesn't exist
+        throw error;
+      } else if (error.response) {
+        console.error(
+          `❌ ${error.response.status}: ${error.response.statusText}`
+        );
+      } else if (error.request) {
+        console.error(`❌ No response`);
+        if (!isLastAttempt) {
+          await new Promise((resolve) => setTimeout(resolve, 2000));
+          continue;
+        }
+      } else {
+        console.error(`❌ Error:`, error.message);
+      }
+
+      if (isLastAttempt) {
+        logger.error("API call failed:", error.message);
+        throw error;
+      }
+    }
   }
 }
 
@@ -56,42 +139,57 @@ function formatAddress(address) {
   )}`;
 }
 
-// FIXED: Exact copy of working searchTokens from terminal app (server.js)
 async function searchTokens(chain, query) {
   try {
-    const cacheKey = `search_${chain}_${query}`;
+    const coinGeckoChain = getCoinGeckoChainId(chain);
+    const cacheKey = `search_${coinGeckoChain}_${query}`;
+
     const cached = cache.get(cacheKey);
     if (cached) {
-      console.log("✅ Cache hit for search:", {
-        chain,
-        query,
-        results: cached.length,
+      console.log("✅ Cache hit:", {
+        chain: coinGeckoChain,
+        count: cached.length,
       });
       return cached;
     }
 
     const url = `${COINGECKO_BASE_URL}/onchain/search/pools`;
-    console.log("🔍 Searching tokens:", { chain, query, url });
+    console.log("🔍 Search:", {
+      original: chain,
+      mapped: coinGeckoChain,
+      query,
+    });
 
     let data;
     try {
-      data = await makeApiCall(url, {
-        query: query,
-        network: chain,
-        include: "base_token", // IMPORTANT
-      });
+      data = await makeApiCall(
+        url,
+        {
+          query: query,
+          network: coinGeckoChain,
+          include: "base_token",
+        },
+        1
+      ); // Only 1 retry (404s won't retry)
     } catch (apiError) {
-      console.error(`❌ API call failed for ${chain}:`, apiError.message);
+      if (apiError.response?.status === 404) {
+        console.error(
+          `❌ Network '${coinGeckoChain}' not supported by CoinGecko`
+        );
+        console.error(
+          `💡 Tip: This chain may not be available in CoinGecko's onchain API`
+        );
+      } else {
+        console.error(`❌ API failed for ${chain}:`, apiError.message);
+      }
       return [];
     }
 
-    // FIXED: Exact logic from terminal app
-    // Create a map of token data from included array
+    // Build token data map
     const tokenDataMap = new Map();
     if (data.included) {
       data.included.forEach((item) => {
         if (item.type === "token" && item.attributes) {
-          // Store the entire token data indexed by token address
           const tokenAddress = item.attributes.address?.toLowerCase() || "";
           const tokenData = {
             name: item.attributes.name,
@@ -100,12 +198,9 @@ async function searchTokens(chain, query) {
             decimals: item.attributes.decimals,
           };
 
-          // Store by address
           if (tokenAddress) {
             tokenDataMap.set(tokenAddress, tokenData);
           }
-
-          // CRITICAL: Also store by full ID (network_address format)
           if (item.id) {
             tokenDataMap.set(item.id.toLowerCase(), tokenData);
           }
@@ -113,58 +208,38 @@ async function searchTokens(chain, query) {
       });
     }
 
-    console.log(
-      `📦 Built token data map with ${tokenDataMap.size} entries for ${chain}`
-    );
+    console.log(`📦 Token map: ${tokenDataMap.size} entries`);
 
-    // Group pools by token address to avoid duplicates
+    // Process pools
     const tokenMap = new Map();
 
     (data.data || []).forEach((pool) => {
       try {
-        // Get pool address
         const poolAddress = pool.attributes?.address || "";
-
-        // FIXED: Exact logic from terminal app for extracting base token address
         const baseTokenId = pool.relationships?.base_token?.data?.id || "";
-        if (!baseTokenId) {
-          console.log(`⚠️ Skipping pool with no base token ID`);
-          return;
-        }
 
-        // CRITICAL FIX: Handle both formats correctly
-        // Format 1: "eth_0x123..." (with underscore)
-        // Format 2: "0x123..." (without underscore)
+        if (!baseTokenId) return;
+
         const baseTokenAddress = baseTokenId.includes("_")
           ? baseTokenId.split("_")[1]
           : baseTokenId;
 
-        if (!baseTokenAddress) {
-          console.log(`⚠️ Skipping pool with invalid base token address`);
-          return;
-        }
+        if (!baseTokenAddress) return;
 
-        // Get pool attributes
         const attrs = pool.attributes || {};
-
-        // FIXED: Get token info from tokenDataMap with multiple lookup strategies
-        // Try both the full ID and just the address
         let tokenInfo =
           tokenDataMap.get(baseTokenId.toLowerCase()) ||
           tokenDataMap.get(baseTokenAddress.toLowerCase()) ||
           {};
 
-        // If token already exists, aggregate data
         if (tokenMap.has(baseTokenAddress)) {
           const existing = tokenMap.get(baseTokenAddress);
-          // Add liquidity from this pool
           existing.liquidity += parseFloat(attrs.reserve_in_usd) || 0;
           existing.volume24h += parseFloat(attrs.volume_usd?.h24) || 0;
           existing.buys24h += attrs.transactions?.h24?.buys || 0;
           existing.sells24h += attrs.transactions?.h24?.sells || 0;
           existing.poolCount++;
 
-          // Keep the pool with highest liquidity as primary
           if (
             (parseFloat(attrs.reserve_in_usd) || 0) > existing.primaryLiquidity
           ) {
@@ -175,11 +250,9 @@ async function searchTokens(chain, query) {
               parseFloat(attrs.price_change_percentage?.h24) || 0;
           }
         } else {
-          // Extract token name and symbol
           let tokenName = tokenInfo.name || "";
           let tokenSymbol = tokenInfo.symbol || "";
 
-          // Fallback: parse from pool name if token info not available
           if (!tokenName && attrs.name) {
             const parts = attrs.name.split(" / ");
             if (parts.length > 0) {
@@ -188,10 +261,8 @@ async function searchTokens(chain, query) {
             }
           }
 
-          // FIXED: Get image URL from tokenInfo (from included array)
           const logo = tokenInfo.image_url || "";
 
-          // Only add if we have valid name and symbol
           if (tokenName && tokenSymbol) {
             tokenMap.set(baseTokenAddress, {
               poolAddress: poolAddress,
@@ -209,27 +280,18 @@ async function searchTokens(chain, query) {
               poolCount: 1,
               primaryLiquidity: parseFloat(attrs.reserve_in_usd) || 0,
             });
-          } else {
-            console.log(`⚠️ Skipping token without valid name/symbol:`, {
-              tokenName,
-              tokenSymbol,
-              baseTokenAddress: baseTokenAddress.substring(0, 10),
-            });
           }
         }
       } catch (poolError) {
-        console.error("❌ Error processing pool:", poolError.message);
-        // Continue with next pool
+        // Continue
       }
     });
 
-    // Convert map to array and sort by liquidity
     const results = Array.from(tokenMap.values())
-      .filter((token) => token.name && token.symbol) // Extra safety check
+      .filter((token) => token.name && token.symbol)
       .sort((a, b) => b.liquidity - a.liquidity)
       .slice(0, 10)
       .map((token) => {
-        // Add pool count to name if multiple pools
         if (token.poolCount > 1) {
           token.displayName = `${token.name} (${token.poolCount} pools)`;
         } else {
@@ -238,55 +300,42 @@ async function searchTokens(chain, query) {
         return token;
       });
 
-    console.log(
-      `✅ Search complete for ${chain}: Found ${results.length} tokens`
-    );
-    console.log(
-      `🖼️ Tokens with logos: ${results.filter((t) => t.logo).length}/${
-        results.length
-      }`
-    );
+    console.log(`✅ Found ${results.length} tokens`);
 
-    // Log first few results for debugging
-    if (results.length > 0) {
-      console.log(
-        `📊 First 3 results for ${chain}:`,
-        results.slice(0, 3).map((r) => ({
-          symbol: r.symbol,
-          name: r.name,
-          hasLogo: !!r.logo,
-          price: r.price,
-        }))
-      );
+    if (results.length === 0) {
+      console.log(`⚠️ No tokens. Debug:`, {
+        raw: data.data?.length || 0,
+        included: data.included?.length || 0,
+        tokenMap: tokenMap.size,
+      });
     }
 
-    // Cache the results
     if (results.length > 0) {
       cache.set(cacheKey, results);
     }
 
     return results;
   } catch (error) {
-    logger.error(`❌ Token search error for ${chain}:`, error);
-    console.error(`❌ Search failed for ${chain}:`, error.message);
-
-    // Always return empty array instead of throwing
+    logger.error(`Search error for ${chain}:`, error);
+    console.error(`❌ Failed for ${chain}:`, error.message);
     return [];
   }
 }
 
 async function getTokenInfo(network, contractAddress, poolAddress) {
   try {
-    const tokenUrl = `${COINGECKO_BASE_URL}/onchain/networks/${network}/tokens/${contractAddress}/info`;
-    const tokenData = await makeApiCall(tokenUrl);
+    const coinGeckoNetwork = getCoinGeckoChainId(network);
+    const tokenUrl = `${COINGECKO_BASE_URL}/onchain/networks/${coinGeckoNetwork}/tokens/${contractAddress}/info`;
+
+    const tokenData = await makeApiCall(tokenUrl, {}, 1);
 
     let poolData = null;
     if (poolAddress) {
       try {
-        const poolUrl = `${COINGECKO_BASE_URL}/onchain/networks/${network}/pools/${poolAddress}`;
-        const poolResponse = await makeApiCall(poolUrl);
+        const poolUrl = `${COINGECKO_BASE_URL}/onchain/networks/${coinGeckoNetwork}/pools/${poolAddress}`;
+        const poolResponse = await makeApiCall(poolUrl, {}, 1);
 
-        if (poolResponse.data && poolResponse.data.attributes) {
+        if (poolResponse.data?.attributes) {
           const poolAttrs = poolResponse.data.attributes;
           poolData = {
             price: parseFloat(poolAttrs.base_token_price_usd) || 0,
@@ -313,11 +362,11 @@ async function getTokenInfo(network, contractAddress, poolAddress) {
           };
         }
       } catch (poolError) {
-        logger.error("Failed to get pool data:", poolError.message);
+        console.error("Pool fetch failed:", poolError.message);
       }
     }
 
-    if (!tokenData.data) throw new Error("No token data found");
+    if (!tokenData.data) throw new Error("No token data");
 
     const attributes = tokenData.data.attributes || {};
     const holders = attributes.holders || {};
@@ -434,15 +483,17 @@ async function getTokenInfo(network, contractAddress, poolAddress) {
         : null,
     };
   } catch (error) {
-    logger.error("Failed to get token info:", error.message);
+    logger.error("Token info failed:", error.message);
     throw error;
   }
 }
 
 async function getOHLCVData(network, poolAddress, timeframe) {
   try {
-    const url = `${COINGECKO_BASE_URL}/onchain/networks/${network}/pools/${poolAddress}/ohlcv/${timeframe}`;
-    const data = await makeApiCall(url);
+    const coinGeckoNetwork = getCoinGeckoChainId(network);
+    const url = `${COINGECKO_BASE_URL}/onchain/networks/${coinGeckoNetwork}/pools/${poolAddress}/ohlcv/${timeframe}`;
+
+    const data = await makeApiCall(url, {}, 1);
 
     const chartData = (data.data?.attributes?.ohlcv_list || []).map(
       (candle) => ({
@@ -457,7 +508,7 @@ async function getOHLCVData(network, poolAddress, timeframe) {
 
     return chartData;
   } catch (error) {
-    logger.error("Failed to get OHLCV data:", error.message);
+    logger.error("OHLCV failed:", error.message);
     return [];
   }
 }

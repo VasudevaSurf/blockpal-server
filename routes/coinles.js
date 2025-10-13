@@ -142,4 +142,58 @@ router.get("/health", async (req, res) => {
   }
 });
 
+router.get("/test-networks", async (req, res) => {
+  const axios = require("axios");
+  const API_KEY = "CG-oTmQJV3kLe92KcQ2753cxy6j";
+  const COINGECKO_BASE_URL = "https://api.coingecko.com/api/v3";
+
+  // Test different network names for Polygon
+  const networksToTest = [
+    "polygon",
+    "matic",
+    "polygon-pos",
+    "matic-network",
+    "polygonpos",
+  ];
+
+  const results = {};
+
+  for (const network of networksToTest) {
+    try {
+      console.log(`Testing network: ${network}`);
+
+      const url = `${COINGECKO_BASE_URL}/onchain/search/pools`;
+      const response = await axios.get(url, {
+        params: {
+          query: "usdc",
+          network: network,
+          include: "base_token",
+        },
+        headers: {
+          "x-cg-demo-api-key": API_KEY,
+        },
+        timeout: 10000,
+      });
+
+      results[network] = {
+        status: "SUCCESS",
+        resultCount: response.data?.data?.length || 0,
+      };
+
+      console.log(
+        `✅ ${network}: SUCCESS (${results[network].resultCount} results)`
+      );
+    } catch (error) {
+      results[network] = {
+        status: "FAILED",
+        error: error.response?.status || error.message,
+      };
+
+      console.log(`❌ ${network}: ${results[network].error}`);
+    }
+  }
+
+  res.json(results);
+});
+
 module.exports = router;
