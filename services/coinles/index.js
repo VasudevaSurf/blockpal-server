@@ -1,4 +1,4 @@
-// services/coinles/index.js - FIXED VERSION WITH PROPER LOGO HANDLING
+// services/coinles/index.js - FIXED VERSION WITH EXACT TERMINAL APP LOGIC
 const axios = require("axios");
 const NodeCache = require("node-cache");
 const { logger } = require("../../utils/logger");
@@ -56,7 +56,7 @@ function formatAddress(address) {
   )}`;
 }
 
-// FIXED: Exact replication of working searchTokens function
+// FIXED: Exact copy of working searchTokens from terminal app (server.js)
 async function searchTokens(chain, query) {
   try {
     const cacheKey = `search_${chain}_${query}`;
@@ -73,22 +73,30 @@ async function searchTokens(chain, query) {
     const url = `${COINGECKO_BASE_URL}/onchain/search/pools`;
     console.log("🔍 Searching tokens:", { chain, query, url });
 
-    const data = await makeApiCall(url, {
-      query: query,
-      network: chain,
-      include: "base_token", // IMPORTANT: Include base_token data
-    });
+    let data;
+    try {
+      data = await makeApiCall(url, {
+        query: query,
+        network: chain,
+        include: "base_token", // IMPORTANT
+      });
+    } catch (apiError) {
+      console.error(`❌ API call failed for ${chain}:`, apiError.message);
+      return [];
+    }
 
-    // FIXED: Create a map of token data from included array
+    // FIXED: Exact logic from terminal app
+    // Create a map of token data from included array
     const tokenDataMap = new Map();
-    if (data.included && Array.isArray(data.included)) {
+    if (data.included) {
       data.included.forEach((item) => {
         if (item.type === "token" && item.attributes) {
+          // Store the entire token data indexed by token address
           const tokenAddress = item.attributes.address?.toLowerCase() || "";
           const tokenData = {
             name: item.attributes.name,
             symbol: item.attributes.symbol,
-            image_url: item.attributes.image_url, // CRITICAL: Get image_url from included data
+            image_url: item.attributes.image_url,
             decimals: item.attributes.decimals,
           };
 
@@ -97,7 +105,7 @@ async function searchTokens(chain, query) {
             tokenDataMap.set(tokenAddress, tokenData);
           }
 
-          // Also store by full ID (network_address format)
+          // CRITICAL: Also store by full ID (network_address format)
           if (item.id) {
             tokenDataMap.set(item.id.toLowerCase(), tokenData);
           }
@@ -105,104 +113,123 @@ async function searchTokens(chain, query) {
       });
     }
 
-    console.log(`📦 Built token data map with ${tokenDataMap.size} entries`);
+    console.log(
+      `📦 Built token data map with ${tokenDataMap.size} entries for ${chain}`
+    );
 
     // Group pools by token address to avoid duplicates
     const tokenMap = new Map();
 
     (data.data || []).forEach((pool) => {
-      // Get pool address
-      const poolAddress = pool.attributes?.address || "";
+      try {
+        // Get pool address
+        const poolAddress = pool.attributes?.address || "";
 
-      // Get base token address from relationships
-      const baseTokenId = pool.relationships?.base_token?.data?.id || "";
-      if (!baseTokenId) return;
-
-      // Extract the address part after the network prefix
-      const baseTokenAddress = baseTokenId.includes("_")
-        ? baseTokenId.split("_")[1]
-        : baseTokenId;
-      if (!baseTokenAddress) return;
-
-      // Get pool attributes
-      const attrs = pool.attributes || {};
-
-      // FIXED: Try multiple lookup strategies for token info
-      let tokenInfo =
-        tokenDataMap.get(baseTokenId.toLowerCase()) ||
-        tokenDataMap.get(baseTokenAddress.toLowerCase()) ||
-        {};
-
-      // If token already exists, aggregate data
-      if (tokenMap.has(baseTokenAddress)) {
-        const existing = tokenMap.get(baseTokenAddress);
-        existing.liquidity += parseFloat(attrs.reserve_in_usd) || 0;
-        existing.volume24h += parseFloat(attrs.volume_usd?.h24) || 0;
-        existing.buys24h += attrs.transactions?.h24?.buys || 0;
-        existing.sells24h += attrs.transactions?.h24?.sells || 0;
-        existing.poolCount++;
-
-        // Keep the pool with highest liquidity as primary
-        if (
-          (parseFloat(attrs.reserve_in_usd) || 0) > existing.primaryLiquidity
-        ) {
-          existing.poolAddress = poolAddress;
-          existing.primaryLiquidity = parseFloat(attrs.reserve_in_usd) || 0;
-          existing.price = parseFloat(attrs.base_token_price_usd) || 0;
-          existing.change24h =
-            parseFloat(attrs.price_change_percentage?.h24) || 0;
+        // FIXED: Exact logic from terminal app for extracting base token address
+        const baseTokenId = pool.relationships?.base_token?.data?.id || "";
+        if (!baseTokenId) {
+          console.log(`⚠️ Skipping pool with no base token ID`);
+          return;
         }
-      } else {
-        // Extract token name and symbol
-        let tokenName = tokenInfo.name || "";
-        let tokenSymbol = tokenInfo.symbol || "";
 
-        // Fallback: parse from pool name if token info not available
-        if (!tokenName && attrs.name) {
-          const parts = attrs.name.split(" / ");
-          if (parts.length > 0) {
-            tokenSymbol = parts[0];
-            tokenName = parts[0];
+        // CRITICAL FIX: Handle both formats correctly
+        // Format 1: "eth_0x123..." (with underscore)
+        // Format 2: "0x123..." (without underscore)
+        const baseTokenAddress = baseTokenId.includes("_")
+          ? baseTokenId.split("_")[1]
+          : baseTokenId;
+
+        if (!baseTokenAddress) {
+          console.log(`⚠️ Skipping pool with invalid base token address`);
+          return;
+        }
+
+        // Get pool attributes
+        const attrs = pool.attributes || {};
+
+        // FIXED: Get token info from tokenDataMap with multiple lookup strategies
+        // Try both the full ID and just the address
+        let tokenInfo =
+          tokenDataMap.get(baseTokenId.toLowerCase()) ||
+          tokenDataMap.get(baseTokenAddress.toLowerCase()) ||
+          {};
+
+        // If token already exists, aggregate data
+        if (tokenMap.has(baseTokenAddress)) {
+          const existing = tokenMap.get(baseTokenAddress);
+          // Add liquidity from this pool
+          existing.liquidity += parseFloat(attrs.reserve_in_usd) || 0;
+          existing.volume24h += parseFloat(attrs.volume_usd?.h24) || 0;
+          existing.buys24h += attrs.transactions?.h24?.buys || 0;
+          existing.sells24h += attrs.transactions?.h24?.sells || 0;
+          existing.poolCount++;
+
+          // Keep the pool with highest liquidity as primary
+          if (
+            (parseFloat(attrs.reserve_in_usd) || 0) > existing.primaryLiquidity
+          ) {
+            existing.poolAddress = poolAddress;
+            existing.primaryLiquidity = parseFloat(attrs.reserve_in_usd) || 0;
+            existing.price = parseFloat(attrs.base_token_price_usd) || 0;
+            existing.change24h =
+              parseFloat(attrs.price_change_percentage?.h24) || 0;
+          }
+        } else {
+          // Extract token name and symbol
+          let tokenName = tokenInfo.name || "";
+          let tokenSymbol = tokenInfo.symbol || "";
+
+          // Fallback: parse from pool name if token info not available
+          if (!tokenName && attrs.name) {
+            const parts = attrs.name.split(" / ");
+            if (parts.length > 0) {
+              tokenSymbol = parts[0];
+              tokenName = parts[0];
+            }
+          }
+
+          // FIXED: Get image URL from tokenInfo (from included array)
+          const logo = tokenInfo.image_url || "";
+
+          // Only add if we have valid name and symbol
+          if (tokenName && tokenSymbol) {
+            tokenMap.set(baseTokenAddress, {
+              poolAddress: poolAddress,
+              contractAddress: baseTokenAddress,
+              contractAddressDisplay: formatAddress(baseTokenAddress),
+              name: tokenName,
+              symbol: tokenSymbol,
+              price: parseFloat(attrs.base_token_price_usd) || 0,
+              logo: logo,
+              change24h: parseFloat(attrs.price_change_percentage?.h24) || 0,
+              liquidity: parseFloat(attrs.reserve_in_usd) || 0,
+              volume24h: parseFloat(attrs.volume_usd?.h24) || 0,
+              buys24h: attrs.transactions?.h24?.buys || 0,
+              sells24h: attrs.transactions?.h24?.sells || 0,
+              poolCount: 1,
+              primaryLiquidity: parseFloat(attrs.reserve_in_usd) || 0,
+            });
+          } else {
+            console.log(`⚠️ Skipping token without valid name/symbol:`, {
+              tokenName,
+              tokenSymbol,
+              baseTokenAddress: baseTokenAddress.substring(0, 10),
+            });
           }
         }
-
-        // FIXED: Get image URL - prioritize from tokenInfo (included data)
-        let logo =
-          tokenInfo.image_url || // Primary source from included data
-          attrs.base_token_image_url || // Fallback 1
-          attrs.token_image_url || // Fallback 2
-          attrs.image_url || // Fallback 3
-          "";
-
-        console.log(
-          `🖼️ Token logo for ${tokenSymbol}:`,
-          logo ? "✅ Found" : "❌ Missing"
-        );
-
-        tokenMap.set(baseTokenAddress, {
-          poolAddress: poolAddress,
-          contractAddress: baseTokenAddress,
-          contractAddressDisplay: formatAddress(baseTokenAddress),
-          name: tokenName,
-          symbol: tokenSymbol,
-          price: parseFloat(attrs.base_token_price_usd) || 0,
-          logo: logo, // FIXED: Now properly gets logo from included data
-          change24h: parseFloat(attrs.price_change_percentage?.h24) || 0,
-          liquidity: parseFloat(attrs.reserve_in_usd) || 0,
-          volume24h: parseFloat(attrs.volume_usd?.h24) || 0,
-          buys24h: attrs.transactions?.h24?.buys || 0,
-          sells24h: attrs.transactions?.h24?.sells || 0,
-          poolCount: 1,
-          primaryLiquidity: parseFloat(attrs.reserve_in_usd) || 0,
-        });
+      } catch (poolError) {
+        console.error("❌ Error processing pool:", poolError.message);
+        // Continue with next pool
       }
     });
 
     // Convert map to array and sort by liquidity
     const results = Array.from(tokenMap.values())
+      .filter((token) => token.name && token.symbol) // Extra safety check
       .sort((a, b) => b.liquidity - a.liquidity)
       .slice(0, 10)
       .map((token) => {
+        // Add pool count to name if multiple pools
         if (token.poolCount > 1) {
           token.displayName = `${token.name} (${token.poolCount} pools)`;
         } else {
@@ -211,19 +238,39 @@ async function searchTokens(chain, query) {
         return token;
       });
 
-    console.log(`✅ Search complete: Found ${results.length} tokens`);
+    console.log(
+      `✅ Search complete for ${chain}: Found ${results.length} tokens`
+    );
     console.log(
       `🖼️ Tokens with logos: ${results.filter((t) => t.logo).length}/${
         results.length
       }`
     );
 
+    // Log first few results for debugging
+    if (results.length > 0) {
+      console.log(
+        `📊 First 3 results for ${chain}:`,
+        results.slice(0, 3).map((r) => ({
+          symbol: r.symbol,
+          name: r.name,
+          hasLogo: !!r.logo,
+          price: r.price,
+        }))
+      );
+    }
+
     // Cache the results
-    cache.set(cacheKey, results);
+    if (results.length > 0) {
+      cache.set(cacheKey, results);
+    }
+
     return results;
   } catch (error) {
-    logger.error("Token search error:", error);
-    console.error("❌ Search failed:", error.message);
+    logger.error(`❌ Token search error for ${chain}:`, error);
+    console.error(`❌ Search failed for ${chain}:`, error.message);
+
+    // Always return empty array instead of throwing
     return [];
   }
 }
@@ -341,7 +388,7 @@ async function getTokenInfo(network, contractAddress, poolAddress) {
       metadata: {
         name: attributes.name,
         symbol: attributes.symbol,
-        logo: attributes.image_url, // Token logo from attributes
+        logo: attributes.image_url,
         description: attributes.description || "",
         websites: attributes.websites || [],
         socials: socials,
