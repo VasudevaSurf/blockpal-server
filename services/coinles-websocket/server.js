@@ -1,4 +1,4 @@
-// services/coinles-websocket/server.js - COMPLETE WEBSOCKET SERVER
+// services/coinles-websocket/server.js - COMPLETE OPTIMIZED VERSION WITH DISCONNECT CLEANUP
 const { Server } = require("socket.io");
 const http = require("http");
 const axios = require("axios");
@@ -72,6 +72,14 @@ const serverStats = {
   lastUpdate: null,
 };
 
+// Connection metrics
+const connectionMetrics = {
+  totalConnections: 0,
+  totalDisconnections: 0,
+  peakConcurrentUsers: 0,
+  startTime: new Date(),
+};
+
 // API rate limiting
 let apiCallsThisMinute = 0;
 let lastMinuteReset = Date.now();
@@ -140,6 +148,34 @@ function formatAddress(address) {
   return `${address.substring(0, 6)}...${address.substring(
     address.length - 4
   )}`;
+}
+
+// Helper function to log active token statistics
+function logActiveTokenStats() {
+  console.log("\n📊 Active Token Statistics:");
+  console.log("═══════════════════════════════════════");
+
+  let totalTokens = 0;
+  let totalUsers = new Set();
+
+  for (const [chainId, tokenMap] of Object.entries(activeTokenLists)) {
+    const tokenCount = tokenMap.size;
+    totalTokens += tokenCount;
+
+    if (tokenCount > 0) {
+      console.log(`   ${chainId.padEnd(10)} │ ${tokenCount} tokens`);
+
+      // Count unique users on this chain
+      for (const tokenData of tokenMap.values()) {
+        tokenData.users.forEach((user) => totalUsers.add(user));
+      }
+    }
+  }
+
+  console.log("───────────────────────────────────────");
+  console.log(`   Total      │ ${totalTokens} tokens`);
+  console.log(`   Users      │ ${totalUsers.size} active users`);
+  console.log("═══════════════════════════════════════\n");
 }
 
 // Search tokens with grouping
@@ -739,20 +775,40 @@ function broadcastTokenUpdate(chainId, contractAddress, data) {
 
 // Socket connection handling
 io.on("connection", (socket) => {
-  console.log("📱 New WebSocket connection:", socket.id);
+  connectionMetrics.totalConnections++;
+  const currentUsers = serverStats.connectedClients.size + 1;
+
+  if (currentUsers > connectionMetrics.peakConcurrentUsers) {
+    connectionMetrics.peakConcurrentUsers = currentUsers;
+  }
+
+  console.log(`\n📱 New WebSocket connection`);
+  console.log(`   Socket ID: ${socket.id}`);
+  console.log(`   Total connections: ${connectionMetrics.totalConnections}`);
+  console.log(`   Current users: ${currentUsers}`);
+  console.log(`   Peak users: ${connectionMetrics.peakConcurrentUsers}`);
 
   socket.on("register", async (data) => {
     const { email } = data;
-    if (!email) return;
+    if (!email) {
+      console.log("⚠️  Registration attempt without email");
+      return;
+    }
 
     try {
+      console.log(`\n👤 User registering: ${email}`);
+      console.log("═══════════════════════════════════════");
+
+      // Track connected client
       serverStats.connectedClients.set(email, {
         socketId: socket.id,
         connectedAt: new Date().toISOString(),
       });
 
+      // Create or update user
       await createOrUpdateUser(email);
 
+      // Create session
       userSessions.set(email, {
         socket,
         socketId: socket.id,
@@ -762,16 +818,39 @@ io.on("connection", (socket) => {
         detailToken: null,
       });
 
+      // Load user's tokens and add to active lists
+      console.log("📋 Loading user's watchlist...");
       const watchlistWithData = await getInitialWatchlistData(email);
+
+      console.log(
+        `   ├─ Found ${watchlistWithData.length} tokens in watchlist`
+      );
+
+      // Count tokens per chain
+      const chainCounts = {};
+      for (const token of watchlistWithData) {
+        chainCounts[token.chainId] = (chainCounts[token.chainId] || 0) + 1;
+      }
+
+      for (const [chain, count] of Object.entries(chainCounts)) {
+        console.log(`   ├─ ${chain}: ${count} tokens`);
+      }
+
+      // Send watchlist to user
       socket.emit("watchlist", watchlistWithData);
 
+      // Add user to active tracking for each token
       for (const token of watchlistWithData) {
         await addUserToActiveToken(token.chainId, token.contractAddress, email);
       }
 
-      console.log(`✅ User registered: ${email}`);
+      console.log(`✅ User registered successfully`);
+      console.log("═══════════════════════════════════════\n");
+
+      // Log current stats
+      logActiveTokenStats();
     } catch (error) {
-      console.error("Registration error:", error.message);
+      console.error("❌ Registration error:", error.message);
       socket.emit("error", { message: "Failed to register user" });
     }
   });
@@ -833,21 +912,53 @@ io.on("connection", (socket) => {
   socket.on("remove-token", async (data) => {
     const { email, chainId, contractAddress } = data;
 
-    await removeTokenFromWatchlist(email, chainId, contractAddress);
+    console.log(
+      `🗑️  User ${email} removing token: ${chainId}/${contractAddress.substring(
+        0,
+        10
+      )}...`
+    );
 
-    const tokenKey = `${chainId}_${contractAddress}`;
-    const activeToken = activeTokenLists[chainId].get(tokenKey);
+    try {
+      // Remove from MongoDB
+      await removeTokenFromWatchlist(email, chainId, contractAddress);
 
-    if (activeToken) {
-      activeToken.users.delete(email);
-      if (activeToken.users.size === 0) {
-        activeTokenLists[chainId].delete(tokenKey);
+      // Remove from active token list
+      const tokenKey = `${chainId}_${contractAddress}`;
+      const activeToken = activeTokenLists[chainId].get(tokenKey);
+
+      if (activeToken) {
+        // Remove user from this token
+        activeToken.users.delete(email);
+        console.log(
+          `   ├─ User removed from token (${activeToken.users.size} users remaining)`
+        );
+
+        // If no users left, remove token completely
+        if (activeToken.users.size === 0) {
+          activeTokenLists[chainId].delete(tokenKey);
+          console.log(
+            `   └─ ✅ Token removed from active list (no users watching)`
+          );
+        }
+
+        // Remove from database tracking
+        await removeUserFromActiveToken(chainId, contractAddress, email);
+      } else {
+        console.log(`   ⚠️  Token not found in active list`);
       }
+
+      socket.emit("token-removed", {
+        success: true,
+        message: "Token removed successfully",
+      });
+
+      // Log stats after removal
+      logActiveTokenStats();
+    } catch (error) {
+      console.error("❌ Error removing token:", error.message);
+      socket.emit("error", { message: "Failed to remove token" });
     }
-
-    await removeUserFromActiveToken(chainId, contractAddress, email);
-
-    socket.emit("token-removed", { success: true });
   });
 
   socket.on("get-token-details", async (data) => {
@@ -896,44 +1007,241 @@ io.on("connection", (socket) => {
   });
 
   socket.on("disconnect", () => {
+    connectionMetrics.totalDisconnections++;
     console.log("👋 WebSocket disconnected:", socket.id);
+    console.log(
+      `   Total disconnections: ${connectionMetrics.totalDisconnections}`
+    );
 
+    let disconnectedUserEmail = null;
+
+    // Step 1: Find the disconnected user's email
     for (const [email, info] of serverStats.connectedClients.entries()) {
       if (info.socketId === socket.id) {
+        disconnectedUserEmail = email;
         serverStats.connectedClients.delete(email);
+        console.log(`📧 Found disconnected user: ${email}`);
         break;
       }
     }
 
+    // Step 2: Remove from user sessions
     for (const [email, session] of userSessions.entries()) {
       if (session.socketId === socket.id) {
+        if (!disconnectedUserEmail) {
+          disconnectedUserEmail = email;
+        }
         userSessions.delete(email);
         break;
       }
+    }
+
+    // Step 3: Clean up activeTokenLists (THE FIX)
+    if (disconnectedUserEmail) {
+      console.log(`🧹 Cleaning up tokens for user: ${disconnectedUserEmail}`);
+
+      let totalTokensRemoved = 0;
+      let totalUsersRemoved = 0;
+
+      // Loop through all chains
+      for (const [chainId, tokenMap] of Object.entries(activeTokenLists)) {
+        const tokensToDelete = [];
+
+        // Loop through all tokens in this chain
+        for (const [tokenKey, tokenData] of tokenMap.entries()) {
+          // Remove user from this token's users Set
+          if (tokenData.users.has(disconnectedUserEmail)) {
+            tokenData.users.delete(disconnectedUserEmail);
+            totalUsersRemoved++;
+
+            console.log(
+              `   ├─ Removed user from ${chainId}/${tokenKey.substring(
+                0,
+                15
+              )}... (${tokenData.users.size} users left)`
+            );
+
+            // If no users left watching this token, mark for deletion
+            if (tokenData.users.size === 0) {
+              tokensToDelete.push(tokenKey);
+              console.log(
+                `   └─ ⚠️  Token has 0 users, will be removed from active list`
+              );
+            }
+          }
+        }
+
+        // Delete tokens with no users
+        for (const tokenKey of tokensToDelete) {
+          tokenMap.delete(tokenKey);
+          totalTokensRemoved++;
+        }
+
+        if (tokensToDelete.length > 0) {
+          console.log(
+            `   ✅ Removed ${tokensToDelete.length} inactive tokens from ${chainId}`
+          );
+        }
+      }
+
+      console.log(
+        `✅ Cleanup complete: Removed user from ${totalUsersRemoved} tokens, deleted ${totalTokensRemoved} inactive tokens`
+      );
+
+      // Log current active token counts
+      logActiveTokenStats();
+    } else {
+      console.log("⚠️  Could not identify disconnected user for cleanup");
     }
   });
 });
 
 // Update all active tokens every 30 seconds
 cron.schedule("*/30 * * * * *", async () => {
-  console.log(
-    `⏰ Running scheduled updates at ${new Date().toLocaleTimeString()}`
-  );
+  const timestamp = new Date().toLocaleTimeString();
+  console.log(`\n⏰ Running scheduled updates at ${timestamp}`);
+  console.log("═══════════════════════════════════════");
+
+  let totalUpdated = 0;
+  let totalSkipped = 0;
 
   for (const chainId of Object.keys(activeTokenLists)) {
-    if (activeTokenLists[chainId].size > 0) {
-      console.log(
-        `🔄 Updating ${activeTokenLists[chainId].size} tokens for ${chainId}`
-      );
-      await updateTokensForChain(chainId);
+    const tokenCount = activeTokenLists[chainId].size;
+
+    if (tokenCount > 0) {
+      console.log(`🔄 Updating ${tokenCount} tokens for ${chainId}...`);
+
+      try {
+        await updateTokensForChain(chainId);
+        totalUpdated += tokenCount;
+        console.log(`   ✅ ${chainId} updated successfully`);
+      } catch (error) {
+        console.error(`   ❌ Failed to update ${chainId}:`, error.message);
+      }
+    } else {
+      totalSkipped++;
+      console.log(`⏭️  Skipping ${chainId} (no active tokens)`);
     }
   }
+
+  console.log("───────────────────────────────────────");
+  console.log(
+    `✅ Update complete: ${totalUpdated} tokens updated, ${totalSkipped} chains skipped`
+  );
+  console.log("═══════════════════════════════════════\n");
 });
 
 // Cleanup inactive tokens every hour
 cron.schedule("0 * * * *", async () => {
-  console.log("🧹 Cleaning up inactive tokens...");
+  console.log("🧹 Cleaning up inactive tokens from database...");
   await cleanupInactiveTokens();
+});
+
+// Deep cleanup - runs every 5 minutes
+// Catches any orphaned users that might have been missed
+cron.schedule("*/5 * * * *", async () => {
+  console.log("\n🔍 Running deep cleanup check...");
+
+  let orphanedUsersFound = 0;
+  let tokensCleanedUp = 0;
+
+  // Get list of currently connected users
+  const connectedEmails = new Set(serverStats.connectedClients.keys());
+
+  // Check all chains
+  for (const [chainId, tokenMap] of Object.entries(activeTokenLists)) {
+    const tokensToDelete = [];
+
+    for (const [tokenKey, tokenData] of tokenMap.entries()) {
+      // Check each user in this token
+      const disconnectedUsers = [];
+
+      for (const userEmail of tokenData.users) {
+        if (!connectedEmails.has(userEmail)) {
+          disconnectedUsers.push(userEmail);
+          orphanedUsersFound++;
+        }
+      }
+
+      // Remove disconnected users
+      for (const userEmail of disconnectedUsers) {
+        tokenData.users.delete(userEmail);
+        console.log(
+          `   🧹 Removed orphaned user ${userEmail} from ${chainId}/${tokenKey.substring(
+            0,
+            15
+          )}...`
+        );
+      }
+
+      // If no users left, mark for deletion
+      if (tokenData.users.size === 0) {
+        tokensToDelete.push(tokenKey);
+      }
+    }
+
+    // Delete empty tokens
+    for (const tokenKey of tokensToDelete) {
+      tokenMap.delete(tokenKey);
+      tokensCleanedUp++;
+    }
+  }
+
+  if (orphanedUsersFound > 0 || tokensCleanedUp > 0) {
+    console.log(
+      `✅ Deep cleanup: Removed ${orphanedUsersFound} orphaned users, ${tokensCleanedUp} empty tokens`
+    );
+    logActiveTokenStats();
+  } else {
+    console.log("✅ Deep cleanup: No orphaned data found");
+  }
+});
+
+// Health check endpoint with detailed stats
+server.on("request", (req, res) => {
+  if (req.url === "/health" && req.method === "GET") {
+    const uptime = Math.floor(
+      (Date.now() - connectionMetrics.startTime.getTime()) / 1000
+    );
+
+    const stats = {
+      status: "healthy",
+      uptime: `${Math.floor(uptime / 3600)}h ${Math.floor(
+        (uptime % 3600) / 60
+      )}m ${uptime % 60}s`,
+      connections: {
+        total: connectionMetrics.totalConnections,
+        disconnections: connectionMetrics.totalDisconnections,
+        current: serverStats.connectedClients.size,
+        peak: connectionMetrics.peakConcurrentUsers,
+      },
+      tokens: {
+        eth: activeTokenLists.eth.size,
+        base: activeTokenLists.base.size,
+        polygon: activeTokenLists.polygon.size,
+        arbitrum: activeTokenLists.arbitrum.size,
+        avalanche: activeTokenLists.avalanche.size,
+        bsc: activeTokenLists.bsc.size,
+        total: Object.values(activeTokenLists).reduce(
+          (sum, map) => sum + map.size,
+          0
+        ),
+      },
+      apiCalls: {
+        thisMinute: apiCallsThisMinute,
+        minuteResetIn:
+          Math.ceil((60000 - (Date.now() - lastMinuteReset)) / 1000) + "s",
+      },
+      memory: {
+        used: `${Math.round(process.memoryUsage().heapUsed / 1024 / 1024)}MB`,
+        total: `${Math.round(process.memoryUsage().heapTotal / 1024 / 1024)}MB`,
+      },
+      timestamp: new Date().toISOString(),
+    };
+
+    res.writeHead(200, { "Content-Type": "application/json" });
+    res.end(JSON.stringify(stats, null, 2));
+  }
 });
 
 // Start server
@@ -947,7 +1255,9 @@ async function startServer() {
       console.log("=====================================");
       console.log(`📡 Port: ${PORT}`);
       console.log(`⏰ Updates: Every 30 seconds`);
+      console.log(`🧹 Cleanup: Every 5 minutes`);
       console.log(`🔗 CORS Origins: ${process.env.ALLOWED_ORIGINS}`);
+      console.log(`📊 Health Check: http://localhost:${PORT}/health`);
       console.log("=====================================\n");
     });
   } catch (error) {
