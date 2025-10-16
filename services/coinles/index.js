@@ -170,14 +170,11 @@ async function searchTokens(chain, query) {
           include: "base_token",
         },
         1
-      ); // Only 1 retry (404s won't retry)
+      );
     } catch (apiError) {
       if (apiError.response?.status === 404) {
         console.error(
           `❌ Network '${coinGeckoChain}' not supported by CoinGecko`
-        );
-        console.error(
-          `💡 Tip: This chain may not be available in CoinGecko's onchain API`
         );
       } else {
         console.error(`❌ API failed for ${chain}:`, apiError.message);
@@ -287,28 +284,56 @@ async function searchTokens(chain, query) {
       }
     });
 
-    const results = Array.from(tokenMap.values())
-      .filter((token) => token.name && token.symbol)
-      .sort((a, b) => b.liquidity - a.liquidity)
-      .slice(0, 10)
-      .map((token) => {
-        if (token.poolCount > 1) {
-          token.displayName = `${token.name} (${token.poolCount} pools)`;
-        } else {
-          token.displayName = token.name;
-        }
-        return token;
-      });
+    // SMART SORTING: Check if query looks like a contract address
+    const queryLower = query.toLowerCase().trim();
+    const isAddressQuery =
+      queryLower.startsWith("0x") && queryLower.length >= 10;
 
-    console.log(`✅ Found ${results.length} tokens`);
+    let results = Array.from(tokenMap.values()).filter(
+      (token) => token.name && token.symbol
+    );
 
-    if (results.length === 0) {
-      console.log(`⚠️ No tokens. Debug:`, {
-        raw: data.data?.length || 0,
-        included: data.included?.length || 0,
-        tokenMap: tokenMap.size,
+    if (isAddressQuery) {
+      // If searching by address, prioritize exact match first
+      results.sort((a, b) => {
+        const aAddress = a.contractAddress.toLowerCase();
+        const bAddress = b.contractAddress.toLowerCase();
+
+        // Exact match comes first
+        const aExactMatch = aAddress === queryLower;
+        const bExactMatch = bAddress === queryLower;
+
+        if (aExactMatch && !bExactMatch) return -1;
+        if (!aExactMatch && bExactMatch) return 1;
+
+        // Partial match (starts with query) comes next
+        const aStartsWith = aAddress.startsWith(queryLower);
+        const bStartsWith = bAddress.startsWith(queryLower);
+
+        if (aStartsWith && !bStartsWith) return -1;
+        if (!aStartsWith && bStartsWith) return 1;
+
+        // Then sort by liquidity
+        return b.liquidity - a.liquidity;
       });
+    } else {
+      // For name/symbol search, just sort by liquidity
+      results.sort((a, b) => b.liquidity - a.liquidity);
     }
+
+    // Limit to top 10 and add display names
+    results = results.slice(0, 10).map((token) => {
+      if (token.poolCount > 1) {
+        token.displayName = `${token.name} (${token.poolCount} pools)`;
+      } else {
+        token.displayName = token.name;
+      }
+      return token;
+    });
+
+    console.log(
+      `✅ Found ${results.length} tokens (address search: ${isAddressQuery})`
+    );
 
     if (results.length > 0) {
       cache.set(cacheKey, results);

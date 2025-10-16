@@ -178,7 +178,7 @@ function logActiveTokenStats() {
   console.log("═══════════════════════════════════════\n");
 }
 
-// Search tokens with grouping
+// Search tokens with SMART SORTING - exact address match first, then by liquidity
 async function searchTokens(chain, query) {
   try {
     const coinGeckoChain = getCoinGeckoChainId(chain);
@@ -288,18 +288,51 @@ async function searchTokens(chain, query) {
       }
     });
 
-    const results = Array.from(tokenMap.values())
-      .filter((token) => token.name && token.symbol)
-      .sort((a, b) => b.liquidity - a.liquidity)
-      .slice(0, 10)
-      .map((token) => {
-        if (token.poolCount > 1) {
-          token.displayName = `${token.name} (${token.poolCount} pools)`;
-        } else {
-          token.displayName = token.name;
-        }
-        return token;
+    // SMART FILTERING: Check if query looks like a contract address
+    const queryLower = query.toLowerCase().trim();
+    const isAddressQuery = queryLower.startsWith("0x") && queryLower.length >= 10;
+
+    let results = Array.from(tokenMap.values()).filter(
+      (token) => token.name && token.symbol
+    );
+
+    if (isAddressQuery) {
+      // For address search, ONLY show matching addresses
+      results = results.filter((token) => {
+        const tokenAddress = token.contractAddress.toLowerCase();
+        return tokenAddress === queryLower || tokenAddress.startsWith(queryLower);
       });
+
+      // Sort: exact match first, then partial matches
+      results.sort((a, b) => {
+        const aAddress = a.contractAddress.toLowerCase();
+        const bAddress = b.contractAddress.toLowerCase();
+        
+        const aExactMatch = aAddress === queryLower;
+        const bExactMatch = bAddress === queryLower;
+        
+        if (aExactMatch && !bExactMatch) return -1;
+        if (!aExactMatch && bExactMatch) return 1;
+        
+        // Both are partial matches, sort by liquidity
+        return b.liquidity - a.liquidity;
+      });
+    } else {
+      // For name/symbol search, just sort by liquidity
+      results.sort((a, b) => b.liquidity - a.liquidity);
+    }
+
+    // Limit to top 10 results
+    results = results.slice(0, 10).map((token) => {
+      if (token.poolCount > 1) {
+        token.displayName = `${token.name} (${token.poolCount} pools)`;
+      } else {
+        token.displayName = token.name;
+      }
+      return token;
+    });
+
+    console.log(`✅ Found ${results.length} tokens (address search: ${isAddressQuery})`);
 
     return results;
   } catch (error) {
