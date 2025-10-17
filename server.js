@@ -17,6 +17,7 @@ const moralisService = require("./services/moralis");
 const swapHistoryRoutes = require("./routes/swapHistory");
 const newsScheduler = require("./services/newsScheduler");
 const newsRoutes = require("./routes/news");
+const swapRoutes = require("./routes/swap");
 
 // Import CoinLes database functions
 const {
@@ -765,6 +766,7 @@ app.use("/api/tokens", tokenRoutes);
 app.use("/api/coingecko", coinGeckoRoutes);
 app.use("/api/coinles", coinlesRoutes);
 app.use("/api/user-watchlist", userWatchlistRoutes);
+app.use("/api/swap", swapRoutes);
 
 // Swap routes
 const swapRouter = express.Router();

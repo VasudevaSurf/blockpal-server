@@ -1,4 +1,4 @@
-// routes/swap.js - Enhanced version matching standalone
+// routes/swap.js - Enhanced version with QUOTE endpoint
 const express = require("express");
 const axios = require("axios");
 const { logger } = require("../utils/logger");
@@ -11,7 +11,7 @@ const ONEINCH_API_KEY =
   process.env.ONEINCH_API_KEY || "7TD80y4Tuv1jeN0QuUbzUw2NT2N9qTwb";
 const ONEINCH_BASE_URL = "https://api.1inch.dev/swap/v6.1";
 
-// Get tokens for a specific chain (FIXED to match standalone)
+// Get tokens for a specific chain
 router.get("/tokens/:chainId", async (req, res) => {
   const { chainId } = req.params;
 
@@ -26,14 +26,12 @@ router.get("/tokens/:chainId", async (req, res) => {
 
     const tokens = response.data?.tokens || {};
 
-    // Return in the format expected by frontend
     return ResponseUtil.success(res, {
       tokens: tokens,
       count: Object.keys(tokens).length,
     });
   } catch (error) {
     logger.error("Error fetching tokens:", error.message);
-    // Return empty tokens instead of error
     return ResponseUtil.success(res, {
       tokens: {},
       count: 0,
@@ -41,13 +39,12 @@ router.get("/tokens/:chainId", async (req, res) => {
   }
 });
 
-// Search tokens endpoint (ENHANCED)
+// Search tokens endpoint
 router.get("/search/:chainId", async (req, res) => {
   const { chainId } = req.params;
   const { query } = req.query;
 
   try {
-    // If no query, return popular tokens
     if (!query) {
       const response = await axios.get(
         `${ONEINCH_BASE_URL}/${chainId}/tokens`,
@@ -87,7 +84,6 @@ router.get("/search/:chainId", async (req, res) => {
       return ResponseUtil.success(res, popularTokens);
     }
 
-    // Try search API first
     try {
       const searchResponse = await axios.get(
         `https://api.1inch.dev/token/v1.2/${chainId}/search`,
@@ -111,7 +107,6 @@ router.get("/search/:chainId", async (req, res) => {
       logger.warn("Search API failed, using fallback filter");
     }
 
-    // Fallback: filter from full token list
     const response = await axios.get(`${ONEINCH_BASE_URL}/${chainId}/tokens`, {
       headers: {
         Authorization: `Bearer ${ONEINCH_API_KEY}`,
@@ -138,11 +133,12 @@ router.get("/search/:chainId", async (req, res) => {
   }
 });
 
-// Get quote with proper gas calculation
+// ✅ ADD THIS MISSING QUOTE ENDPOINT
 router.get("/quote/:chainId", async (req, res) => {
   const { chainId } = req.params;
   const { src, dst, amount, from, slippage = 1, gasMode = "high" } = req.query;
 
+  // Validation
   if (!src || !dst || !amount || !from) {
     return ResponseUtil.validation(res, "Missing required parameters");
   }
@@ -206,7 +202,7 @@ router.get("/quote/:chainId", async (req, res) => {
   }
 });
 
-// Get swap transaction with gas included
+// Get swap transaction
 router.get("/swap/:chainId", async (req, res) => {
   const { chainId } = req.params;
   const { src, dst, amount, from, slippage = 1, gasMode = "high" } = req.query;
@@ -355,7 +351,7 @@ router.get("/spender/:chainId", async (req, res) => {
   }
 });
 
-// Enhanced gas prices
+// Get gas prices
 router.get("/gas/:chainId", async (req, res) => {
   const { chainId } = req.params;
 
@@ -390,7 +386,7 @@ router.get("/gas/:chainId", async (req, res) => {
   }
 });
 
-// Native token price
+// Get native token price
 router.get("/price/:chainId", async (req, res) => {
   const { chainId } = req.params;
 
