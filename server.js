@@ -1,8 +1,9 @@
-// server.js - Complete updated version with CoinLes integration
+// server.js - MERGED VERSION WITH COINLES WEBSOCKET
 const express = require("express");
 const http = require("http");
-const WebSocket = require("ws");
+const { Server } = require("socket.io");
 const axios = require("axios");
+const cron = require("node-cron");
 require("dotenv").config();
 
 // Import middleware
@@ -14,13 +15,557 @@ const { logger } = require("./utils/logger");
 const walletConnectService = require("./services/wallet-connect");
 const moralisService = require("./services/moralis");
 const swapHistoryRoutes = require("./routes/swapHistory");
-
 const newsScheduler = require("./services/newsScheduler");
 const newsRoutes = require("./routes/news");
 
+// Import CoinLes database functions
+const {
+  connectDB,
+  createOrUpdateUser,
+  addTokenToWatchlist,
+  removeTokenFromWatchlist,
+  getUserWatchlist,
+  addRecentSearch,
+  upsertTokenCache,
+  getActiveTokens,
+  addUserToActiveToken,
+  removeUserFromActiveToken,
+  cleanupInactiveTokens,
+  updateStats,
+} = require("./lib/coinlesDatabase");
+
 const mongoose = require("mongoose");
 
-// Connect to MongoDB with BlockPal database
+// CoinGecko configuration for CoinLes
+const COINGECKO_BASE_URL = "https://api.coingecko.com/api/v3";
+const COINGECKO_API_KEY =
+  process.env.COINGECKO_API_KEY || "CG-oTmQJV3kLe92KcQ2753cxy6j";
+
+// Chain ID mapping for CoinLes
+const CHAIN_ID_MAP = {
+  eth: "eth",
+  ethereum: "eth",
+  polygon: "polygon_pos",
+  matic: "polygon_pos",
+  bsc: "bsc",
+  binance: "bsc",
+  arbitrum: "arbitrum",
+  arb: "arbitrum",
+  avalanche: "avax",
+  avax: "avax",
+  base: "base",
+};
+
+// Active token lists per chain for CoinLes
+const activeTokenLists = {
+  eth: new Map(),
+  base: new Map(),
+  polygon: new Map(),
+  arbitrum: new Map(),
+  avalanche: new Map(),
+  bsc: new Map(),
+};
+
+// User sessions for CoinLes
+const userSessions = new Map();
+
+// API rate limiting for CoinLes
+let apiCallsThisMinute = 0;
+let lastMinuteReset = Date.now();
+
+function resetApiCounter() {
+  const now = Date.now();
+  if (now - lastMinuteReset > 60000) {
+    apiCallsThisMinute = 0;
+    lastMinuteReset = now;
+  }
+}
+
+async function makeApiCall(url, params = {}, retries = 2) {
+  resetApiCounter();
+
+  if (apiCallsThisMinute >= 28) {
+    console.log("⏱️ Rate limit approaching, waiting...");
+    await new Promise((resolve) =>
+      setTimeout(resolve, 60000 - (Date.now() - lastMinuteReset))
+    );
+    resetApiCounter();
+  }
+
+  for (let attempt = 1; attempt <= retries + 1; attempt++) {
+    try {
+      apiCallsThisMinute++;
+      const response = await axios.get(url, {
+        params: params,
+        headers: {
+          "x-cg-demo-api-key": COINGECKO_API_KEY,
+        },
+        timeout: 15000,
+      });
+
+      await updateStats({ apiCalls: 1 });
+      return response.data;
+    } catch (error) {
+      const isLastAttempt = attempt === retries + 1;
+
+      if (error.code === "ECONNABORTED" && !isLastAttempt) {
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+        continue;
+      } else if (error.response?.status === 429 && !isLastAttempt) {
+        await new Promise((resolve) => setTimeout(resolve, 5000));
+        continue;
+      } else if (error.response?.status === 404) {
+        throw error;
+      }
+
+      if (isLastAttempt) {
+        console.error("API call failed:", error.message);
+        await updateStats({ errors: 1 });
+        throw error;
+      }
+    }
+  }
+}
+
+function getCoinGeckoChainId(chainId) {
+  const normalized = chainId.toLowerCase().trim();
+  return CHAIN_ID_MAP[normalized] || normalized;
+}
+
+function formatAddress(address) {
+  if (!address) return "";
+  return `${address.substring(0, 6)}...${address.substring(
+    address.length - 4
+  )}`;
+}
+
+// CoinLes helper functions
+async function searchTokens(chain, query) {
+  try {
+    const coinGeckoChain = getCoinGeckoChainId(chain);
+    const url = `${COINGECKO_BASE_URL}/onchain/search/pools`;
+
+    const data = await makeApiCall(url, {
+      query: query,
+      network: coinGeckoChain,
+      include: "base_token",
+    });
+
+    const tokenDataMap = new Map();
+    if (data.included) {
+      data.included.forEach((item) => {
+        if (item.type === "token" && item.attributes) {
+          const tokenAddress = item.attributes.address?.toLowerCase() || "";
+          const tokenData = {
+            name: item.attributes.name,
+            symbol: item.attributes.symbol,
+            image_url: item.attributes.image_url,
+            decimals: item.attributes.decimals,
+          };
+
+          if (tokenAddress) {
+            tokenDataMap.set(tokenAddress, tokenData);
+          }
+          if (item.id) {
+            tokenDataMap.set(item.id.toLowerCase(), tokenData);
+          }
+        }
+      });
+    }
+
+    const tokenMap = new Map();
+
+    (data.data || []).forEach((pool) => {
+      try {
+        const poolAddress = pool.attributes?.address || "";
+        const baseTokenId = pool.relationships?.base_token?.data?.id || "";
+
+        if (!baseTokenId) return;
+
+        const baseTokenAddress = baseTokenId.includes("_")
+          ? baseTokenId.split("_")[1]
+          : baseTokenId;
+
+        if (!baseTokenAddress) return;
+
+        const attrs = pool.attributes || {};
+        let tokenInfo =
+          tokenDataMap.get(baseTokenId.toLowerCase()) ||
+          tokenDataMap.get(baseTokenAddress.toLowerCase()) ||
+          {};
+
+        if (tokenMap.has(baseTokenAddress)) {
+          const existing = tokenMap.get(baseTokenAddress);
+          existing.liquidity += parseFloat(attrs.reserve_in_usd) || 0;
+          existing.volume24h += parseFloat(attrs.volume_usd?.h24) || 0;
+          existing.buys24h += attrs.transactions?.h24?.buys || 0;
+          existing.sells24h += attrs.transactions?.h24?.sells || 0;
+          existing.poolCount++;
+
+          if (
+            (parseFloat(attrs.reserve_in_usd) || 0) > existing.primaryLiquidity
+          ) {
+            existing.poolAddress = poolAddress;
+            existing.primaryLiquidity = parseFloat(attrs.reserve_in_usd) || 0;
+            existing.price = parseFloat(attrs.base_token_price_usd) || 0;
+            existing.change24h =
+              parseFloat(attrs.price_change_percentage?.h24) || 0;
+          }
+        } else {
+          let tokenName = tokenInfo.name || "";
+          let tokenSymbol = tokenInfo.symbol || "";
+
+          if (!tokenName && attrs.name) {
+            const parts = attrs.name.split(" / ");
+            if (parts.length > 0) {
+              tokenSymbol = parts[0];
+              tokenName = parts[0];
+            }
+          }
+
+          const logo = tokenInfo.image_url || "";
+
+          if (tokenName && tokenSymbol) {
+            tokenMap.set(baseTokenAddress, {
+              poolAddress: poolAddress,
+              contractAddress: baseTokenAddress,
+              contractAddressDisplay: formatAddress(baseTokenAddress),
+              name: tokenName,
+              symbol: tokenSymbol,
+              price: parseFloat(attrs.base_token_price_usd) || 0,
+              logo: logo,
+              change24h: parseFloat(attrs.price_change_percentage?.h24) || 0,
+              liquidity: parseFloat(attrs.reserve_in_usd) || 0,
+              volume24h: parseFloat(attrs.volume_usd?.h24) || 0,
+              buys24h: attrs.transactions?.h24?.buys || 0,
+              sells24h: attrs.transactions?.h24?.sells || 0,
+              poolCount: 1,
+              primaryLiquidity: parseFloat(attrs.reserve_in_usd) || 0,
+            });
+          }
+        }
+      } catch (poolError) {
+        // Continue processing other pools
+      }
+    });
+
+    const queryLower = query.toLowerCase().trim();
+    const isAddressQuery =
+      queryLower.startsWith("0x") && queryLower.length >= 10;
+
+    let results = Array.from(tokenMap.values()).filter(
+      (token) => token.name && token.symbol
+    );
+
+    if (isAddressQuery) {
+      results = results.filter((token) => {
+        const tokenAddress = token.contractAddress.toLowerCase();
+        return (
+          tokenAddress === queryLower || tokenAddress.startsWith(queryLower)
+        );
+      });
+
+      results.sort((a, b) => {
+        const aAddress = a.contractAddress.toLowerCase();
+        const bAddress = b.contractAddress.toLowerCase();
+
+        const aExactMatch = aAddress === queryLower;
+        const bExactMatch = bAddress === queryLower;
+
+        if (aExactMatch && !bExactMatch) return -1;
+        if (!aExactMatch && bExactMatch) return 1;
+
+        return b.liquidity - a.liquidity;
+      });
+    } else {
+      results.sort((a, b) => b.liquidity - a.liquidity);
+    }
+
+    results = results.slice(0, 10).map((token) => {
+      if (token.poolCount > 1) {
+        token.displayName = `${token.name} (${token.poolCount} pools)`;
+      } else {
+        token.displayName = token.name;
+      }
+      return token;
+    });
+
+    console.log(
+      `✅ Found ${results.length} tokens (address search: ${isAddressQuery})`
+    );
+    return results;
+  } catch (error) {
+    console.error(`Search error for ${chain}:`, error.message);
+    return [];
+  }
+}
+
+async function updateTokensForChain(chainId, isInitialLoad = false) {
+  const activeTokens = Array.from(activeTokenLists[chainId].values());
+  if (activeTokens.length === 0) return [];
+
+  console.log(`🔄 Updating ${activeTokens.length} tokens for ${chainId}`);
+
+  const allTokenData = [];
+  const coinGeckoChain = getCoinGeckoChainId(chainId);
+
+  const batches = [];
+  for (let i = 0; i < activeTokens.length; i += 30) {
+    batches.push(activeTokens.slice(i, i + 30));
+  }
+
+  for (const batch of batches) {
+    try {
+      const addresses = batch.map((t) => t.contractAddress).join(",");
+      const url = `${COINGECKO_BASE_URL}/onchain/networks/${coinGeckoChain}/tokens/multi/${addresses}`;
+
+      const response = await makeApiCall(url, {
+        include: "top_pools",
+        include_composition: false,
+      });
+
+      const tokensMap = new Map();
+      const poolsByTokenMap = new Map();
+
+      if (response.data) {
+        response.data.forEach((token) => {
+          const tokenAddress = token.id.split("_")[1];
+          tokensMap.set(tokenAddress.toLowerCase(), token);
+          poolsByTokenMap.set(tokenAddress.toLowerCase(), []);
+        });
+      }
+
+      if (response.included) {
+        response.included.forEach((item) => {
+          if (item.type === "pool" && item.attributes) {
+            const baseTokenId = item.relationships?.base_token?.data?.id;
+            if (baseTokenId) {
+              const baseTokenAddress = baseTokenId.split("_")[1].toLowerCase();
+              if (poolsByTokenMap.has(baseTokenAddress)) {
+                poolsByTokenMap.get(baseTokenAddress).push(item);
+              }
+            }
+          }
+        });
+      }
+
+      for (const activeToken of batch) {
+        const contractAddress = activeToken.contractAddress.toLowerCase();
+        const tokenData = tokensMap.get(contractAddress);
+
+        if (!tokenData) continue;
+
+        const tokenPools = poolsByTokenMap.get(contractAddress) || [];
+
+        let poolData = null;
+        if (tokenPools.length > 0) {
+          const primaryPool = tokenPools[0];
+          const primaryAttrs = primaryPool.attributes || {};
+
+          let totalLiquidity = 0;
+          let totalVolume24h = 0;
+          let totalBuys24h = 0;
+          let totalSells24h = 0;
+          let totalBuys6h = 0;
+          let totalSells6h = 0;
+          let totalBuys1h = 0;
+          let totalSells1h = 0;
+
+          tokenPools.forEach((pool) => {
+            const attrs = pool.attributes || {};
+            totalLiquidity += parseFloat(attrs.reserve_in_usd) || 0;
+            totalVolume24h += parseFloat(attrs.volume_usd?.h24) || 0;
+
+            if (attrs.transactions) {
+              totalBuys24h += parseInt(attrs.transactions.h24?.buys) || 0;
+              totalSells24h += parseInt(attrs.transactions.h24?.sells) || 0;
+              totalBuys6h += parseInt(attrs.transactions.h6?.buys) || 0;
+              totalSells6h += parseInt(attrs.transactions.h6?.sells) || 0;
+              totalBuys1h += parseInt(attrs.transactions.h1?.buys) || 0;
+              totalSells1h += parseInt(attrs.transactions.h1?.sells) || 0;
+            }
+          });
+
+          poolData = {
+            price: parseFloat(primaryAttrs.base_token_price_usd) || 0,
+            priceChange: {
+              m5: parseFloat(primaryAttrs.price_change_percentage?.m5) || 0,
+              m15: parseFloat(primaryAttrs.price_change_percentage?.m15) || 0,
+              m30: parseFloat(primaryAttrs.price_change_percentage?.m30) || 0,
+              h1: parseFloat(primaryAttrs.price_change_percentage?.h1) || 0,
+              h6: parseFloat(primaryAttrs.price_change_percentage?.h6) || 0,
+              h24: parseFloat(primaryAttrs.price_change_percentage?.h24) || 0,
+            },
+            liquidity: totalLiquidity,
+            volume24h: totalVolume24h,
+            marketCap: parseFloat(primaryAttrs.market_cap_usd) || 0,
+            fdv: parseFloat(primaryAttrs.fdv_usd) || 0,
+            transactions: {
+              buys24h: totalBuys24h,
+              sells24h: totalSells24h,
+              buys6h: totalBuys6h,
+              sells6h: totalSells6h,
+              buys1h: totalBuys1h,
+              sells1h: totalSells1h,
+            },
+          };
+        }
+
+        const tokenAttrs = tokenData.attributes || {};
+
+        const gtScore = parseFloat(tokenAttrs.gt_score) || 0;
+        const tokenScore = Math.min(
+          100,
+          ((tokenAttrs.gt_score_details?.info || 0) +
+            (tokenAttrs.gt_score_details?.holders || 0)) /
+            2
+        );
+        const poolScore = Math.min(
+          100,
+          ((tokenAttrs.gt_score_details?.pool || 0) +
+            (tokenAttrs.gt_score_details?.transaction || 0) +
+            (tokenAttrs.gt_score_details?.creation || 0)) /
+            3
+        );
+        const palScore = (tokenScore + poolScore) / 2;
+
+        let riskLevel = "";
+        if (tokenAttrs.is_honeypot) {
+          riskLevel = "⚠️ HONEYPOT DETECTED";
+        } else if (palScore < 30) {
+          riskLevel = "⚠️ Too Risky";
+        } else if (palScore < 60) {
+          riskLevel = "⚠️ Moderate Risk";
+        } else if (palScore < 80) {
+          riskLevel = "✓ Fine, No Issues";
+        } else {
+          riskLevel = "🚀 Super Bullish";
+        }
+
+        const marketData = {
+          chainId,
+          contractAddress: activeToken.contractAddress,
+          contractAddressDisplay: formatAddress(activeToken.contractAddress),
+          poolAddress: activeToken.poolAddress,
+          metadata: {
+            name: tokenAttrs.name || "",
+            symbol: tokenAttrs.symbol || "",
+            logo: tokenAttrs.image_url || "",
+            description: tokenAttrs.description || "",
+            websites: tokenAttrs.websites || [],
+            socials: tokenAttrs.socials || {},
+            gtScore: gtScore,
+            tokenScore: tokenScore,
+            poolScore: poolScore,
+            palScore: palScore,
+            riskLevel: riskLevel,
+            holders: parseFloat(tokenAttrs.total_holders) || 0,
+            isHoneypot: tokenAttrs.is_honeypot || false,
+            createdAt: tokenAttrs.pool_created_at || null,
+          },
+          marketData: {
+            price: poolData?.price || parseFloat(tokenAttrs.price_usd) || 0,
+            change24h: poolData?.priceChange.h24 || 0,
+            priceChange: poolData?.priceChange || {
+              m5: 0,
+              m15: 0,
+              m30: 0,
+              h1: 0,
+              h6: 0,
+              h24: 0,
+            },
+            marketCap: poolData?.marketCap || 0,
+            fdv: poolData?.fdv || 0,
+            volume24h: poolData?.volume24h || 0,
+            liquidity: poolData?.liquidity || 0,
+          },
+          transactions: {
+            buys24h: poolData?.transactions.buys24h || 0,
+            sells24h: poolData?.transactions.sells24h || 0,
+            buys6h: poolData?.transactions.buys6h || 0,
+            sells6h: poolData?.transactions.sells6h || 0,
+            buys1h: poolData?.transactions.buys1h || 0,
+            sells1h: poolData?.transactions.sells1h || 0,
+            netBuys24h:
+              (poolData?.transactions.buys24h || 0) -
+              (poolData?.transactions.sells24h || 0),
+            totalTx24h:
+              (poolData?.transactions.buys24h || 0) +
+              (poolData?.transactions.sells24h || 0),
+          },
+          activeUsers: Array.from(activeToken.users),
+        };
+
+        if (isInitialLoad) {
+          allTokenData.push(marketData);
+        }
+
+        await upsertTokenCache(marketData);
+        broadcastTokenUpdate(chainId, activeToken.contractAddress, marketData);
+      }
+    } catch (error) {
+      console.error(`Failed to update batch for ${chainId}:`, error.message);
+    }
+  }
+
+  return allTokenData;
+}
+
+async function getInitialWatchlistData(email) {
+  const watchlist = await getUserWatchlist(email);
+  const tokensByChain = {};
+
+  for (const token of watchlist) {
+    if (!tokensByChain[token.chainId]) {
+      tokensByChain[token.chainId] = [];
+    }
+    tokensByChain[token.chainId].push(token);
+  }
+
+  const allTokenData = [];
+
+  for (const [chainId, tokens] of Object.entries(tokensByChain)) {
+    for (const token of tokens) {
+      const tokenKey = `${chainId}_${token.contractAddress}`;
+      if (!activeTokenLists[chainId].has(tokenKey)) {
+        activeTokenLists[chainId].set(tokenKey, {
+          contractAddress: token.contractAddress,
+          poolAddress: token.poolAddress,
+          users: new Set([email]),
+        });
+      } else {
+        activeTokenLists[chainId].get(tokenKey).users.add(email);
+      }
+    }
+
+    const chainData = await updateTokensForChain(chainId, true);
+    if (chainData) {
+      allTokenData.push(...chainData);
+    }
+  }
+
+  return allTokenData;
+}
+
+function broadcastTokenUpdate(chainId, contractAddress, data) {
+  const tokenKey = `${chainId}_${contractAddress}`;
+  const activeToken = activeTokenLists[chainId].get(tokenKey);
+
+  if (!activeToken) return;
+
+  for (const userId of activeToken.users) {
+    const session = userSessions.get(userId);
+    if (session && session.socket) {
+      session.socket.emit("token-update", {
+        chainId,
+        contractAddress,
+        data,
+      });
+    }
+  }
+}
+
+// Connect to MongoDB
 async function connectMongoDB() {
   try {
     const mongoUri =
@@ -44,13 +589,13 @@ async function connectMongoDB() {
       collections.map((c) => c.name)
     );
 
+    // Ensure required collections exist
     const swapTransactionExists = collections.some(
       (c) => c.name === "swapTransactions"
     );
     if (!swapTransactionExists) {
       logger.info("Creating swapTransactions collection...");
       await mongoose.connection.db.createCollection("swapTransactions");
-
       const swapTransactions =
         mongoose.connection.db.collection("swapTransactions");
       await swapTransactions.createIndex({ walletAddress: 1, createdAt: -1 });
@@ -61,13 +606,9 @@ async function connectMongoDB() {
         createdAt: -1,
       });
       await swapTransactions.createIndex({ txHash: 1 }, { sparse: true });
-
       logger.info("swapTransactions collection created with indexes");
-    } else {
-      logger.info("swapTransactions collection already exists");
     }
 
-    // Ensure userWatchlists collection exists
     const userWatchlistExists = collections.some(
       (c) => c.name === "userWatchlists"
     );
@@ -76,6 +617,9 @@ async function connectMongoDB() {
       await mongoose.connection.db.createCollection("userWatchlists");
       logger.info("userWatchlists collection created");
     }
+
+    // Connect to CoinLes database
+    await connectDB();
   } catch (error) {
     logger.error("MongoDB connection failed:", error);
     logger.warn("Server will continue without database functionality");
@@ -91,7 +635,23 @@ const userWatchlistRoutes = require("./routes/user-watchlist");
 
 const app = express();
 const server = http.createServer(app);
-const wss = new WebSocket.Server({ server });
+
+// Setup Socket.IO for both WebSocket systems
+const io = new Server(server, {
+  cors: {
+    origin: process.env.ALLOWED_ORIGINS?.split(",") || [
+      "http://localhost:3000",
+      "http://localhost:3001",
+      "http://localhost:3002",
+      "http://127.0.0.1:3000",
+      "http://127.0.0.1:3001",
+      "http://localhost:5173",
+      "https://block-pal.vercel.app",
+    ],
+    methods: ["GET", "POST"],
+    credentials: true,
+  },
+});
 
 // Basic middleware
 app.use(express.json({ limit: "10mb" }));
@@ -110,7 +670,7 @@ app.use(
   })
 );
 
-// CRITICAL: Apply CORS middleware BEFORE all routes
+// Apply CORS middleware
 app.use(corsMiddleware);
 
 // Add request logging middleware
@@ -130,12 +690,12 @@ const limiter = rateLimit({
 });
 app.use(limiter);
 
-// 1inch API configuration for swap routes
+// 1inch API configuration
 const ONEINCH_API_KEY =
   process.env.ONEINCH_API_KEY || "7TD80y4Tuv1jeN0QuUbzUw2NT2N9qTwb";
 const ONEINCH_BASE_URL = "https://api.1inch.dev/swap/v6.1";
 
-// Supported chains for swap
+// Supported chains
 const SUPPORTED_CHAINS = {
   1: "Ethereum",
   137: "Polygon",
@@ -168,9 +728,9 @@ app.get("/health", async (req, res) => {
         "swap-history":
           mongoose.connection.readyState === 1 ? "running" : "offline",
         coinles: "running",
+        "coinles-websocket": "running",
         "user-watchlist":
           mongoose.connection.readyState === 1 ? "running" : "offline",
-
         "crypto-news": "running",
         "news-scheduler": newsScheduler.isRunning ? "running" : "stopped",
       },
@@ -197,78 +757,18 @@ app.get("/health", async (req, res) => {
   }
 });
 
-// Mount swap-history routes
-app.use(
-  "/api/swap-history",
-  (req, res, next) => {
-    console.log(`Swap History API Request: ${req.method} ${req.path}`);
-    next();
-  },
-  swapHistoryRoutes
-);
+// Mount routes
+app.use("/api/swap-history", swapHistoryRoutes);
+app.use("/api/news", newsRoutes);
+app.use("/api/wallet", walletConnectService);
+app.use("/api/tokens", tokenRoutes);
+app.use("/api/coingecko", coinGeckoRoutes);
+app.use("/api/coinles", coinlesRoutes);
+app.use("/api/user-watchlist", userWatchlistRoutes);
 
-app.use(
-  "/api/news",
-  (req, res, next) => {
-    console.log(`News API Request: ${req.method} ${req.path}`);
-    next();
-  },
-  newsRoutes
-);
-
-// Service routes
-app.use(
-  "/api/wallet",
-  (req, res, next) => {
-    console.log(`Wallet API Request: ${req.method} ${req.path}`);
-    next();
-  },
-  walletConnectService
-);
-
-// Token routes
-app.use(
-  "/api/tokens",
-  (req, res, next) => {
-    console.log(`Token API Request: ${req.method} ${req.path}`);
-    next();
-  },
-  tokenRoutes
-);
-
-// CoinGecko routes
-app.use(
-  "/api/coingecko",
-  (req, res, next) => {
-    console.log(`CoinGecko API Request: ${req.method} ${req.path}`);
-    next();
-  },
-  coinGeckoRoutes
-);
-
-// Mount CoinLes routes (add this BEFORE your 404 handler)
-app.use(
-  "/api/coinles",
-  (req, res, next) => {
-    console.log(`CoinLes API Request: ${req.method} ${req.path}`);
-    next();
-  },
-  coinlesRoutes
-);
-
-app.use(
-  "/api/user-watchlist",
-  (req, res, next) => {
-    console.log(`Watchlist API Request: ${req.method} ${req.path}`);
-    next();
-  },
-  userWatchlistRoutes
-);
-
-// ============= SWAP ROUTES =============
+// Swap routes
 const swapRouter = express.Router();
 
-// Get gas prices from 1inch
 swapRouter.get("/gas/:chainId", async (req, res) => {
   const { chainId } = req.params;
 
@@ -307,7 +807,6 @@ swapRouter.get("/gas/:chainId", async (req, res) => {
   }
 });
 
-// Get native token price for gas USD calculation
 swapRouter.get("/price/:chainId", async (req, res) => {
   const { chainId } = req.params;
 
@@ -355,7 +854,6 @@ swapRouter.get("/price/:chainId", async (req, res) => {
   }
 });
 
-// Get tokens for a specific chain
 swapRouter.get("/tokens/:chainId", async (req, res) => {
   const { chainId } = req.params;
 
@@ -396,529 +894,347 @@ swapRouter.get("/tokens/:chainId", async (req, res) => {
   }
 });
 
-// Search tokens
-swapRouter.get("/search/:chainId", async (req, res) => {
-  const { chainId } = req.params;
-  const { query } = req.query;
+// Add remaining swap routes here...
 
-  if (!SUPPORTED_CHAINS[chainId]) {
-    return res.status(400).json({
-      success: false,
-      error: "Unsupported chain",
-      data: [],
-    });
-  }
+app.use("/api/swap", swapRouter);
 
-  try {
-    console.log(`Searching tokens for "${query}" on chain ${chainId}`);
-
-    if (!query) {
-      const response = await axios.get(
-        `${ONEINCH_BASE_URL}/${chainId}/tokens`,
-        {
-          headers: {
-            Authorization: `Bearer ${ONEINCH_API_KEY}`,
-            Accept: "application/json",
-          },
-          timeout: 10000,
-        }
-      );
-
-      const tokens = Object.values(response.data?.tokens || {});
-      const popularSymbols = [
-        "ETH",
-        "WETH",
-        "USDT",
-        "USDC",
-        "DAI",
-        "WBTC",
-        "UNI",
-        "LINK",
-        "AAVE",
-        "MATIC",
-        "BNB",
-      ];
-
-      const popularTokens = tokens
-        .filter((token) => popularSymbols.includes(token.symbol?.toUpperCase()))
-        .sort((a, b) => {
-          const aIndex = popularSymbols.indexOf(a.symbol?.toUpperCase());
-          const bIndex = popularSymbols.indexOf(b.symbol?.toUpperCase());
-          return aIndex - bIndex;
-        })
-        .slice(0, 20);
-
-      return res.json({ success: true, data: popularTokens });
-    }
-
-    try {
-      const searchResponse = await axios.get(
-        `https://api.1inch.dev/token/v1.2/${chainId}/search`,
-        {
-          headers: {
-            Authorization: `Bearer ${ONEINCH_API_KEY}`,
-            Accept: "application/json",
-          },
-          params: {
-            query: query,
-            limit: 50,
-          },
-          timeout: 5000,
-        }
-      );
-
-      if (searchResponse.data && Array.isArray(searchResponse.data)) {
-        console.log(`Found ${searchResponse.data.length} tokens via search`);
-        return res.json({ success: true, data: searchResponse.data });
-      }
-    } catch (searchError) {
-      console.log("Search API failed, using fallback filter");
-    }
-
-    const response = await axios.get(`${ONEINCH_BASE_URL}/${chainId}/tokens`, {
-      headers: {
-        Authorization: `Bearer ${ONEINCH_API_KEY}`,
-        Accept: "application/json",
-      },
-      timeout: 10000,
-    });
-
-    const tokens = Object.values(response.data?.tokens || {});
-    const searchLower = query.toLowerCase();
-
-    const filtered = tokens
-      .filter((token) => {
-        const symbolMatch = token.symbol?.toLowerCase().includes(searchLower);
-        const nameMatch = token.name?.toLowerCase().includes(searchLower);
-        const addressMatch = token.address?.toLowerCase() === searchLower;
-
-        return symbolMatch || nameMatch || addressMatch;
-      })
-      .slice(0, 50);
-
-    res.json({ success: true, data: filtered });
-  } catch (error) {
-    console.error("Error searching tokens:", error.message);
-    res.json({ success: false, data: [] });
-  }
-});
-
-// Get quote with gas calculation
-swapRouter.get("/quote/:chainId", async (req, res) => {
-  const { chainId } = req.params;
-  const { src, dst, amount, from, slippage = 1, gasMode = "high" } = req.query;
-
-  if (!SUPPORTED_CHAINS[chainId]) {
-    return res.status(400).json({
-      success: false,
-      error: "Unsupported chain",
-      data: { dstAmount: "0" },
-    });
-  }
-
-  if (!src || !dst || !amount || !from) {
-    return res.status(400).json({
-      success: false,
-      error: "Missing required parameters",
-      data: { dstAmount: "0" },
-    });
-  }
-
-  if (isNaN(amount) || parseFloat(amount) <= 0) {
-    return res.status(400).json({
-      success: false,
-      error: "Invalid amount",
-      message: "Amount must be a positive number",
-      data: { dstAmount: "0" },
-    });
-  }
-
-  try {
-    console.log(
-      `Getting quote: ${amount} of ${src} to ${dst} on chain ${chainId}`
-    );
-
-    const response = await axios.get(`${ONEINCH_BASE_URL}/${chainId}/quote`, {
-      headers: {
-        Authorization: `Bearer ${ONEINCH_API_KEY}`,
-        Accept: "application/json",
-      },
-      params: {
-        src,
-        dst,
-        amount,
-        from,
-        slippage: parseFloat(slippage),
-        includeProtocols: true,
-        includeGas: true,
-        allowPartialFill: false,
-        disableEstimate: false,
-        includeTokensInfo: true,
-        compatibilityMode: false,
-      },
-      timeout: 15000,
-    });
-
-    const quoteData = response.data;
-
-    if (!quoteData || !quoteData.dstAmount) {
-      throw new Error("Invalid quote response from 1inch");
-    }
-
-    console.log(`Quote successful: ${quoteData.dstAmount} output tokens`);
-
-    res.json({ success: true, data: quoteData });
-  } catch (error) {
-    console.error("Quote error:", error.response?.data || error.message);
-
-    if (error.response?.data) {
-      return res.json({
-        success: false,
-        error: "Quote failed",
-        message:
-          error.response.data.description ||
-          error.response.data.error ||
-          "Unable to get quote",
-        data: { dstAmount: "0" },
-        details: error.response.data,
-      });
-    }
-
-    res.json({
-      success: false,
-      error: "Failed to get quote",
-      message: error.message || "Unknown error",
-      data: { dstAmount: "0" },
-    });
-  }
-});
-
-// Get swap transaction
-swapRouter.get("/swap/:chainId", async (req, res) => {
-  const { chainId } = req.params;
-  const {
-    src,
-    dst,
-    amount,
-    from,
-    slippage = 1,
-    gasMode = "high",
-    receiver,
-    referrer,
-  } = req.query;
-
-  if (!SUPPORTED_CHAINS[chainId]) {
-    return res.status(400).json({
-      success: false,
-      error: "Unsupported chain",
-      data: { tx: null },
-    });
-  }
-
-  if (!src || !dst || !amount || !from) {
-    return res.status(400).json({
-      success: false,
-      error: "Missing required parameters",
-      data: { tx: null },
-    });
-  }
-
-  if (isNaN(amount) || parseFloat(amount) <= 0) {
-    return res.status(400).json({
-      success: false,
-      error: "Invalid amount",
-      message: "Amount must be a positive number",
-      data: { tx: null },
-    });
-  }
-
-  try {
-    console.log(
-      `Getting swap tx: ${amount} of ${src} to ${dst} on chain ${chainId}`
-    );
-
-    const params = {
-      src,
-      dst,
-      amount,
-      from,
-      slippage: parseFloat(slippage),
-      origin: from,
-      includeTokensInfo: true,
-      allowPartialFill: false,
-      disableEstimate: false,
-    };
-
-    if (receiver) params.receiver = receiver;
-    if (referrer) params.referrer = referrer;
-
-    const response = await axios.get(`${ONEINCH_BASE_URL}/${chainId}/swap`, {
-      headers: {
-        Authorization: `Bearer ${ONEINCH_API_KEY}`,
-        Accept: "application/json",
-      },
-      params,
-      timeout: 15000,
-    });
-
-    if (!response.data || !response.data.tx) {
-      throw new Error("Invalid swap response from 1inch");
-    }
-
-    console.log(`Swap tx generated successfully`);
-    res.json({ success: true, data: response.data });
-  } catch (error) {
-    console.error("Swap error:", error.response?.data || error.message);
-
-    if (error.response?.data) {
-      return res.json({
-        success: false,
-        error: "Swap failed",
-        message:
-          error.response.data.description ||
-          error.response.data.error ||
-          "Unable to create swap",
-        details: error.response.data,
-        data: { tx: null },
-      });
-    }
-
-    res.json({
-      success: false,
-      error: "Failed to get swap transaction",
-      message: error.message || "Unknown error",
-      data: { tx: null },
-    });
-  }
-});
-
-// Get allowance
-swapRouter.get("/allowance/:chainId", async (req, res) => {
-  const { chainId } = req.params;
-  const { tokenAddress, walletAddress } = req.query;
-
-  if (!SUPPORTED_CHAINS[chainId]) {
-    return res.status(400).json({
-      success: false,
-      error: "Unsupported chain",
-      data: { allowance: "0" },
-    });
-  }
-
-  if (!tokenAddress || !walletAddress) {
-    return res.status(400).json({
-      success: false,
-      error: "Missing required parameters",
-      data: { allowance: "0" },
-    });
-  }
-
-  try {
-    const response = await axios.get(
-      `${ONEINCH_BASE_URL}/${chainId}/approve/allowance`,
-      {
-        headers: {
-          Authorization: `Bearer ${ONEINCH_API_KEY}`,
-          Accept: "application/json",
-        },
-        params: {
-          tokenAddress,
-          walletAddress,
-        },
-        timeout: 10000,
-      }
-    );
-
-    res.json({ success: true, data: response.data || { allowance: "0" } });
-  } catch (error) {
-    console.error("Allowance error:", error.message);
-    res.json({ success: true, data: { allowance: "0" } });
-  }
-});
-
-// Get approve transaction
-swapRouter.get("/approve/:chainId", async (req, res) => {
-  const { chainId } = req.params;
-  const { tokenAddress, amount } = req.query;
-
-  if (!SUPPORTED_CHAINS[chainId]) {
-    return res.status(400).json({
-      success: false,
-      error: "Unsupported chain",
-      data: null,
-    });
-  }
-
-  if (!tokenAddress) {
-    return res.status(400).json({
-      success: false,
-      error: "Token address required",
-      data: null,
-    });
-  }
-
-  try {
-    const params = { tokenAddress };
-    if (amount) params.amount = amount;
-
-    const response = await axios.get(
-      `${ONEINCH_BASE_URL}/${chainId}/approve/transaction`,
-      {
-        headers: {
-          Authorization: `Bearer ${ONEINCH_API_KEY}`,
-          Accept: "application/json",
-        },
-        params,
-        timeout: 10000,
-      }
-    );
-
-    res.json({ success: true, data: response.data });
-  } catch (error) {
-    console.error("Approve error:", error.message);
-    res.json({
-      success: false,
-      error: "Failed to get approve transaction",
-      message: error.response?.data?.description || error.message,
-      data: null,
-    });
-  }
-});
-
-// Get spender address
-swapRouter.get("/spender/:chainId", async (req, res) => {
-  const { chainId } = req.params;
-
-  if (!SUPPORTED_CHAINS[chainId]) {
-    return res.status(400).json({
-      success: false,
-      error: "Unsupported chain",
-      data: { address: null },
-    });
-  }
-
-  try {
-    const response = await axios.get(
-      `${ONEINCH_BASE_URL}/${chainId}/approve/spender`,
-      {
-        headers: {
-          Authorization: `Bearer ${ONEINCH_API_KEY}`,
-          Accept: "application/json",
-        },
-        timeout: 10000,
-      }
-    );
-
-    res.json({ success: true, data: response.data || { address: null } });
-  } catch (error) {
-    console.error("Spender error:", error.message);
-    res.json({
-      success: false,
-      error: "Failed to get spender address",
-      data: { address: null },
-    });
-  }
-});
-
-// Mount swap router
-app.use(
-  "/api/swap",
-  (req, res, next) => {
-    console.log(`Swap API Request: ${req.method} ${req.path}`);
-    next();
-  },
-  swapRouter
-);
-
-// Debug routes (only in development)
+// Debug routes (development only)
 if (process.env.NODE_ENV === "development") {
-  app.use(
-    "/api/debug",
-    (req, res, next) => {
-      console.log(`Debug API Request: ${req.method} ${req.path}`);
-      next();
-    },
-    debugRoutes
-  );
+  app.use("/api/debug", debugRoutes);
   console.log("Debug routes enabled in development mode");
 }
 
-// WebSocket handling for real-time updates
-wss.on("connection", (ws, req) => {
+// CoinLes WebSocket handling
+io.on("connection", (socket) => {
   const clientId = require("uuid").v4();
   logger.info(`New WebSocket connection: ${clientId}`);
 
-  ws.clientId = clientId;
+  socket.clientId = clientId;
 
-  ws.on("message", (message) => {
+  socket.on("register", async (data) => {
+    const { email } = data;
+    if (!email) {
+      console.log("⚠️  Registration attempt without email");
+      return;
+    }
+
     try {
-      const data = JSON.parse(message);
-      logger.info(`Message from ${clientId}:`, data);
+      console.log(`\n👤 User registering: ${email}`);
+      console.log("═══════════════════════════════════════");
 
-      switch (data.type) {
-        case "wallet_connect":
-          ws.send(
-            JSON.stringify({
-              type: "wallet_connected",
-              message: "Wallet connection acknowledged",
-            })
-          );
-          break;
+      await createOrUpdateUser(email);
 
-        case "chain_switch":
-          ws.send(
-            JSON.stringify({
-              type: "chain_switched",
-              message: "Chain switch acknowledged",
-              chainId: data.chainId,
-            })
-          );
-          break;
+      userSessions.set(email, {
+        socket,
+        socketId: socket.id,
+        email,
+        currentPage: "watchlist",
+        watchingTokens: new Set(),
+        detailToken: null,
+      });
 
-        case "swap_quote":
-          ws.send(
-            JSON.stringify({
-              type: "swap_quote_started",
-              message: "Swap quote calculation initiated",
-              tokens: { from: data.from, to: data.to },
-            })
-          );
-          break;
+      console.log("📋 Loading user's watchlist...");
+      const watchlistWithData = await getInitialWatchlistData(email);
 
-        default:
-          ws.send(JSON.stringify({ error: "Unknown message type" }));
+      console.log(
+        `   ├─ Found ${watchlistWithData.length} tokens in watchlist`
+      );
+
+      const chainCounts = {};
+      for (const token of watchlistWithData) {
+        chainCounts[token.chainId] = (chainCounts[token.chainId] || 0) + 1;
       }
+
+      for (const [chain, count] of Object.entries(chainCounts)) {
+        console.log(`   ├─ ${chain}: ${count} tokens`);
+      }
+
+      socket.emit("watchlist", watchlistWithData);
+
+      for (const token of watchlistWithData) {
+        await addUserToActiveToken(token.chainId, token.contractAddress, email);
+      }
+
+      console.log(`✅ User registered successfully`);
+      console.log("═══════════════════════════════════════\n");
     } catch (error) {
-      logger.error("WebSocket message error:", error);
-      ws.send(JSON.stringify({ error: "Invalid message format" }));
+      console.error("❌ Registration error:", error.message);
+      socket.emit("error", { message: "Failed to register user" });
     }
   });
 
-  ws.on("close", () => {
-    logger.info(`WebSocket connection closed: ${clientId}`);
+  socket.on("search", async (data) => {
+    const { chain, query, email } = data;
+    const results = await searchTokens(chain, query);
+
+    if (email) {
+      await addRecentSearch(email, {
+        chainId: chain,
+        query,
+        results: results.slice(0, 3).map((r) => ({
+          contractAddress: r.contractAddress,
+          name: r.name,
+          symbol: r.symbol,
+        })),
+      });
+    }
+
+    socket.emit("search-results", results);
   });
 
-  ws.on("error", (error) => {
-    logger.error(`WebSocket error for ${clientId}:`, error);
+  socket.on("add-token", async (data) => {
+    const { email, token } = data;
+
+    try {
+      await addTokenToWatchlist(email, token);
+
+      const tokenKey = `${token.chainId}_${token.contractAddress}`;
+
+      if (!activeTokenLists[token.chainId].has(tokenKey)) {
+        activeTokenLists[token.chainId].set(tokenKey, {
+          contractAddress: token.contractAddress,
+          poolAddress: token.poolAddress,
+          users: new Set([email]),
+        });
+      } else {
+        activeTokenLists[token.chainId].get(tokenKey).users.add(email);
+      }
+
+      await addUserToActiveToken(token.chainId, token.contractAddress, email);
+
+      const tokenData = await updateTokensForChain(token.chainId, true);
+      const addedTokenData = tokenData?.find(
+        (t) => t.contractAddress === token.contractAddress
+      );
+
+      socket.emit("token-added", {
+        success: true,
+        tokenData: addedTokenData,
+      });
+    } catch (error) {
+      console.error("Failed to add token:", error.message);
+      socket.emit("error", { message: "Failed to add token" });
+    }
   });
 
-  ws.send(
-    JSON.stringify({
-      type: "connection",
-      message: "Connected to Blockpal Services",
-      clientId,
-      services: [
-        "wallet-connect",
-        "tokens",
-        "moralis",
-        "coingecko",
-        "swap",
-        "swap-history",
-        "coinles",
-        "user-watchlist",
-      ],
-    })
+  socket.on("remove-token", async (data) => {
+    const { email, chainId, contractAddress } = data;
+
+    console.log(
+      `🗑️  User ${email} removing token: ${chainId}/${contractAddress.substring(
+        0,
+        10
+      )}...`
+    );
+
+    try {
+      await removeTokenFromWatchlist(email, chainId, contractAddress);
+
+      const tokenKey = `${chainId}_${contractAddress}`;
+      const activeToken = activeTokenLists[chainId].get(tokenKey);
+
+      if (activeToken) {
+        activeToken.users.delete(email);
+        console.log(
+          `   ├─ User removed from token (${activeToken.users.size} users remaining)`
+        );
+
+        if (activeToken.users.size === 0) {
+          activeTokenLists[chainId].delete(tokenKey);
+          console.log(
+            `   └─ ✅ Token removed from active list (no users watching)`
+          );
+        }
+
+        await removeUserFromActiveToken(chainId, contractAddress, email);
+      } else {
+        console.log(`   ⚠️  Token not found in active list`);
+      }
+
+      socket.emit("token-removed", {
+        success: true,
+        message: "Token removed successfully",
+      });
+    } catch (error) {
+      console.error("❌ Error removing token:", error.message);
+      socket.emit("error", { message: "Failed to remove token" });
+    }
+  });
+
+  socket.on("disconnect", () => {
+    console.log("👋 WebSocket disconnected:", socket.id);
+
+    let disconnectedUserEmail = null;
+
+    for (const [email, session] of userSessions.entries()) {
+      if (session.socketId === socket.id) {
+        disconnectedUserEmail = email;
+        userSessions.delete(email);
+        break;
+      }
+    }
+
+    if (disconnectedUserEmail) {
+      console.log(`🧹 Cleaning up tokens for user: ${disconnectedUserEmail}`);
+
+      let totalTokensRemoved = 0;
+      let totalUsersRemoved = 0;
+
+      for (const [chainId, tokenMap] of Object.entries(activeTokenLists)) {
+        const tokensToDelete = [];
+
+        for (const [tokenKey, tokenData] of tokenMap.entries()) {
+          if (tokenData.users.has(disconnectedUserEmail)) {
+            tokenData.users.delete(disconnectedUserEmail);
+            totalUsersRemoved++;
+
+            console.log(
+              `   ├─ Removed user from ${chainId}/${tokenKey.substring(
+                0,
+                15
+              )}... (${tokenData.users.size} users left)`
+            );
+
+            if (tokenData.users.size === 0) {
+              tokensToDelete.push(tokenKey);
+              console.log(
+                `   └─ ⚠️  Token has 0 users, will be removed from active list`
+              );
+            }
+          }
+        }
+
+        for (const tokenKey of tokensToDelete) {
+          tokenMap.delete(tokenKey);
+          totalTokensRemoved++;
+        }
+
+        if (tokensToDelete.length > 0) {
+          console.log(
+            `   ✅ Removed ${tokensToDelete.length} inactive tokens from ${chainId}`
+          );
+        }
+      }
+
+      console.log(
+        `✅ Cleanup complete: Removed user from ${totalUsersRemoved} tokens, deleted ${totalTokensRemoved} inactive tokens`
+      );
+    } else {
+      console.log("⚠️  Could not identify disconnected user for cleanup");
+    }
+  });
+
+  socket.emit("connection", {
+    type: "connection",
+    message: "Connected to Blockpal Services",
+    clientId,
+    services: [
+      "wallet-connect",
+      "tokens",
+      "moralis",
+      "coingecko",
+      "swap",
+      "swap-history",
+      "coinles",
+      "coinles-websocket",
+      "user-watchlist",
+    ],
+  });
+});
+
+// Scheduled updates for CoinLes - every 30 seconds
+cron.schedule("*/30 * * * * *", async () => {
+  const timestamp = new Date().toLocaleTimeString();
+  console.log(`\n⏰ Running scheduled updates at ${timestamp}`);
+  console.log("═══════════════════════════════════════");
+
+  let totalUpdated = 0;
+  let totalSkipped = 0;
+
+  for (const chainId of Object.keys(activeTokenLists)) {
+    const tokenCount = activeTokenLists[chainId].size;
+
+    if (tokenCount > 0) {
+      console.log(`🔄 Updating ${tokenCount} tokens for ${chainId}...`);
+
+      try {
+        await updateTokensForChain(chainId);
+        totalUpdated += tokenCount;
+        console.log(`   ✅ ${chainId} updated successfully`);
+      } catch (error) {
+        console.error(`   ❌ Failed to update ${chainId}:`, error.message);
+      }
+    } else {
+      totalSkipped++;
+      console.log(`⏭️  Skipping ${chainId} (no active tokens)`);
+    }
+  }
+
+  console.log("───────────────────────────────────────");
+  console.log(
+    `✅ Update complete: ${totalUpdated} tokens updated, ${totalSkipped} chains skipped`
   );
+  console.log("═══════════════════════════════════════\n");
+});
+
+// Cleanup inactive tokens every hour
+cron.schedule("0 * * * *", async () => {
+  console.log("🧹 Cleaning up inactive tokens from database...");
+  await cleanupInactiveTokens();
+});
+
+// Deep cleanup - runs every 5 minutes
+cron.schedule("*/5 * * * *", async () => {
+  console.log("\n🔍 Running deep cleanup check...");
+
+  let orphanedUsersFound = 0;
+  let tokensCleanedUp = 0;
+
+  const connectedEmails = new Set(
+    Array.from(userSessions.values()).map((s) => s.email)
+  );
+
+  for (const [chainId, tokenMap] of Object.entries(activeTokenLists)) {
+    const tokensToDelete = [];
+
+    for (const [tokenKey, tokenData] of tokenMap.entries()) {
+      const disconnectedUsers = [];
+
+      for (const userEmail of tokenData.users) {
+        if (!connectedEmails.has(userEmail)) {
+          disconnectedUsers.push(userEmail);
+          orphanedUsersFound++;
+        }
+      }
+
+      for (const userEmail of disconnectedUsers) {
+        tokenData.users.delete(userEmail);
+        console.log(
+          `   🧹 Removed orphaned user ${userEmail} from ${chainId}/${tokenKey.substring(
+            0,
+            15
+          )}...`
+        );
+      }
+
+      if (tokenData.users.size === 0) {
+        tokensToDelete.push(tokenKey);
+      }
+    }
+
+    for (const tokenKey of tokensToDelete) {
+      tokenMap.delete(tokenKey);
+      tokensCleanedUp++;
+    }
+  }
+
+  if (orphanedUsersFound > 0 || tokensCleanedUp > 0) {
+    console.log(
+      `✅ Deep cleanup: Removed ${orphanedUsersFound} orphaned users, ${tokensCleanedUp} empty tokens`
+    );
+  } else {
+    console.log("✅ Deep cleanup: No orphaned data found");
+  }
 });
 
 // Initialize services
@@ -951,6 +1267,7 @@ async function initializeServices() {
     logger.info("CoinGecko service ready");
     logger.info("1inch Swap service ready");
     logger.info("CoinLes service ready");
+    logger.info("CoinLes WebSocket service ready");
 
     if (mongoose.connection.readyState === 1) {
       logger.info(
@@ -1019,6 +1336,7 @@ server.listen(PORT, async () => {
   logger.info(`Swap API: http://localhost:${PORT}/api/swap`);
   logger.info(`Swap History API: http://localhost:${PORT}/api/swap-history`);
   logger.info(`CoinLes API: http://localhost:${PORT}/api/coinles`);
+  logger.info(`CoinLes WebSocket: ws://localhost:${PORT}`);
   logger.info(`Watchlist API: http://localhost:${PORT}/api/user-watchlist`);
 
   if (process.env.NODE_ENV === "development") {
@@ -1036,10 +1354,7 @@ server.listen(PORT, async () => {
 // Graceful shutdown
 process.on("SIGTERM", () => {
   logger.info("SIGTERM received, shutting down gracefully");
-
-  // Stop news scheduler
   newsScheduler.stop();
-
   server.close(() => {
     mongoose.connection.close();
     logger.info("Process terminated");
@@ -1056,7 +1371,6 @@ process.on("SIGINT", () => {
   });
 });
 
-// Handle uncaught exceptions
 process.on("uncaughtException", (error) => {
   logger.error("Uncaught Exception:", error);
   process.exit(1);
