@@ -1,11 +1,10 @@
-// services/moralis/index.js - FIXED to return separate main list and total values
 const Moralis = require("moralis").default;
 const NodeCache = require("node-cache");
 const { logger } = require("../../utils/logger");
 
-// Initialize cache with TTL
+// ✅ VERIFY: Cache TTL matches refresh interval
 const cache = new NodeCache({
-  stdTTL: parseInt(process.env.CACHE_TTL_SECONDS) || 300, // 5 minutes default
+  stdTTL: parseInt(process.env.CACHE_TTL_SECONDS) || 300, // ✅ 300 seconds = 5 minutes
   checkperiod: 60,
 });
 
@@ -141,7 +140,7 @@ class MoralisService {
     this.initialized = false;
     this.apiKey =
       process.env.MORALIS_API_KEY ||
-      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6ImU1YjRlZjIzLTFjNzgtNDI2My05MDQ0LTQ4NzUwMDY5NzAzYiIsIm9yZ0lkIjoiNDc2NDM1IiwidXNlcklkIjoiNDkwMTYwIiwidHlwZUlkIjoiNzdiMTVmNmUtMDdmMS00ZmFiLThmZmYtNjNmYjhjNzhiMTA3IiwidHlwZSI6IlBST0pFQ1QiLCJpYXQiOjE3NjA3MzE4MDEsImV4cCI6NDkxNjQ5MTgwMX0.u2C82cFdf4VrpJC-fqveSQ_CRlY1gO7KWcSDLOWUcmA";
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6IjcwM2JkNmYwLWE3OTQtNDAzYy1hMTc4LTg4ZmZiYTY0YTVhYyIsIm9yZ0lkIjoiNDQ1NTIyIiwidXNlcklkIjoiNDU4Mzg4IiwidHlwZUlkIjoiNzA0ODUyNzgtNTUxYS00OWMxLTk4ZDktZTMwOTVkYTNiMGQ4IiwidHlwZSI6IlBST0pFQ1QiLCJpYXQiOjE3NDY1MTc1MzAsImV4cCI6NDkwMjI3NzUzMH0.cbvMGGnlu0EFsAFkukRa9i6_NQknx7iidSlfyowgCMg";
   }
 
   async initialize() {

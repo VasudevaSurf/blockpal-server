@@ -1,10 +1,9 @@
-// services/coingecko/index.js - FIXED VERSION WITH TOP GAINERS IMAGES
 const NodeCache = require("node-cache");
 const { logger } = require("../../utils/logger");
 
-// Initialize cache with TTL (60 seconds for trending data)
+// ✅ CHANGED: Cache with 1 hour TTL (was 60 seconds)
 const cache = new NodeCache({
-  stdTTL: 60, // 60 seconds cache for trending data
+  stdTTL: 60 * 60, // ✅ CHANGED: 60 → 3600 seconds (1 hour)
   checkperiod: 30,
 });
 
@@ -69,7 +68,7 @@ class CoinGeckoService {
       const cached = cache.get(cacheKey);
 
       if (cached) {
-        logger.info("📦 Cache hit for trending tokens");
+        logger.info("📦 Cache hit for trending tokens (1 hour cache)");
         return cached;
       }
 
@@ -220,23 +219,17 @@ class CoinGeckoService {
         timestamp: new Date().toLocaleString(),
       };
 
-      // Cache the result
+      // Cache the result for 1 hour
       cache.set(cacheKey, result);
 
       logger.info(
-        `✅ Fetched ${trendingTokens.length} trending tokens and ${topGainers.length} top gainers`
-      );
-      logger.info(
-        `🖼️ Top gainers with images: ${
-          topGainers.filter((t) => t.imageUrl).length
-        }/${topGainers.length}`
+        `✅ Fetched ${trendingTokens.length} trending tokens and ${topGainers.length} top gainers (cached for 1 hour)`
       );
 
       return result;
     } catch (error) {
       logger.error("❌ Error fetching trending tokens:", error);
 
-      // Return empty arrays instead of throwing
       return {
         trendingTokens: [],
         topGainers: [],
