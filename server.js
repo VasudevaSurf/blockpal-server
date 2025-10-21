@@ -310,6 +310,7 @@ async function updateTokensForChain(chainId, isInitialLoad = false) {
   const allTokenData = [];
   const coinGeckoChain = getCoinGeckoChainId(chainId);
 
+  // Group tokens into batches of 30
   const batches = [];
   for (let i = 0; i < activeTokens.length; i += 30) {
     batches.push(activeTokens.slice(i, i + 30));
@@ -325,9 +326,11 @@ async function updateTokensForChain(chainId, isInitialLoad = false) {
         include_composition: false,
       });
 
+      // Create maps for easy lookup
       const tokensMap = new Map();
       const poolsByTokenMap = new Map();
 
+      // Process token data
       if (response.data) {
         response.data.forEach((token) => {
           const tokenAddress = token.id.split("_")[1];
@@ -336,20 +339,40 @@ async function updateTokensForChain(chainId, isInitialLoad = false) {
         });
       }
 
+      // ✅ FIXED: Process pool data checking BOTH base_token AND quote_token
       if (response.included) {
         response.included.forEach((item) => {
           if (item.type === "pool" && item.attributes) {
+            // Check base token
             const baseTokenId = item.relationships?.base_token?.data?.id;
             if (baseTokenId) {
-              const baseTokenAddress = baseTokenId.split("_")[1].toLowerCase();
-              if (poolsByTokenMap.has(baseTokenAddress)) {
-                poolsByTokenMap.get(baseTokenAddress).push(item);
+              const baseTokenAddress = baseTokenId.split("_")[1]?.toLowerCase();
+              if (baseTokenAddress && poolsByTokenMap.has(baseTokenAddress)) {
+                poolsByTokenMap.get(baseTokenAddress).push({
+                  ...item,
+                  tokenPosition: "base", // Mark position for price selection
+                });
+              }
+            }
+
+            // ✅ NEW: Also check quote token
+            const quoteTokenId = item.relationships?.quote_token?.data?.id;
+            if (quoteTokenId) {
+              const quoteTokenAddress = quoteTokenId
+                .split("_")[1]
+                ?.toLowerCase();
+              if (quoteTokenAddress && poolsByTokenMap.has(quoteTokenAddress)) {
+                poolsByTokenMap.get(quoteTokenAddress).push({
+                  ...item,
+                  tokenPosition: "quote", // Mark position for price selection
+                });
               }
             }
           }
         });
       }
 
+      // Process each token with its pools
       for (const activeToken of batch) {
         const contractAddress = activeToken.contractAddress.toLowerCase();
         const tokenData = tokensMap.get(contractAddress);
@@ -358,11 +381,26 @@ async function updateTokensForChain(chainId, isInitialLoad = false) {
 
         const tokenPools = poolsByTokenMap.get(contractAddress) || [];
 
+        // Aggregate pool data
         let poolData = null;
         if (tokenPools.length > 0) {
-          const primaryPool = tokenPools[0];
-          const primaryAttrs = primaryPool.attributes || {};
+          // ✅ FIXED: Use the pool with highest liquidity as primary
+          const sortedPools = [...tokenPools].sort((a, b) => {
+            const aLiquidity = parseFloat(a.attributes?.reserve_in_usd) || 0;
+            const bLiquidity = parseFloat(b.attributes?.reserve_in_usd) || 0;
+            return bLiquidity - aLiquidity;
+          });
 
+          const primaryPool = sortedPools[0];
+          const primaryAttrs = primaryPool.attributes || {};
+          const isBaseToken = primaryPool.tokenPosition === "base";
+
+          // ✅ FIXED: Use correct price field based on token position
+          const price = isBaseToken
+            ? parseFloat(primaryAttrs.base_token_price_usd) || 0
+            : parseFloat(primaryAttrs.quote_token_price_usd) || 0;
+
+          // Aggregate all pools for this token
           let totalLiquidity = 0;
           let totalVolume24h = 0;
           let totalBuys24h = 0;
@@ -388,7 +426,7 @@ async function updateTokensForChain(chainId, isInitialLoad = false) {
           });
 
           poolData = {
-            price: parseFloat(primaryAttrs.base_token_price_usd) || 0,
+            price: price,
             priceChange: {
               m5: parseFloat(primaryAttrs.price_change_percentage?.m5) || 0,
               m15: parseFloat(primaryAttrs.price_change_percentage?.m15) || 0,
@@ -410,10 +448,19 @@ async function updateTokensForChain(chainId, isInitialLoad = false) {
               sells1h: totalSells1h,
             },
           };
+
+          console.log(
+            `✅ Token ${tokenData.attributes?.symbol}: Found ${
+              tokenPools.length
+            } pools, Total volume: $${totalVolume24h.toFixed(
+              2
+            )}, Buys: ${totalBuys24h}, Sells: ${totalSells24h}`
+          );
         }
 
         const tokenAttrs = tokenData.attributes || {};
 
+        // Calculate scores
         const gtScore = parseFloat(tokenAttrs.gt_score) || 0;
         const tokenScore = Math.min(
           100,
