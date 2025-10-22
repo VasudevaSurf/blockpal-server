@@ -1,4 +1,4 @@
-// server.js - MERGED VERSION WITH COINLES WEBSOCKET
+// server.js - FIXED VERSION - USER-SPECIFIC WATCHLIST
 const express = require("express");
 const http = require("http");
 const { Server } = require("socket.io");
@@ -339,23 +339,21 @@ async function updateTokensForChain(chainId, isInitialLoad = false) {
         });
       }
 
-      // ✅ FIXED: Process pool data checking BOTH base_token AND quote_token
+      // Process pool data
       if (response.included) {
         response.included.forEach((item) => {
           if (item.type === "pool" && item.attributes) {
-            // Check base token
             const baseTokenId = item.relationships?.base_token?.data?.id;
             if (baseTokenId) {
               const baseTokenAddress = baseTokenId.split("_")[1]?.toLowerCase();
               if (baseTokenAddress && poolsByTokenMap.has(baseTokenAddress)) {
                 poolsByTokenMap.get(baseTokenAddress).push({
                   ...item,
-                  tokenPosition: "base", // Mark position for price selection
+                  tokenPosition: "base",
                 });
               }
             }
 
-            // ✅ NEW: Also check quote token
             const quoteTokenId = item.relationships?.quote_token?.data?.id;
             if (quoteTokenId) {
               const quoteTokenAddress = quoteTokenId
@@ -364,7 +362,7 @@ async function updateTokensForChain(chainId, isInitialLoad = false) {
               if (quoteTokenAddress && poolsByTokenMap.has(quoteTokenAddress)) {
                 poolsByTokenMap.get(quoteTokenAddress).push({
                   ...item,
-                  tokenPosition: "quote", // Mark position for price selection
+                  tokenPosition: "quote",
                 });
               }
             }
@@ -384,7 +382,6 @@ async function updateTokensForChain(chainId, isInitialLoad = false) {
         // Aggregate pool data
         let poolData = null;
         if (tokenPools.length > 0) {
-          // ✅ FIXED: Use the pool with highest liquidity as primary
           const sortedPools = [...tokenPools].sort((a, b) => {
             const aLiquidity = parseFloat(a.attributes?.reserve_in_usd) || 0;
             const bLiquidity = parseFloat(b.attributes?.reserve_in_usd) || 0;
@@ -395,12 +392,10 @@ async function updateTokensForChain(chainId, isInitialLoad = false) {
           const primaryAttrs = primaryPool.attributes || {};
           const isBaseToken = primaryPool.tokenPosition === "base";
 
-          // ✅ FIXED: Use correct price field based on token position
           const price = isBaseToken
             ? parseFloat(primaryAttrs.base_token_price_usd) || 0
             : parseFloat(primaryAttrs.quote_token_price_usd) || 0;
 
-          // Aggregate all pools for this token
           let totalLiquidity = 0;
           let totalVolume24h = 0;
           let totalBuys24h = 0;
@@ -448,14 +443,6 @@ async function updateTokensForChain(chainId, isInitialLoad = false) {
               sells1h: totalSells1h,
             },
           };
-
-          console.log(
-            `✅ Token ${tokenData.attributes?.symbol}: Found ${
-              tokenPools.length
-            } pools, Total volume: $${totalVolume24h.toFixed(
-              2
-            )}, Buys: ${totalBuys24h}, Sells: ${totalSells24h}`
-          );
         }
 
         const tokenAttrs = tokenData.attributes || {};
@@ -559,10 +546,19 @@ async function updateTokensForChain(chainId, isInitialLoad = false) {
   return allTokenData;
 }
 
+// ✅ FIXED: Get initial watchlist data - USER SPECIFIC
 async function getInitialWatchlistData(email) {
+  console.log(`📋 Loading watchlist for user: ${email}`);
+
+  // ✅ Get ONLY this user's watchlist from database
   const watchlist = await getUserWatchlist(email);
+  console.log(
+    `   ├─ Found ${watchlist.length} tokens in database for ${email}`
+  );
+
   const tokensByChain = {};
 
+  // Group tokens by chain
   for (const token of watchlist) {
     if (!tokensByChain[token.chainId]) {
       tokensByChain[token.chainId] = [];
@@ -572,26 +568,58 @@ async function getInitialWatchlistData(email) {
 
   const allTokenData = [];
 
+  // Process each chain
   for (const [chainId, tokens] of Object.entries(tokensByChain)) {
+    console.log(
+      `   ├─ Processing ${tokens.length} tokens for chain ${chainId}`
+    );
+
+    // Add tokens to active tracking
     for (const token of tokens) {
       const tokenKey = `${chainId}_${token.contractAddress}`;
       if (!activeTokenLists[chainId].has(tokenKey)) {
         activeTokenLists[chainId].set(tokenKey, {
           contractAddress: token.contractAddress,
           poolAddress: token.poolAddress,
-          users: new Set([email]),
+          users: new Set([email]), // Track this user is watching
         });
       } else {
         activeTokenLists[chainId].get(tokenKey).users.add(email);
       }
     }
 
+    // Get market data for this chain
     const chainData = await updateTokensForChain(chainId, true);
-    if (chainData) {
-      allTokenData.push(...chainData);
+
+    // ✅ CRITICAL FIX: Filter to only include tokens from THIS user's watchlist
+    const userTokenAddresses = new Set(
+      tokens.map((t) => t.contractAddress.toLowerCase())
+    );
+
+    console.log(
+      `   ├─ User ${email} has these tokens on ${chainId}:`,
+      Array.from(userTokenAddresses)
+        .map((a) => a.substring(0, 10) + "...")
+        .join(", ")
+    );
+
+    const filteredChainData = chainData.filter((tokenData) => {
+      const matches = userTokenAddresses.has(
+        tokenData.contractAddress.toLowerCase()
+      );
+      return matches;
+    });
+
+    console.log(
+      `   ├─ Filtered ${chainData.length} -> ${filteredChainData.length} tokens for user ${email}`
+    );
+
+    if (filteredChainData.length > 0) {
+      allTokenData.push(...filteredChainData);
     }
   }
 
+  console.log(`✅ Returning ${allTokenData.length} tokens for user ${email}`);
   return allTokenData;
 }
 
@@ -601,6 +629,7 @@ function broadcastTokenUpdate(chainId, contractAddress, data) {
 
   if (!activeToken) return;
 
+  // Broadcast to ALL users watching this token (this is correct)
   for (const userId of activeToken.users) {
     const session = userSessions.get(userId);
     if (session && session.socket) {
@@ -637,7 +666,6 @@ async function connectMongoDB() {
       collections.map((c) => c.name)
     );
 
-    // Ensure required collections exist
     const swapTransactionExists = collections.some(
       (c) => c.name === "swapTransactions"
     );
@@ -666,7 +694,6 @@ async function connectMongoDB() {
       logger.info("userWatchlists collection created");
     }
 
-    // Connect to CoinLes database
     await connectDB();
   } catch (error) {
     logger.error("MongoDB connection failed:", error);
@@ -684,7 +711,7 @@ const userWatchlistRoutes = require("./routes/user-watchlist");
 const app = express();
 const server = http.createServer(app);
 
-// Setup Socket.IO for both WebSocket systems
+// Setup Socket.IO
 const io = new Server(server, {
   cors: {
     origin: process.env.ALLOWED_ORIGINS?.split(",") || [
@@ -718,10 +745,8 @@ app.use(
   })
 );
 
-// Apply CORS middleware
 app.use(corsMiddleware);
 
-// Add request logging middleware
 app.use((req, res, next) => {
   console.log(`${req.method} ${req.path} - Origin: ${req.get("origin")}`);
   next();
@@ -738,12 +763,10 @@ const limiter = rateLimit({
 });
 app.use(limiter);
 
-// 1inch API configuration
 const ONEINCH_API_KEY =
   process.env.ONEINCH_API_KEY || "7TD80y4Tuv1jeN0QuUbzUw2NT2N9qTwb";
 const ONEINCH_BASE_URL = "https://api.1inch.dev/swap/v6.1";
 
-// Supported chains
 const SUPPORTED_CHAINS = {
   1: "Ethereum",
   137: "Polygon",
@@ -943,23 +966,21 @@ swapRouter.get("/tokens/:chainId", async (req, res) => {
   }
 });
 
-// Add remaining swap routes here...
-
 app.use("/api/swap", swapRouter);
 
-// Debug routes (development only)
 if (process.env.NODE_ENV === "development") {
   app.use("/api/debug", debugRoutes);
   console.log("Debug routes enabled in development mode");
 }
 
-// CoinLes WebSocket handling
+// ✅ FIXED: CoinLes WebSocket handling
 io.on("connection", (socket) => {
   const clientId = require("uuid").v4();
   logger.info(`New WebSocket connection: ${clientId}`);
 
   socket.clientId = clientId;
 
+  // ✅ FIXED: Register event - user specific
   socket.on("register", async (data) => {
     const { email } = data;
     if (!email) {
@@ -983,12 +1004,15 @@ io.on("connection", (socket) => {
       });
 
       console.log("📋 Loading user's watchlist...");
+
+      // ✅ This now returns ONLY this user's tokens
       const watchlistWithData = await getInitialWatchlistData(email);
 
       console.log(
-        `   ├─ Found ${watchlistWithData.length} tokens in watchlist`
+        `   ├─ Sending ${watchlistWithData.length} tokens to user ${email}`
       );
 
+      // Count tokens per chain for logging
       const chainCounts = {};
       for (const token of watchlistWithData) {
         chainCounts[token.chainId] = (chainCounts[token.chainId] || 0) + 1;
@@ -998,13 +1022,17 @@ io.on("connection", (socket) => {
         console.log(`   ├─ ${chain}: ${count} tokens`);
       }
 
+      // ✅ Send ONLY this user's watchlist
       socket.emit("watchlist", watchlistWithData);
 
+      // Add user to active tracking
       for (const token of watchlistWithData) {
         await addUserToActiveToken(token.chainId, token.contractAddress, email);
       }
 
-      console.log(`✅ User registered successfully`);
+      console.log(
+        `✅ User ${email} registered successfully with ${watchlistWithData.length} tokens`
+      );
       console.log("═══════════════════════════════════════\n");
     } catch (error) {
       console.error("❌ Registration error:", error.message);
@@ -1035,10 +1063,14 @@ io.on("connection", (socket) => {
     const { email, token } = data;
 
     try {
+      console.log(`➕ User ${email} adding token: ${token.tokenSymbol}`);
+
+      // Add to database
       await addTokenToWatchlist(email, token);
 
       const tokenKey = `${token.chainId}_${token.contractAddress}`;
 
+      // Add to active tracking
       if (!activeTokenLists[token.chainId].has(tokenKey)) {
         activeTokenLists[token.chainId].set(tokenKey, {
           contractAddress: token.contractAddress,
@@ -1051,9 +1083,14 @@ io.on("connection", (socket) => {
 
       await addUserToActiveToken(token.chainId, token.contractAddress, email);
 
+      // Get updated market data
       const tokenData = await updateTokensForChain(token.chainId, true);
       const addedTokenData = tokenData?.find(
         (t) => t.contractAddress === token.contractAddress
+      );
+
+      console.log(
+        `✅ Token ${token.tokenSymbol} added successfully for user ${email}`
       );
 
       socket.emit("token-added", {
@@ -1191,7 +1228,7 @@ io.on("connection", (socket) => {
   });
 });
 
-// Scheduled updates for CoinLes - every 30 seconds
+// Scheduled updates - every 30 seconds
 cron.schedule("*/30 * * * * *", async () => {
   const timestamp = new Date().toLocaleTimeString();
   console.log(`\n⏰ Running scheduled updates at ${timestamp}`);
@@ -1346,10 +1383,10 @@ async function initializeServices() {
   }
 }
 
-// Error handling middleware (must be last)
+// Error handling middleware
 app.use(errorHandler);
 
-// 404 handler - MUST BE LAST
+// 404 handler
 app.use("*", (req, res) => {
   console.log(`404 - Route not found: ${req.method} ${req.originalUrl}`);
   res.status(404).json({
