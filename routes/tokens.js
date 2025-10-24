@@ -1,9 +1,10 @@
-// routes/tokens.js - FIXED REWRITE following wallet-balance.js approach
+// routes/tokens.js - COMPLETE FIXED VERSION
 const express = require("express");
 const rateLimit = require("express-rate-limit");
 const { logger } = require("../utils/logger");
 const ResponseUtil = require("../utils/response");
 const moralisService = require("../services/moralis");
+const { findWalletPreferences } = require("../lib/mongodb"); // ✅ ADDED
 
 const router = express.Router();
 
@@ -25,7 +26,7 @@ router.use(tokenRateLimit);
 router.get("/wallet/:address", async (req, res) => {
   try {
     const { address } = req.params;
-    const { chain, showHidden = "false", email } = req.query; // ✅ ADDED: email parameter
+    const { chain, showHidden = "false", email } = req.query;
 
     // Validation
     if (!address || !address.match(/^0x[a-fA-F0-9]{40}$/)) {
@@ -61,6 +62,40 @@ router.get("/wallet/:address", async (req, res) => {
       }
     }
 
+    // ✅ CRITICAL: Load user preferences BEFORE processing tokens
+    let userAddedTokenAddresses = [];
+    if (email) {
+      try {
+        console.log(`📋 Loading preferences for user: ${email}`);
+
+        const preferences = await findWalletPreferences(
+          email,
+          address,
+          chainId
+        );
+
+        if (preferences && preferences.userAddedTokens) {
+          userAddedTokenAddresses = preferences.userAddedTokens.map((addr) =>
+            addr.toLowerCase()
+          );
+          console.log(
+            `   ✅ Found ${userAddedTokenAddresses.length} user-added tokens:`,
+            userAddedTokenAddresses
+              .map((a) => a.substring(0, 10) + "...")
+              .join(", ")
+          );
+        } else {
+          console.log(`   ℹ️  No user-added tokens found for ${email}`);
+        }
+      } catch (error) {
+        console.error("❌ Error loading preferences:", error);
+      }
+    } else {
+      console.log(
+        "⚠️  No email provided - user-added tokens will not be loaded"
+      );
+    }
+
     // Get token balances from Moralis
     let result = [];
     try {
@@ -90,31 +125,16 @@ router.get("/wallet/:address", async (req, res) => {
       };
     }
 
-    // ✅ CRITICAL: Load user preferences to get user-added tokens
-    let userAddedTokenAddresses = [];
-    if (email) {
-      try {
-        const preferences = await findWalletPreferences(
-          email,
-          address,
-          chainId
-        );
-        if (preferences && preferences.userAddedTokens) {
-          userAddedTokenAddresses = preferences.userAddedTokens.map((addr) =>
-            addr.toLowerCase()
-          );
-          console.log(
-            `📋 User has ${userAddedTokenAddresses.length} user-added tokens:`,
-            userAddedTokenAddresses
-          );
-        }
-      } catch (error) {
-        console.error("Error loading preferences:", error);
-      }
-    }
+    // ✅ CRITICAL: Process tokens with user-added flags
+    console.log("\n📊 ═══ PROCESSING TOKENS WITH USER FLAGS ═══");
 
-    // Process tokens with proper flags
-    const processToken = (token, isInMainList, isUserAdded = false) => {
+    const processToken = (token, isPresetToken) => {
+      const tokenAddress = token.token_address?.toLowerCase() || "native";
+      const isUserAdded = userAddedTokenAddresses.includes(tokenAddress);
+
+      // ✅ CRITICAL: If user-added, it should be in main list
+      const shouldBeInMainList = isPresetToken || isUserAdded;
+
       let balance = 0;
       if (token.balance_formatted) {
         balance = parseFloat(token.balance_formatted);
@@ -153,69 +173,61 @@ router.get("/wallet/:address", async (req, res) => {
         price: usdPrice,
         isNative: isNativeToken,
         logoUrl: token.logo || token.thumbnail || null,
-        isPopular: isInMainList,
-        isPreset: isInMainList && !isUserAdded, // ✅ Only true for actual preset tokens
-        isUserAdded: isUserAdded, // ✅ Flag user-added tokens
+        isPopular: shouldBeInMainList,
+        isPreset: isPresetToken && !isUserAdded, // ✅ TRUE only for preset tokens
+        isUserAdded: isUserAdded, // ✅ TRUE for user-added tokens
         possibleSpam: token.possible_spam || false,
         verifiedContract: token.verified_contract !== false,
       };
     };
 
-    // ✅ FIXED: Separate displayed tokens into preset and user-added
-    console.log("\n📊 ═══ PROCESSING TOKENS ═══");
-
-    const presetTokens = [];
-    const userAddedTokens = [];
-    const hiddenTokensProcessed = [];
-
-    // Process displayed tokens (from Moralis)
-    result.displayedTokens.forEach((token) => {
-      const tokenAddress = token.token_address?.toLowerCase() || "native";
-      const isUserAdded = userAddedTokenAddresses.includes(tokenAddress);
-
-      if (isUserAdded) {
-        console.log(
-          `   ✓ USER-ADDED: ${token.symbol} (${tokenAddress.slice(0, 10)}...)`
-        );
-        userAddedTokens.push(processToken(token, true, true));
-      } else {
-        console.log(
-          `   ✓ PRESET: ${token.symbol} (${tokenAddress.slice(0, 10)}...)`
-        );
-        presetTokens.push(processToken(token, true, false));
-      }
+    // ✅ Process displayed tokens (preset tokens from Moralis)
+    const presetTokensProcessed = result.displayedTokens.map((token) => {
+      const processed = processToken(token, true);
+      console.log(
+        `   ✓ PRESET: ${processed.symbol} (${processed.contractAddress.slice(
+          0,
+          10
+        )}...)`
+      );
+      return processed;
     });
 
-    // Process hidden tokens
-    result.hiddenTokens.forEach((token) => {
-      const tokenAddress = token.token_address?.toLowerCase() || "native";
-      const isUserAdded = userAddedTokenAddresses.includes(tokenAddress);
+    // ✅ Process hidden tokens and check for user-added ones
+    const hiddenTokensProcessed = [];
+    const userAddedFromHidden = [];
 
-      if (isUserAdded) {
-        // User added this token, move to main list
+    result.hiddenTokens.forEach((token) => {
+      const processed = processToken(token, false);
+
+      if (processed.isUserAdded) {
+        // ✅ Move user-added tokens to main list
         console.log(
-          `   ✓ USER-ADDED (was hidden): ${token.symbol} (${tokenAddress.slice(
+          `   ✓ USER-ADDED (was hidden): ${
+            processed.symbol
+          } (${processed.contractAddress.slice(0, 10)}...)`
+        );
+        userAddedFromHidden.push(processed);
+      } else {
+        console.log(
+          `   ✗ HIDDEN: ${processed.symbol} (${processed.contractAddress.slice(
             0,
             10
           )}...)`
         );
-        userAddedTokens.push(processToken(token, true, true));
-      } else {
-        console.log(
-          `   ✗ HIDDEN: ${token.symbol} (${tokenAddress.slice(0, 10)}...)`
-        );
-        hiddenTokensProcessed.push(processToken(token, false, false));
+        hiddenTokensProcessed.push(processed);
       }
     });
 
     // ✅ CRITICAL: Combine preset + user-added for main list
-    const mainListTokens = [...presetTokens, ...userAddedTokens].sort(
-      (a, b) => b.value - a.value
-    );
+    const mainListTokens = [
+      ...presetTokensProcessed,
+      ...userAddedFromHidden,
+    ].sort((a, b) => b.value - a.value);
 
     console.log("\n📈 ═══ FINAL TOKEN COUNTS ═══");
-    console.log(`   ├─ Preset Tokens: ${presetTokens.length}`);
-    console.log(`   ├─ User-Added Tokens: ${userAddedTokens.length}`);
+    console.log(`   ├─ Preset Tokens: ${presetTokensProcessed.length}`);
+    console.log(`   ├─ User-Added Tokens: ${userAddedFromHidden.length}`);
     console.log(`   ├─ Main List Total: ${mainListTokens.length}`);
     console.log(`   └─ Hidden Tokens: ${hiddenTokensProcessed.length}`);
 
@@ -224,6 +236,7 @@ router.get("/wallet/:address", async (req, res) => {
       (sum, t) => sum + t.value,
       0
     );
+
     const recalculatedMainList24hrChange = mainListTokens.reduce(
       (sum, t) => sum + (t.usdChange24h || 0),
       0
@@ -239,16 +252,17 @@ router.get("/wallet/:address", async (req, res) => {
       )}`
     );
     console.log(
-      `   ├─ Match: ${
-        Math.abs(result.mainListValue - recalculatedMainListValue) < 0.01
-          ? "✅"
-          : "❌"
-      }`
+      `   ├─ Difference: $${Math.abs(
+        recalculatedMainListValue - result.mainListValue
+      ).toFixed(3)}`
+    );
+    console.log(
+      `   └─ Includes ${userAddedFromHidden.length} user-added tokens`
     );
 
-    if (Math.abs(result.mainListValue - recalculatedMainListValue) >= 0.01) {
+    if (Math.abs(recalculatedMainListValue - result.mainListValue) >= 0.01) {
       console.log(
-        `   └─ ⚠️ Using recalculated value (includes user-added tokens)`
+        `   ⚠️  Using recalculated value (includes user-added tokens)`
       );
     }
 
@@ -280,14 +294,15 @@ router.get("/wallet/:address", async (req, res) => {
     console.log("\n📤 ═══ SENDING RESPONSE ═══");
     console.log(
       `   ├─ mainListValue: $${response.mainListValue.toFixed(3)} (includes ${
-        userAddedTokens.length
+        userAddedFromHidden.length
       } user-added)`
     );
     console.log(`   ├─ totalValue: $${response.totalValue.toFixed(3)}`);
     console.log(
-      `   ├─ presetTokenCount: ${response.presetTokenCount} (${presetTokens.length} preset + ${userAddedTokens.length} user-added)`
+      `   ├─ presetTokenCount: ${response.presetTokenCount} (${presetTokensProcessed.length} preset + ${userAddedFromHidden.length} user-added)`
     );
     console.log(`   └─ hiddenTokenCount: ${response.hiddenTokenCount}`);
+    console.log("═══════════════════════════════════════\n");
 
     return ResponseUtil.success(res, response, "Tokens fetched successfully");
   } catch (error) {
