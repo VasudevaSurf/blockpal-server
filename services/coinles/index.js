@@ -9,7 +9,7 @@ const cache = new NodeCache({
 });
 
 const COINGECKO_BASE_URL = "https://api.coingecko.com/api/v3";
-const API_KEY = process.env.COINGECKO_API_KEY || "CG-oTmQJV3kLe92KcQ2753cxy6j";
+const API_KEY = process.env.COINGECKO_API_KEY || "CG-VPV4bwHApXkdum7KgB5AejuJ";
 
 console.log("🔑 CoinGecko API initialized");
 

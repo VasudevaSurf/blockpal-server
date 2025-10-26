@@ -10,7 +10,7 @@ const cache = new NodeCache({
 class CoinGeckoService {
   constructor() {
     this.apiKey =
-      process.env.COINGECKO_API_KEY || "CG-oTmQJV3kLe92KcQ2753cxy6j";
+      process.env.COINGECKO_API_KEY || "CG-VPV4bwHApXkdum7KgB5AejuJ";
     this.apiUrl = "https://api.coingecko.com/api/v3/search/trending";
   }
 

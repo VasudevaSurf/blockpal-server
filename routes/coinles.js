@@ -144,7 +144,7 @@ router.get("/health", async (req, res) => {
 
 router.get("/test-networks", async (req, res) => {
   const axios = require("axios");
-  const API_KEY = "CG-oTmQJV3kLe92KcQ2753cxy6j";
+  const API_KEY = "CG-VPV4bwHApXkdum7KgB5AejuJ";
   const COINGECKO_BASE_URL = "https://api.coingecko.com/api/v3";
 
   // Test different network names for Polygon

@@ -40,7 +40,7 @@ const mongoose = require("mongoose");
 // CoinGecko configuration for CoinLes
 const COINGECKO_BASE_URL = "https://api.coingecko.com/api/v3";
 const COINGECKO_API_KEY =
-  process.env.COINGECKO_API_KEY || "CG-oTmQJV3kLe92KcQ2753cxy6j";
+  process.env.COINGECKO_API_KEY || "CG-VPV4bwHApXkdum7KgB5AejuJ";
 
 // Chain ID mapping for CoinLes
 const CHAIN_ID_MAP = {
@@ -722,6 +722,7 @@ const io = new Server(server, {
       "http://127.0.0.1:3001",
       "http://localhost:5173",
       "https://block-pal.vercel.app",
+      "https://block-pal-main.vercel.app",
     ],
     methods: ["GET", "POST"],
     credentials: true,
