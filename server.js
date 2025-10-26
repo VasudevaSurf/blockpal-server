@@ -721,7 +721,7 @@ const io = new Server(server, {
       "http://127.0.0.1:3000",
       "http://127.0.0.1:3001",
       "http://localhost:5173",
-      "https://block-pal.vercel.app",
+      "https://block-pal-new.vercel.app",
       "https://block-pal-main.vercel.app",
     ],
     methods: ["GET", "POST"],

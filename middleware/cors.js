@@ -8,7 +8,7 @@ const allowedOrigins = process.env.ALLOWED_ORIGINS
       "http://127.0.0.1:3002",
       "http://127.0.0.1:3000",
       "http://127.0.0.1:3001",
-      "https://block-pal.vercel.app",
+      "https://block-pal-new.vercel.app",
     ];
 
 const corsOptions = {
