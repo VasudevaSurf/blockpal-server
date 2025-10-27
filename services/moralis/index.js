@@ -140,7 +140,7 @@ class MoralisService {
     this.initialized = false;
     this.apiKey =
       process.env.MORALIS_API_KEY ||
-      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6ImU1YjRlZjIzLTFjNzgtNDI2My05MDQ0LTQ4NzUwMDY5NzAzYiIsIm9yZ0lkIjoiNDc2NDM1IiwidXNlcklkIjoiNDkwMTYwIiwidHlwZUlkIjoiNzdiMTVmNmUtMDdmMS00ZmFiLThmZmYtNjNmYjhjNzhiMTA3IiwidHlwZSI6IlBST0pFQ1QiLCJpYXQiOjE3NjA3MzE4MDEsImV4cCI6NDkxNjQ5MTgwMX0.u2C82cFdf4VrpJC-fqveSQ_CRlY1gO7KWcSDLOWUcmA";
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6IjU1Y2NiZDdlLWJhNzYtNGViYy05YzIwLWM2Mjg1ZTI5NmI4MyIsIm9yZ0lkIjoiNDc4MTI0IiwidXNlcklkIjoiNDkxODkwIiwidHlwZUlkIjoiYmQ5MWEzMzAtNTU5Ny00OGVjLWI2N2ItYmYwNjYyMjY4NGVmIiwidHlwZSI6IlBST0pFQ1QiLCJpYXQiOjE3NjE1NTQ3OTMsImV4cCI6NDkxNzMxNDc5M30.zSHyaXOwMxlrst6WJs5-WETy92Q3OAxhhUBJtGfk4dk";
   }
 
   async initialize() {
