@@ -222,7 +222,7 @@ async function searchTokens(chain, query) {
         if (!baseTokenId) return;
 
         const baseTokenAddress = baseTokenId.includes("_")
-          ? baseTokenId.split("_")[1]
+          ? baseTokenId.split("_").slice(-1)[0]
           : baseTokenId;
 
         if (!baseTokenAddress) return;
@@ -290,7 +290,8 @@ async function searchTokens(chain, query) {
 
     // SMART FILTERING: Check if query looks like a contract address
     const queryLower = query.toLowerCase().trim();
-    const isAddressQuery = queryLower.startsWith("0x") && queryLower.length >= 10;
+    const isAddressQuery =
+      queryLower.startsWith("0x") && queryLower.length >= 10;
 
     let results = Array.from(tokenMap.values()).filter(
       (token) => token.name && token.symbol
@@ -300,20 +301,22 @@ async function searchTokens(chain, query) {
       // For address search, ONLY show matching addresses
       results = results.filter((token) => {
         const tokenAddress = token.contractAddress.toLowerCase();
-        return tokenAddress === queryLower || tokenAddress.startsWith(queryLower);
+        return (
+          tokenAddress === queryLower || tokenAddress.startsWith(queryLower)
+        );
       });
 
       // Sort: exact match first, then partial matches
       results.sort((a, b) => {
         const aAddress = a.contractAddress.toLowerCase();
         const bAddress = b.contractAddress.toLowerCase();
-        
+
         const aExactMatch = aAddress === queryLower;
         const bExactMatch = bAddress === queryLower;
-        
+
         if (aExactMatch && !bExactMatch) return -1;
         if (!aExactMatch && bExactMatch) return 1;
-        
+
         // Both are partial matches, sort by liquidity
         return b.liquidity - a.liquidity;
       });
@@ -332,7 +335,9 @@ async function searchTokens(chain, query) {
       return token;
     });
 
-    console.log(`✅ Found ${results.length} tokens (address search: ${isAddressQuery})`);
+    console.log(
+      `✅ Found ${results.length} tokens (address search: ${isAddressQuery})`
+    );
 
     return results;
   } catch (error) {
@@ -371,23 +376,37 @@ async function updateTokensForChain(chainId, isInitialLoad = false) {
       const tokensMap = new Map();
       const poolsByTokenMap = new Map();
 
-      // Process token data
       if (response.data) {
         response.data.forEach((token) => {
-          const tokenAddress = token.id.split("_")[1];
-          tokensMap.set(tokenAddress.toLowerCase(), token);
-          poolsByTokenMap.set(tokenAddress.toLowerCase(), []);
+          if (token && token.id) {
+            const tokenParts = token.id.split("_");
+            const tokenAddress =
+              tokenParts.length > 0 ? tokenParts[tokenParts.length - 1] : null;
+
+            if (tokenAddress) {
+              tokensMap.set(tokenAddress.toLowerCase(), token);
+              poolsByTokenMap.set(tokenAddress.toLowerCase(), []);
+            }
+          }
         });
       }
 
-      // Process pool data from included array
       if (response.included) {
         response.included.forEach((item) => {
           if (item.type === "pool" && item.attributes) {
             const baseTokenId = item.relationships?.base_token?.data?.id;
             if (baseTokenId) {
-              const baseTokenAddress = baseTokenId.split("_")[1].toLowerCase();
-              if (poolsByTokenMap.has(baseTokenAddress)) {
+              const baseTokenParts = baseTokenId.split("_");
+              const baseTokenAddress =
+                baseTokenParts.length > 0
+                  ? baseTokenParts[baseTokenParts.length - 1]?.toLowerCase()
+                  : null;
+
+              if (
+                baseTokenAddress &&
+                poolsByTokenMap &&
+                poolsByTokenMap.has(baseTokenAddress)
+              ) {
                 poolsByTokenMap.get(baseTokenAddress).push(item);
               }
             }

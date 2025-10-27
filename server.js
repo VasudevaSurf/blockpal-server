@@ -183,8 +183,9 @@ async function searchTokens(chain, query) {
 
         if (!baseTokenId) return;
 
+        // Handle polygon_pos_ADDRESS format correctly
         const baseTokenAddress = baseTokenId.includes("_")
-          ? baseTokenId.split("_")[1]
+          ? baseTokenId.split("_").slice(-1)[0] // ✅ Get last element (contract address)
           : baseTokenId;
 
         if (!baseTokenAddress) return;
@@ -331,41 +332,116 @@ async function updateTokensForChain(chainId, isInitialLoad = false) {
       const poolsByTokenMap = new Map();
 
       // Process token data
+      // Process token data
       if (response.data) {
         response.data.forEach((token) => {
-          const tokenAddress = token.id.split("_")[1];
-          tokensMap.set(tokenAddress.toLowerCase(), token);
-          poolsByTokenMap.set(tokenAddress.toLowerCase(), []);
+          try {
+            if (token && token.id) {
+              const tokenParts = token.id.split("_");
+              const tokenAddress =
+                tokenParts.length > 0
+                  ? tokenParts[tokenParts.length - 1]
+                  : null;
+
+              if (tokenAddress) {
+                const lowerAddress = tokenAddress.toLowerCase();
+                tokensMap.set(lowerAddress, token);
+                poolsByTokenMap.set(lowerAddress, []);
+                console.log(
+                  `   ├─ Mapped token: ${lowerAddress.substring(
+                    0,
+                    10
+                  )}... for chain ${chainId}`
+                );
+              } else {
+                console.warn(
+                  `⚠️ Could not extract token address from: ${token.id}`
+                );
+              }
+            }
+          } catch (tokenError) {
+            console.error(`❌ Error processing token data:`, {
+              error: tokenError.message,
+              tokenId: token?.id,
+              chainId,
+            });
+          }
         });
+
+        console.log(
+          `   ├─ Token map size: ${tokensMap.size}, Pool map size: ${poolsByTokenMap.size}`
+        );
       }
 
       // Process pool data
       if (response.included) {
         response.included.forEach((item) => {
-          if (item.type === "pool" && item.attributes) {
-            const baseTokenId = item.relationships?.base_token?.data?.id;
-            if (baseTokenId) {
-              const baseTokenAddress = baseTokenId.split("_")[1]?.toLowerCase();
-              if (baseTokenAddress && poolsByTokenMap.has(baseTokenAddress)) {
-                poolsByTokenMap.get(baseTokenAddress).push({
-                  ...item,
-                  tokenPosition: "base",
-                });
-              }
-            }
+          try {
+            if (item.type === "pool" && item.attributes) {
+              const baseTokenId = item.relationships?.base_token?.data?.id;
+              if (baseTokenId) {
+                const baseTokenParts = baseTokenId.split("_");
+                const baseTokenAddress =
+                  baseTokenParts.length > 0
+                    ? baseTokenParts[baseTokenParts.length - 1]?.toLowerCase()
+                    : null;
 
-            const quoteTokenId = item.relationships?.quote_token?.data?.id;
-            if (quoteTokenId) {
-              const quoteTokenAddress = quoteTokenId
-                .split("_")[1]
-                ?.toLowerCase();
-              if (quoteTokenAddress && poolsByTokenMap.has(quoteTokenAddress)) {
-                poolsByTokenMap.get(quoteTokenAddress).push({
-                  ...item,
-                  tokenPosition: "quote",
-                });
+                if (baseTokenAddress) {
+                  if (!poolsByTokenMap) {
+                    console.error(
+                      `❌ poolsByTokenMap is undefined for chain ${chainId}`
+                    );
+                  } else if (!poolsByTokenMap.has(baseTokenAddress)) {
+                    console.warn(
+                      `⚠️ Token ${baseTokenAddress.substring(
+                        0,
+                        10
+                      )}... not found in poolsByTokenMap`
+                    );
+                  } else {
+                    poolsByTokenMap.get(baseTokenAddress).push({
+                      ...item,
+                      tokenPosition: "base",
+                    });
+                  }
+                }
+              }
+
+              const quoteTokenId = item.relationships?.quote_token?.data?.id;
+              if (quoteTokenId) {
+                const quoteTokenParts = quoteTokenId.split("_");
+                const quoteTokenAddress =
+                  quoteTokenParts.length > 0
+                    ? quoteTokenParts[quoteTokenParts.length - 1]?.toLowerCase()
+                    : null;
+
+                if (quoteTokenAddress) {
+                  if (!poolsByTokenMap) {
+                    console.error(
+                      `❌ poolsByTokenMap is undefined for chain ${chainId}`
+                    );
+                  } else if (!poolsByTokenMap.has(quoteTokenAddress)) {
+                    console.warn(
+                      `⚠️ Token ${quoteTokenAddress.substring(
+                        0,
+                        10
+                      )}... not found in poolsByTokenMap`
+                    );
+                  } else {
+                    poolsByTokenMap.get(quoteTokenAddress).push({
+                      ...item,
+                      tokenPosition: "quote",
+                    });
+                  }
+                }
               }
             }
+          } catch (poolError) {
+            console.error(`❌ Error processing pool data:`, {
+              error: poolError.message,
+              itemType: item?.type,
+              chainId,
+            });
           }
         });
       }
@@ -547,80 +623,107 @@ async function updateTokensForChain(chainId, isInitialLoad = false) {
 }
 
 // ✅ FIXED: Get initial watchlist data - USER SPECIFIC
+// ✅ FIXED: Get initial watchlist data - USER SPECIFIC
 async function getInitialWatchlistData(email) {
   console.log(`📋 Loading watchlist for user: ${email}`);
 
-  // ✅ Get ONLY this user's watchlist from database
-  const watchlist = await getUserWatchlist(email);
-  console.log(
-    `   ├─ Found ${watchlist.length} tokens in database for ${email}`
-  );
-
-  const tokensByChain = {};
-
-  // Group tokens by chain
-  for (const token of watchlist) {
-    if (!tokensByChain[token.chainId]) {
-      tokensByChain[token.chainId] = [];
-    }
-    tokensByChain[token.chainId].push(token);
-  }
-
-  const allTokenData = [];
-
-  // Process each chain
-  for (const [chainId, tokens] of Object.entries(tokensByChain)) {
+  try {
+    // ✅ Get ONLY this user's watchlist from database
+    const watchlist = await getUserWatchlist(email);
     console.log(
-      `   ├─ Processing ${tokens.length} tokens for chain ${chainId}`
+      `   ├─ Found ${watchlist.length} tokens in database for ${email}`
     );
 
-    // Add tokens to active tracking
-    for (const token of tokens) {
-      const tokenKey = `${chainId}_${token.contractAddress}`;
-      if (!activeTokenLists[chainId].has(tokenKey)) {
-        activeTokenLists[chainId].set(tokenKey, {
-          contractAddress: token.contractAddress,
-          poolAddress: token.poolAddress,
-          users: new Set([email]), // Track this user is watching
+    const tokensByChain = {};
+
+    // Group tokens by chain
+    for (const token of watchlist) {
+      if (!tokensByChain[token.chainId]) {
+        tokensByChain[token.chainId] = [];
+      }
+      tokensByChain[token.chainId].push(token);
+    }
+
+    const allTokenData = [];
+
+    // Process each chain
+    for (const [chainId, tokens] of Object.entries(tokensByChain)) {
+      try {
+        console.log(
+          `   ├─ Processing ${tokens.length} tokens for chain ${chainId}`
+        );
+
+        // Add tokens to active tracking
+        for (const token of tokens) {
+          const tokenKey = `${chainId}_${token.contractAddress}`;
+          if (!activeTokenLists[chainId]) {
+            console.warn(
+              `⚠️ Chain ${chainId} not found in activeTokenLists, initializing...`
+            );
+            activeTokenLists[chainId] = new Map();
+          }
+
+          if (!activeTokenLists[chainId].has(tokenKey)) {
+            activeTokenLists[chainId].set(tokenKey, {
+              contractAddress: token.contractAddress,
+              poolAddress: token.poolAddress,
+              users: new Set([email]), // Track this user is watching
+            });
+          } else {
+            activeTokenLists[chainId].get(tokenKey).users.add(email);
+          }
+        }
+
+        // Get market data for this chain
+        const chainData = await updateTokensForChain(chainId, true);
+
+        // ✅ CRITICAL FIX: Filter to only include tokens from THIS user's watchlist
+        const userTokenAddresses = new Set(
+          tokens.map((t) => t.contractAddress.toLowerCase())
+        );
+
+        console.log(
+          `   ├─ User ${email} has these tokens on ${chainId}:`,
+          Array.from(userTokenAddresses)
+            .map((a) => a.substring(0, 10) + "...")
+            .join(", ")
+        );
+
+        const filteredChainData = chainData.filter((tokenData) => {
+          const matches = userTokenAddresses.has(
+            tokenData.contractAddress.toLowerCase()
+          );
+          return matches;
         });
-      } else {
-        activeTokenLists[chainId].get(tokenKey).users.add(email);
+
+        console.log(
+          `   ├─ Filtered ${chainData.length} -> ${filteredChainData.length} tokens for user ${email}`
+        );
+
+        if (filteredChainData.length > 0) {
+          allTokenData.push(...filteredChainData);
+        }
+      } catch (chainError) {
+        console.error(`❌ Error processing chain ${chainId}:`, {
+          error: chainError.message,
+          stack: chainError.stack,
+          email,
+          tokenCount: tokens.length,
+        });
+        // Continue processing other chains even if one fails
       }
     }
 
-    // Get market data for this chain
-    const chainData = await updateTokensForChain(chainId, true);
-
-    // ✅ CRITICAL FIX: Filter to only include tokens from THIS user's watchlist
-    const userTokenAddresses = new Set(
-      tokens.map((t) => t.contractAddress.toLowerCase())
-    );
-
-    console.log(
-      `   ├─ User ${email} has these tokens on ${chainId}:`,
-      Array.from(userTokenAddresses)
-        .map((a) => a.substring(0, 10) + "...")
-        .join(", ")
-    );
-
-    const filteredChainData = chainData.filter((tokenData) => {
-      const matches = userTokenAddresses.has(
-        tokenData.contractAddress.toLowerCase()
-      );
-      return matches;
+    console.log(`✅ Returning ${allTokenData.length} tokens for user ${email}`);
+    return allTokenData;
+  } catch (error) {
+    console.error(`❌ Critical error in getInitialWatchlistData:`, {
+      error: error.message,
+      stack: error.stack,
+      email,
     });
-
-    console.log(
-      `   ├─ Filtered ${chainData.length} -> ${filteredChainData.length} tokens for user ${email}`
-    );
-
-    if (filteredChainData.length > 0) {
-      allTokenData.push(...filteredChainData);
-    }
+    return []; // Return empty array on error
   }
-
-  console.log(`✅ Returning ${allTokenData.length} tokens for user ${email}`);
-  return allTokenData;
 }
 
 function broadcastTokenUpdate(chainId, contractAddress, data) {
@@ -1006,8 +1109,22 @@ io.on("connection", (socket) => {
 
       console.log("📋 Loading user's watchlist...");
 
-      // ✅ This now returns ONLY this user's tokens
-      const watchlistWithData = await getInitialWatchlistData(email);
+      let watchlistWithData = [];
+
+      try {
+        // ✅ This now returns ONLY this user's tokens
+        watchlistWithData = await getInitialWatchlistData(email);
+        console.log(
+          `   ├─ Successfully loaded ${watchlistWithData.length} tokens`
+        );
+      } catch (watchlistError) {
+        console.error(`❌ Error loading watchlist for ${email}:`, {
+          error: watchlistError.message,
+          stack: watchlistError.stack,
+        });
+        // Continue with empty watchlist rather than failing registration
+        watchlistWithData = [];
+      }
 
       console.log(
         `   ├─ Sending ${watchlistWithData.length} tokens to user ${email}`
@@ -1028,7 +1145,18 @@ io.on("connection", (socket) => {
 
       // Add user to active tracking
       for (const token of watchlistWithData) {
-        await addUserToActiveToken(token.chainId, token.contractAddress, email);
+        try {
+          await addUserToActiveToken(
+            token.chainId,
+            token.contractAddress,
+            email
+          );
+        } catch (trackingError) {
+          console.error(
+            `❌ Error tracking token ${token.contractAddress}:`,
+            trackingError.message
+          );
+        }
       }
 
       console.log(
@@ -1036,7 +1164,11 @@ io.on("connection", (socket) => {
       );
       console.log("═══════════════════════════════════════\n");
     } catch (error) {
-      console.error("❌ Registration error:", error.message);
+      console.error("❌ Registration error:", {
+        error: error.message,
+        stack: error.stack,
+        email,
+      });
       socket.emit("error", { message: "Failed to register user" });
     }
   });

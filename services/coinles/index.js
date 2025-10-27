@@ -217,9 +217,11 @@ async function searchTokens(chain, query) {
 
         if (!baseTokenId) return;
 
-        const baseTokenAddress = baseTokenId.includes("_")
-          ? baseTokenId.split("_")[1]
-          : baseTokenId;
+        const baseTokenParts = baseTokenId.split("_");
+        const baseTokenAddress =
+          baseTokenParts.length > 1
+            ? baseTokenParts[baseTokenParts.length - 1]
+            : baseTokenId;
 
         if (!baseTokenAddress) return;
 
