@@ -55,6 +55,8 @@ const CHAIN_ID_MAP = {
   avalanche: "avax",
   avax: "avax",
   base: "base",
+  solana: "solana",
+  sol: "solana",
 };
 
 // Active token lists per chain for CoinLes
@@ -65,6 +67,7 @@ const activeTokenLists = {
   arbitrum: new Map(),
   avalanche: new Map(),
   bsc: new Map(),
+  solana: new Map(),
 };
 
 // User sessions for CoinLes
