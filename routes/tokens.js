@@ -1,4 +1,4 @@
-// routes/tokens.js - FIXED REWRITE following wallet-balance.js approach
+// routes/tokens.js - FIXED: Solana Support
 const express = require("express");
 const rateLimit = require("express-rate-limit");
 const { logger } = require("../utils/logger");
@@ -7,10 +7,9 @@ const moralisService = require("../services/moralis");
 
 const router = express.Router();
 
-// Rate limiting for token endpoints
 const tokenRateLimit = rateLimit({
-  windowMs: 60 * 1000, // 1 minute
-  max: 30, // 30 requests per minute
+  windowMs: 60 * 1000,
+  max: 30,
   message: "Too many token requests, please try again later.",
   standardHeaders: true,
   legacyHeaders: false,
@@ -20,54 +19,97 @@ router.use(tokenRateLimit);
 
 /**
  * GET /api/tokens/wallet/:address
- * Get token balances with show/hide functionality - FIXED VERSION
+ * ✅ FIXED: Support both EVM (number) and Solana (string) chain IDs
  */
 router.get("/wallet/:address", async (req, res) => {
   try {
+    console.log("\n🔥 ===== TOKEN API REQUEST START =====");
+    console.log("📥 Request params:", req.params);
+    console.log("📥 Request query:", req.query);
+    console.log("📥 Request headers:", {
+      origin: req.get("origin"),
+      userAgent: req.get("user-agent"),
+    });
+
     const { address } = req.params;
     const { chain, showHidden = "false" } = req.query;
 
-    // Validation
-    if (!address || !address.match(/^0x[a-fA-F0-9]{40}$/)) {
+    console.log("🔍 Extracted values:", { address, chain, showHidden });
+
+    // ✅ FIXED: Support Solana addresses (base58) and EVM addresses (0x...)
+    const isEVMAddress = address.match(/^0x[a-fA-F0-9]{40}$/);
+    const isSolanaAddress = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(address);
+
+    console.log("🔍 Address validation:", {
+      isEVMAddress: !!isEVMAddress,
+      isSolanaAddress,
+    });
+
+    if (!isEVMAddress && !isSolanaAddress) {
+      console.log("❌ Invalid address format");
       return ResponseUtil.validation(res, "Invalid wallet address format");
     }
 
     if (!chain) {
+      console.log("❌ Chain ID missing");
       return ResponseUtil.validation(res, "Chain ID is required");
     }
 
-    const chainId = parseInt(chain);
-    if (isNaN(chainId)) {
+    // ✅ FIXED: Handle both string (Solana) and number (EVM) chain IDs
+    const isSolana = chain === "solana" || chain === "solana:mainnet";
+    const chainId = isSolana ? "solana" : parseInt(chain);
+
+    console.log("🔍 Chain details:", {
+      chainId,
+      isSolana,
+      originalChain: chain,
+    });
+
+    if (!isSolana && isNaN(chainId)) {
+      console.log("❌ Invalid chain ID");
       return ResponseUtil.validation(res, "Invalid chain ID");
     }
 
     const showHiddenTokens = showHidden === "true";
 
     logger.info(
-      `Fetching tokens for wallet: ${address} on chain: ${chainId}, showHidden: ${showHiddenTokens}`
+      `🪙 Fetching tokens for wallet: ${address.substring(
+        0,
+        10
+      )}... on chain: ${chainId} (Solana: ${isSolana}), showHidden: ${showHiddenTokens}`
     );
 
-    // Check if Moralis service is initialized
     if (!moralisService.initialized) {
+      console.log("⚠️ Moralis not initialized, attempting to initialize...");
       logger.warn(
         "Moralis service not initialized, attempting to initialize..."
       );
       try {
         await moralisService.initialize();
+        console.log("✅ Moralis initialized successfully");
       } catch (initError) {
+        console.error("❌ Failed to initialize Moralis:", initError);
         logger.error("Failed to initialize Moralis service:", initError);
         return ResponseUtil.error(res, "Service initialization failed", 503);
       }
     }
 
-    // Get token balances from Moralis - EXACT same approach as wallet-balance.js
+    console.log("📡 Calling moralisService.getWalletTokenBalances...");
+
+    // ✅ Get token balances from Moralis (works for both EVM and Solana)
     let result = [];
     try {
       result = await moralisService.getWalletTokenBalances(address, chainId);
+      console.log("✅ Moralis returned:", {
+        displayedTokens: result.displayedTokens?.length || 0,
+        hiddenTokens: result.hiddenTokens?.length || 0,
+        totalValue: result.totalValue,
+        chainName: result.chainName,
+      });
     } catch (moralisError) {
+      console.error("❌ Moralis API error:", moralisError);
       logger.error("Moralis API error:", moralisError);
 
-      // Check for specific Moralis errors
       if (moralisError.message.includes("Invalid address")) {
         return ResponseUtil.validation(res, "Invalid wallet address");
       }
@@ -80,7 +122,6 @@ router.get("/wallet/:address", async (req, res) => {
         return ResponseUtil.error(res, "API configuration error", 503);
       }
 
-      // Return empty result for better UX
       logger.warn(
         `Returning empty result due to Moralis error: ${moralisError.message}`
       );
@@ -89,19 +130,17 @@ router.get("/wallet/:address", async (req, res) => {
         hiddenTokens: [],
         totalValue: 0,
         total24hrChange: 0,
-        chainName: "Unknown",
+        chainName: isSolana ? "Solana" : "Unknown",
       };
     }
 
-    // Process tokens into frontend format
     const processToken = (token) => {
-      // Parse balance
       let balance = 0;
       if (token.balance_formatted) {
         balance = parseFloat(token.balance_formatted);
       } else if (token.balance) {
         const rawBalance = token.balance.toString();
-        const decimals = parseInt(token.decimals) || 18;
+        const decimals = parseInt(token.decimals) || (isSolana ? 9 : 18);
         balance = parseFloat(rawBalance) / Math.pow(10, decimals);
       }
 
@@ -111,11 +150,14 @@ router.get("/wallet/:address", async (req, res) => {
       const priceChange24h =
         parseFloat(token.usd_price_24hr_percent_change) || 0;
 
-      // Determine if native token
+      // ✅ FIXED: Handle Solana native token differently
       const isNativeToken =
         token.native_token ||
-        token.token_address === "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE" ||
-        !token.token_address;
+        (isSolana && token.symbol === "SOL") ||
+        (!isSolana &&
+          (token.token_address ===
+            "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE" ||
+            !token.token_address));
 
       return {
         id: isNativeToken
@@ -126,43 +168,38 @@ router.get("/wallet/:address", async (req, res) => {
         contractAddress: isNativeToken
           ? "native"
           : token.token_address.toLowerCase(),
-        decimals: parseInt(token.decimals) || 18,
+        decimals: parseInt(token.decimals) || (isSolana ? 9 : 18),
         balance: balance,
         balanceWei: token.balance || "0",
         value: usdValue,
-        change24h: priceChange24h, // Percentage change
-        usdChange24h: change24h, // USD change amount
+        change24h: priceChange24h,
+        usdChange24h: change24h,
         price: usdPrice,
         isNative: isNativeToken,
         logoUrl: token.logo || token.thumbnail || null,
-        isPopular: true, // All preset tokens are popular
+        isPopular: true,
         possibleSpam: token.possible_spam || false,
         verifiedContract: token.verified_contract !== false,
       };
     };
 
-    // FIXED: Process displayed tokens (preset tokens) and sort by value
     const displayedTokens = result.displayedTokens
       .map(processToken)
       .sort((a, b) => b.value - a.value);
 
-    // FIXED: Process hidden tokens (non-preset tokens) and sort by value
     const hiddenTokens = result.hiddenTokens
       .map(processToken)
       .sort((a, b) => b.value - a.value);
 
-    // FIXED: Decide which tokens to return - KEEP SEPARATION
     let tokensToReturn = [];
     let actualPresetCount = displayedTokens.length;
     let actualHiddenCount = hiddenTokens.length;
 
     if (showHiddenTokens) {
-      // FIXED: When showing hidden, send preset tokens FIRST, then hidden tokens
       tokensToReturn = [...displayedTokens, ...hiddenTokens];
     } else {
-      // When not showing hidden, send only preset tokens
       tokensToReturn = displayedTokens;
-      actualHiddenCount = hiddenTokens.length; // Still report hidden count
+      actualHiddenCount = hiddenTokens.length;
     }
 
     const response = {
@@ -170,25 +207,22 @@ router.get("/wallet/:address", async (req, res) => {
       chainId,
       chainName: result.chainName,
       tokens: tokensToReturn,
-      // FIXED: Summary data
       totalValue: result.totalValue,
       total24hrChange: result.total24hrChange,
       tokenCount: tokensToReturn.length,
-      // FIXED: Metadata for show/hide functionality
-      presetTokenCount: actualPresetCount, // Number of preset tokens
-      hiddenTokenCount: actualHiddenCount, // Number of hidden tokens
+      presetTokenCount: actualPresetCount,
+      hiddenTokenCount: actualHiddenCount,
       showingHidden: showHiddenTokens,
       hasHiddenTokens: hiddenTokens.length > 0,
       lastUpdated: new Date().toISOString(),
     };
 
     logger.info(
-      `Successfully returning ${tokensToReturn.length} tokens (${actualPresetCount} preset, ${actualHiddenCount} hidden)`
-    );
-    logger.info(
-      `Total portfolio value: $${result.totalValue.toFixed(2)}, 24hr change: ${
-        result.total24hrChange >= 0 ? "+" : ""
-      }$${result.total24hrChange.toFixed(3)}`
+      `Successfully returning ${
+        tokensToReturn.length
+      } tokens (${actualPresetCount} preset, ${actualHiddenCount} hidden) for ${
+        isSolana ? "Solana" : "EVM"
+      } chain`
     );
 
     return ResponseUtil.success(res, response, "Tokens fetched successfully");
@@ -205,10 +239,6 @@ router.get("/wallet/:address", async (req, res) => {
   }
 });
 
-/**
- * GET /api/tokens/chains
- * Get supported chains with token counts
- */
 router.get("/chains", async (req, res) => {
   try {
     logger.info("Fetching supported chains");
@@ -234,22 +264,20 @@ router.get("/chains", async (req, res) => {
   }
 });
 
-/**
- * POST /api/tokens/refresh/:address
- * Refresh token data for a wallet (clears cache)
- */
 router.post("/refresh/:address", async (req, res) => {
   try {
     const { address } = req.params;
 
-    // Validation
-    if (!address || !address.match(/^0x[a-fA-F0-9]{40}$/)) {
+    // ✅ Support both EVM and Solana addresses
+    const isEVMAddress = address.match(/^0x[a-fA-F0-9]{40}$/);
+    const isSolanaAddress = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(address);
+
+    if (!isEVMAddress && !isSolanaAddress) {
       return ResponseUtil.validation(res, "Invalid wallet address format");
     }
 
     logger.info(`Refreshing token data for wallet: ${address}`);
 
-    // Clear cache for the wallet
     moralisService.clearWalletCache(address);
 
     return ResponseUtil.success(
@@ -267,17 +295,15 @@ router.post("/refresh/:address", async (req, res) => {
   }
 });
 
-/**
- * GET /api/tokens/native/:address
- * Get native token balance for a wallet
- */
 router.get("/native/:address", async (req, res) => {
   try {
     const { address } = req.params;
     const { chain } = req.query;
 
-    // Validation
-    if (!address || !address.match(/^0x[a-fA-F0-9]{40}$/)) {
+    const isEVMAddress = address.match(/^0x[a-fA-F0-9]{40}$/);
+    const isSolanaAddress = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(address);
+
+    if (!isEVMAddress && !isSolanaAddress) {
       return ResponseUtil.validation(res, "Invalid wallet address format");
     }
 
@@ -285,8 +311,10 @@ router.get("/native/:address", async (req, res) => {
       return ResponseUtil.validation(res, "Chain ID is required");
     }
 
-    const chainId = parseInt(chain);
-    if (isNaN(chainId)) {
+    const isSolana = chain === "solana" || chain === "solana:mainnet";
+    const chainId = isSolana ? "solana" : parseInt(chain);
+
+    if (!isSolana && isNaN(chainId)) {
       return ResponseUtil.validation(res, "Invalid chain ID");
     }
 
@@ -294,7 +322,6 @@ router.get("/native/:address", async (req, res) => {
       `Fetching native balance for wallet: ${address} on chain: ${chainId}`
     );
 
-    // Get native balance from Moralis
     const nativeBalance = await moralisService.getNativeBalance(
       address,
       chainId
@@ -323,10 +350,6 @@ router.get("/native/:address", async (req, res) => {
   }
 });
 
-/**
- * GET /api/tokens/stats
- * Get service statistics
- */
 router.get("/stats", async (req, res) => {
   try {
     logger.info("Fetching token service statistics");
@@ -351,13 +374,8 @@ router.get("/stats", async (req, res) => {
   }
 });
 
-/**
- * GET /api/tokens/health
- * Health check for token service
- */
 router.get("/health", async (req, res) => {
   try {
-    // Test Moralis connection
     const isHealthy = moralisService.initialized;
 
     const health = {
