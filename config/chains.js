@@ -637,6 +637,20 @@ const chainConfig = {
       },
     ],
   },
+  solana: {
+    name: "Solana",
+    symbol: "SOL",
+    chainId: "solana",
+    popularTokens: [
+      {
+        symbol: "USDC",
+        name: "USD Coin",
+        address: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+        decimals: 6,
+      },
+      // ... other Solana tokens
+    ],
+  },
 };
 
 module.exports = chainConfig;
