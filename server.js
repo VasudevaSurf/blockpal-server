@@ -813,6 +813,7 @@ const debugRoutes = require("./routes/debug");
 const coinGeckoRoutes = require("./routes/coingecko");
 const coinlesRoutes = require("./routes/coinles");
 const userWatchlistRoutes = require("./routes/user-watchlist");
+const jupiterSwapRoutes = require("./routes/jupiterSwap");
 
 const app = express();
 const server = http.createServer(app);
@@ -944,6 +945,7 @@ app.use("/api/coingecko", coinGeckoRoutes);
 app.use("/api/coinles", coinlesRoutes);
 app.use("/api/user-watchlist", userWatchlistRoutes);
 app.use("/api/swap", swapRoutes);
+app.use("/api/jupiter", jupiterSwapRoutes);
 
 // Swap routes
 const swapRouter = express.Router();
