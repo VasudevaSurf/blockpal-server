@@ -189,7 +189,6 @@ class MoralisService {
     }
   }
 
-  // ✅ NEW: Check if chain is Solana
   isSolanaChain(chainId) {
     return (
       chainId === "solana" ||
@@ -199,7 +198,7 @@ class MoralisService {
     );
   }
 
-  // ✅ NEW: Get Solana token balances
+  // ✅ FIXED: Use correct Moralis Solana Portfolio API
   async getWalletTokenBalancesSolana(walletAddress, chainId = "solana") {
     try {
       await this.initialize();
@@ -216,7 +215,7 @@ class MoralisService {
         `🔍 Fetching Solana token balances for wallet: ${walletAddress}`
       );
 
-      // Step 1: Get token portfolio from Moralis
+      // ✅ Step 1: Get portfolio using Moralis Solana API
       logger.info("📡 Calling Moralis Solana Portfolio API...");
 
       const portfolioUrl = `https://solana-gateway.moralis.io/account/mainnet/${walletAddress}/portfolio`;
@@ -226,20 +225,28 @@ class MoralisService {
           accept: "application/json",
           "X-API-Key": this.apiKey,
         },
-        params: {
-          nftMetadata: false,
-          mediaItems: false,
-          excludeSpam: true,
-        },
         timeout: 15000,
       });
 
       const portfolioData = portfolioResponse.data;
+
+      logger.info(
+        "📦 Raw Solana Portfolio Response:",
+        JSON.stringify(portfolioData, null, 2)
+      );
+
+      // ✅ Get native SOL balance
+      const nativeSolBalance = parseFloat(
+        portfolioData.nativeBalance?.solana || "0"
+      );
+      logger.info(`💎 Native SOL Balance: ${nativeSolBalance} SOL`);
+
+      // ✅ Get SPL tokens
       const tokens = portfolioData.tokens || [];
+      logger.info(`✅ Found ${tokens.length} SPL tokens in portfolio`);
 
-      logger.info(`✅ Found ${tokens.length} tokens in portfolio`);
-
-      if (tokens.length === 0) {
+      if (tokens.length === 0 && nativeSolBalance === 0) {
+        logger.warn("⚠️ No tokens or native balance found");
         const emptyResult = {
           displayedTokens: [],
           hiddenTokens: [],
@@ -253,12 +260,18 @@ class MoralisService {
         return emptyResult;
       }
 
-      // Step 2: Extract mint addresses for price fetching
+      // ✅ Step 2: Get mint addresses for price fetching
       const mintAddresses = tokens.map((token) => token.mint);
+
+      // Add native SOL mint for pricing
+      const solMint = "So11111111111111111111111111111111111111112";
+      if (!mintAddresses.includes(solMint)) {
+        mintAddresses.push(solMint);
+      }
 
       logger.info(`💰 Fetching prices for ${mintAddresses.length} tokens...`);
 
-      // Step 3: Batch fetch token prices
+      // ✅ Step 3: Fetch token prices from Moralis
       const pricesUrl =
         "https://solana-gateway.moralis.io/token/mainnet/prices";
 
@@ -276,28 +289,33 @@ class MoralisService {
       );
 
       const pricesData = pricesResponse.data;
+      logger.info(`📦 Price Response:`, JSON.stringify(pricesData, null, 2));
 
-      // Create price map for quick lookup
+      // ✅ Create price map
       const priceMap = new Map();
       if (Array.isArray(pricesData)) {
         pricesData.forEach((priceInfo) => {
-          if (priceInfo.mint && priceInfo.usdPrice !== undefined) {
-            priceMap.set(priceInfo.mint, priceInfo.usdPrice);
+          if (priceInfo.tokenAddress && priceInfo.usdPrice !== undefined) {
+            priceMap.set(priceInfo.tokenAddress, {
+              price: priceInfo.usdPrice,
+              change24h: priceInfo.usdPrice24hrPercentChange || 0,
+              usdChange24h: priceInfo.usdPrice24hrUsdChange || 0,
+            });
           }
         });
       }
 
       logger.info(`✅ Fetched prices for ${priceMap.size} tokens`);
 
-      // Step 4: Process tokens with balances and prices
+      // ✅ Step 4: Process SPL tokens
       const processedTokens = tokens.map((token) => {
         const balance = parseFloat(token.amount) || 0;
-        const price = priceMap.get(token.mint) || 0;
-        const value = balance * price;
-
-        // Check if token is native SOL
-        const isNativeToken =
-          token.mint === "So11111111111111111111111111111111111111112";
+        const priceInfo = priceMap.get(token.mint) || {
+          price: 0,
+          change24h: 0,
+          usdChange24h: 0,
+        };
+        const value = balance * priceInfo.price;
 
         return {
           token_address: token.mint,
@@ -310,21 +328,54 @@ class MoralisService {
           thumbnail: token.logo || null,
           possible_spam: token.possibleSpam || false,
           verified_contract: token.isVerifiedContract !== false,
-          native_token: isNativeToken,
-          usd_price: price,
+          native_token: false,
+          usd_price: priceInfo.price,
           usd_value: value,
-          usd_value_24hr_usd_change: 0, // Solana endpoint doesn't provide 24h change
-          usd_price_24hr_percent_change: 0,
+          usd_value_24hr_usd_change: priceInfo.usdChange24h,
+          usd_price_24hr_percent_change: priceInfo.change24h,
         };
       });
 
-      // Step 5: Categorize tokens (preset vs hidden)
+      // ✅ Step 5: Add native SOL if balance exists
+      if (nativeSolBalance > 0) {
+        const solPriceInfo = priceMap.get(solMint) || {
+          price: 0,
+          change24h: 0,
+          usdChange24h: 0,
+        };
+        const solValue = nativeSolBalance * solPriceInfo.price;
+
+        processedTokens.unshift({
+          token_address: solMint,
+          symbol: "SOL",
+          name: "Solana",
+          decimals: 9,
+          balance: portfolioData.nativeBalance?.lamports || "0",
+          balance_formatted: nativeSolBalance.toString(),
+          logo: "https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/So11111111111111111111111111111111111111112/logo.png",
+          thumbnail:
+            "https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/So11111111111111111111111111111111111111112/logo.png",
+          possible_spam: false,
+          verified_contract: true,
+          native_token: true,
+          usd_price: solPriceInfo.price,
+          usd_value: solValue,
+          usd_value_24hr_usd_change: solPriceInfo.usdChange24h,
+          usd_price_24hr_percent_change: solPriceInfo.change24h,
+        });
+      }
+
+      logger.info(
+        `✅ Processed ${processedTokens.length} total tokens (including native SOL)`
+      );
+
+      // ✅ Step 6: Categorize tokens
       const { displayedTokens, hiddenTokens } = this.categorizeTokens(
         processedTokens,
         "solana"
       );
 
-      // Step 6: Calculate values
+      // ✅ Step 7: Calculate values
       const mainListValue = displayedTokens.reduce((sum, t) => {
         return sum + (parseFloat(t.usd_value) || 0);
       }, 0);
@@ -336,9 +387,16 @@ class MoralisService {
         0
       );
 
-      // Note: 24h change not available from Solana endpoints
-      const mainList24hrChange = 0;
-      const total24hrChange = 0;
+      const mainList24hrChange = displayedTokens.reduce((sum, t) => {
+        return sum + (parseFloat(t.usd_value_24hr_usd_change) || 0);
+      }, 0);
+
+      const total24hrChange = [...displayedTokens, ...hiddenTokens].reduce(
+        (sum, t) => {
+          return sum + (parseFloat(t.usd_value_24hr_usd_change) || 0);
+        },
+        0
+      );
 
       const finalResult = {
         displayedTokens,
@@ -367,15 +425,6 @@ class MoralisService {
           displayedTokens.length + hiddenTokens.length
         } tokens)`
       );
-      logger.info(
-        `🎯 Showing: ${displayedTokens.length} preset tokens in main list`
-      );
-
-      if (hiddenTokens.length > 0) {
-        logger.info(
-          `💡 Found ${hiddenTokens.length} additional token(s) not in main list.`
-        );
-      }
 
       return finalResult;
     } catch (error) {
@@ -383,6 +432,7 @@ class MoralisService {
         wallet: walletAddress,
         error: error.message,
         stack: error.stack,
+        response: error.response?.data,
       });
 
       // Return empty result instead of throwing
