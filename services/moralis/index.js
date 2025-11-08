@@ -1,18 +1,20 @@
+// services/moralis/index.js - ENHANCED WITH SOLANA SUPPORT
 const Moralis = require("moralis").default;
 const NodeCache = require("node-cache");
+const axios = require("axios");
 const { logger } = require("../../utils/logger");
 
-// ✅ VERIFY: Cache TTL matches refresh interval
 const cache = new NodeCache({
-  stdTTL: parseInt(process.env.CACHE_TTL_SECONDS) || 300, // ✅ 300 seconds = 5 minutes
+  stdTTL: parseInt(process.env.CACHE_TTL_SECONDS) || 300,
   checkperiod: 60,
 });
 
-// PRESET TOKEN CONFIGURATIONS - Exact copy from wallet-balance.js
+// PRESET TOKEN CONFIGURATIONS - Enhanced with Solana
 const PRESET_TOKENS = {
   1: {
     name: "Ethereum",
     chainParam: "0x1",
+    chainType: "evm",
     tokens: [
       "0xdac17f958d2ee523a2206206994597c13d831ec7", // USDT
       "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48", // USDC
@@ -38,6 +40,7 @@ const PRESET_TOKENS = {
   8453: {
     name: "Base",
     chainParam: "0x2105",
+    chainType: "evm",
     tokens: [
       "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913", // USDC
       "0x50c5725949a6f0c72e6c4a641f24049a917db0cb", // DAI
@@ -59,6 +62,7 @@ const PRESET_TOKENS = {
   137: {
     name: "Polygon",
     chainParam: "0x89",
+    chainType: "evm",
     tokens: [
       "0x2791bca1f2de4661ed88a30c99a7a9449aa84174", // USDC
       "0xc2132d05d31c914a87c6611c10748aeb04b58e8f", // USDT
@@ -79,12 +83,13 @@ const PRESET_TOKENS = {
   56: {
     name: "BSC",
     chainParam: "0x38",
+    chainType: "evm",
     tokens: [
       "0x55d398326f99059ff775485246999027b3197955", // USDT
       "0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d", // USDC
       "0xe9e7cea3dedca5984780bafc599bd69add087d56", // BUSD
       "0x2170ed0880ac9a755fd29b2688956bd959f933f8", // ETH
-      "0x7130d2a12b9173bc095c", // BTCB
+      "0x7130d2a12b9bcbfae4f2634d864a1ee1ce3ead9c", // BTCB
       "0xbb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c", // WBNB
       "0x0e09fabb73bd3ade0a17ecc321fd13a19e81ce82", // CAKE
       "0xf8a0bf9cf54bb92f17374d9e9a321e6a111a51bd", // LINK
@@ -99,6 +104,7 @@ const PRESET_TOKENS = {
   42161: {
     name: "Arbitrum",
     chainParam: "0xa4b1",
+    chainType: "evm",
     tokens: [
       "0xfd086bc7cd5c481dcc9c85ebe478a1c0b69fcbb9", // USDT
       "0xaf88d065e77c8cc2239327c5edb3a432268e5831", // USDC
@@ -118,6 +124,7 @@ const PRESET_TOKENS = {
   43114: {
     name: "Avalanche",
     chainParam: "0xa86a",
+    chainType: "evm",
     tokens: [
       "0x9702230a8ea53601f5cd2dc00fdbc13d4df4a8c7", // USDT
       "0xb97ef9ef8734c71904d8002f8b6bc66dd9c48a6e", // USDC
@@ -133,14 +140,31 @@ const PRESET_TOKENS = {
       "0x59414b3089ce2af0010e7523dea7e2b35d776ec7", // YAK
     ],
   },
+  // ✅ SOLANA CHAIN
+  solana: {
+    name: "Solana",
+    chainParam: "mainnet",
+    chainType: "solana",
+    tokens: [
+      "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v", // USDC
+      "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB", // USDT
+      "4k3Dyjzvzp8eMZWUXbBCjEvwSkkk59S5iCNLY3QrkX6R", // RAY (Raydium)
+      "SRMuApVNdxXokk5GT7XD5cUUgXMBCoAz2LHeuAoKWRt", // SRM (Serum)
+      "orcaEKTdK7LKz57vaAYr9QeNsVEPfiu6QeMU1kektZE", // ORCA
+      "MangoCzJ36AjZyKwVj3VnYU4GTonjfVEnJmvvWaxLac", // MNGO (Mango)
+      "So11111111111111111111111111111111111111112", // Wrapped SOL
+      "JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN", // JUP (Jupiter)
+      "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263", // BONK
+      "jtojtomepa8beP8AuQc6eXt5FriJwfFMwQx2v2f9mCL", // JTO (Jito)
+    ],
+  },
 };
 
 class MoralisService {
   constructor() {
     this.initialized = false;
-    this.apiKey =
-      process.env.MORALIS_API_KEY ||
-      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6IjU1Y2NiZDdlLWJhNzYtNGViYy05YzIwLWM2Mjg1ZTI5NmI4MyIsIm9yZ0lkIjoiNDc4MTI0IiwidXNlcklkIjoiNDkxODkwIiwidHlwZUlkIjoiYmQ5MWEzMzAtNTU5Ny00OGVjLWI2N2ItYmYwNjYyMjY4NGVmIiwidHlwZSI6IlBST0pFQ1QiLCJpYXQiOjE3NjE1NTQ3OTMsImV4cCI6NDkxNzMxNDc5M30.zSHyaXOwMxlrst6WJs5-WETy92Q3OAxhhUBJtGfk4dk";
+    this.apiKey = process.env.MORALIS_API_KEY;
+    this.PRESET_TOKENS = PRESET_TOKENS;
   }
 
   async initialize() {
@@ -165,7 +189,216 @@ class MoralisService {
     }
   }
 
-  // EXACT COPY: Categorize tokens function from wallet-balance.js
+  // ✅ NEW: Check if chain is Solana
+  isSolanaChain(chainId) {
+    return (
+      chainId === "solana" ||
+      chainId === "Solana" ||
+      chainId === "SOLANA" ||
+      chainId?.toString().toLowerCase() === "solana"
+    );
+  }
+
+  // ✅ NEW: Get Solana token balances
+  async getWalletTokenBalancesSolana(walletAddress, chainId = "solana") {
+    try {
+      await this.initialize();
+
+      const cacheKey = `wallet_tokens_${walletAddress}_solana`;
+      const cached = cache.get(cacheKey);
+
+      if (cached && process.env.ENABLE_CACHE !== "false") {
+        logger.info(`📦 Cache hit for Solana wallet tokens: ${walletAddress}`);
+        return cached;
+      }
+
+      logger.info(
+        `🔍 Fetching Solana token balances for wallet: ${walletAddress}`
+      );
+
+      // Step 1: Get token portfolio from Moralis
+      logger.info("📡 Calling Moralis Solana Portfolio API...");
+
+      const portfolioUrl = `https://solana-gateway.moralis.io/account/mainnet/${walletAddress}/portfolio`;
+
+      const portfolioResponse = await axios.get(portfolioUrl, {
+        headers: {
+          accept: "application/json",
+          "X-API-Key": this.apiKey,
+        },
+        params: {
+          nftMetadata: false,
+          mediaItems: false,
+          excludeSpam: true,
+        },
+        timeout: 15000,
+      });
+
+      const portfolioData = portfolioResponse.data;
+      const tokens = portfolioData.tokens || [];
+
+      logger.info(`✅ Found ${tokens.length} tokens in portfolio`);
+
+      if (tokens.length === 0) {
+        const emptyResult = {
+          displayedTokens: [],
+          hiddenTokens: [],
+          totalValue: 0,
+          mainListValue: 0,
+          total24hrChange: 0,
+          mainList24hrChange: 0,
+          chainName: "Solana",
+        };
+        cache.set(cacheKey, emptyResult);
+        return emptyResult;
+      }
+
+      // Step 2: Extract mint addresses for price fetching
+      const mintAddresses = tokens.map((token) => token.mint);
+
+      logger.info(`💰 Fetching prices for ${mintAddresses.length} tokens...`);
+
+      // Step 3: Batch fetch token prices
+      const pricesUrl =
+        "https://solana-gateway.moralis.io/token/mainnet/prices";
+
+      const pricesResponse = await axios.post(
+        pricesUrl,
+        { addresses: mintAddresses },
+        {
+          headers: {
+            accept: "application/json",
+            "X-API-Key": this.apiKey,
+            "content-type": "application/json",
+          },
+          timeout: 15000,
+        }
+      );
+
+      const pricesData = pricesResponse.data;
+
+      // Create price map for quick lookup
+      const priceMap = new Map();
+      if (Array.isArray(pricesData)) {
+        pricesData.forEach((priceInfo) => {
+          if (priceInfo.mint && priceInfo.usdPrice !== undefined) {
+            priceMap.set(priceInfo.mint, priceInfo.usdPrice);
+          }
+        });
+      }
+
+      logger.info(`✅ Fetched prices for ${priceMap.size} tokens`);
+
+      // Step 4: Process tokens with balances and prices
+      const processedTokens = tokens.map((token) => {
+        const balance = parseFloat(token.amount) || 0;
+        const price = priceMap.get(token.mint) || 0;
+        const value = balance * price;
+
+        // Check if token is native SOL
+        const isNativeToken =
+          token.mint === "So11111111111111111111111111111111111111112";
+
+        return {
+          token_address: token.mint,
+          symbol: token.symbol || "UNKNOWN",
+          name: token.name || "Unknown Token",
+          decimals: parseInt(token.decimals) || 9,
+          balance: token.amountRaw || "0",
+          balance_formatted: balance.toString(),
+          logo: token.logo || null,
+          thumbnail: token.logo || null,
+          possible_spam: token.possibleSpam || false,
+          verified_contract: token.isVerifiedContract !== false,
+          native_token: isNativeToken,
+          usd_price: price,
+          usd_value: value,
+          usd_value_24hr_usd_change: 0, // Solana endpoint doesn't provide 24h change
+          usd_price_24hr_percent_change: 0,
+        };
+      });
+
+      // Step 5: Categorize tokens (preset vs hidden)
+      const { displayedTokens, hiddenTokens } = this.categorizeTokens(
+        processedTokens,
+        "solana"
+      );
+
+      // Step 6: Calculate values
+      const mainListValue = displayedTokens.reduce((sum, t) => {
+        return sum + (parseFloat(t.usd_value) || 0);
+      }, 0);
+
+      const totalValue = [...displayedTokens, ...hiddenTokens].reduce(
+        (sum, t) => {
+          return sum + (parseFloat(t.usd_value) || 0);
+        },
+        0
+      );
+
+      // Note: 24h change not available from Solana endpoints
+      const mainList24hrChange = 0;
+      const total24hrChange = 0;
+
+      const finalResult = {
+        displayedTokens,
+        hiddenTokens,
+        totalValue,
+        mainListValue,
+        total24hrChange: mainList24hrChange,
+        mainList24hrChange,
+        all24hrChange: total24hrChange,
+        chainName: "Solana",
+      };
+
+      // Cache the result
+      cache.set(cacheKey, finalResult);
+
+      logger.info(
+        `✅ Successfully processed Solana tokens for wallet ${walletAddress}`
+      );
+      logger.info(
+        `💰 Main List Value: $${mainListValue.toFixed(3)} (${
+          displayedTokens.length
+        } tokens)`
+      );
+      logger.info(
+        `📊 Total Portfolio Value: $${totalValue.toFixed(3)} (${
+          displayedTokens.length + hiddenTokens.length
+        } tokens)`
+      );
+      logger.info(
+        `🎯 Showing: ${displayedTokens.length} preset tokens in main list`
+      );
+
+      if (hiddenTokens.length > 0) {
+        logger.info(
+          `💡 Found ${hiddenTokens.length} additional token(s) not in main list.`
+        );
+      }
+
+      return finalResult;
+    } catch (error) {
+      logger.error("❌ Error fetching Solana wallet token balances", {
+        wallet: walletAddress,
+        error: error.message,
+        stack: error.stack,
+      });
+
+      // Return empty result instead of throwing
+      return {
+        displayedTokens: [],
+        hiddenTokens: [],
+        totalValue: 0,
+        mainListValue: 0,
+        total24hrChange: 0,
+        mainList24hrChange: 0,
+        chainName: "Solana",
+      };
+    }
+  }
+
+  // EVM token categorization (existing)
   categorizeTokens(allTokens, chainId) {
     const presetTokenAddresses =
       PRESET_TOKENS[chainId]?.tokens.map((addr) => addr.toLowerCase()) || [];
@@ -191,8 +424,39 @@ class MoralisService {
     return { displayedTokens, hiddenTokens };
   }
 
-  // FIXED: Enhanced wallet token balance function with separate main list and total calculations
+  // ✅ ENHANCED: Main entry point - auto-detects chain type
   async getWalletTokenBalances(walletAddress, chainId) {
+    try {
+      // Detect if Solana chain
+      if (this.isSolanaChain(chainId)) {
+        logger.info(`🌐 Detected Solana chain, using Solana endpoint`);
+        return await this.getWalletTokenBalancesSolana(walletAddress, chainId);
+      }
+
+      // Otherwise use EVM endpoint
+      logger.info(`🌐 Detected EVM chain (${chainId}), using EVM endpoint`);
+      return await this.getWalletTokenBalancesEVM(walletAddress, chainId);
+    } catch (error) {
+      logger.error("❌ Error in getWalletTokenBalances", {
+        wallet: walletAddress,
+        chain: chainId,
+        error: error.message,
+      });
+
+      return {
+        displayedTokens: [],
+        hiddenTokens: [],
+        totalValue: 0,
+        mainListValue: 0,
+        total24hrChange: 0,
+        mainList24hrChange: 0,
+        chainName: "Unknown",
+      };
+    }
+  }
+
+  // ✅ RENAMED: Original EVM implementation
+  async getWalletTokenBalancesEVM(walletAddress, chainId) {
     try {
       await this.initialize();
 
@@ -219,7 +483,6 @@ class MoralisService {
         `🔗 Using chain hex: ${chainConfig.chainParam} for chain ID: ${chainId}`
       );
 
-      // Get all tokens with prices - EXACT MORALIS CALL
       logger.info("📡 Making Moralis API call for tokens with prices...");
 
       const response = await Moralis.EvmApi.wallets.getWalletTokenBalancesPrice(
@@ -242,23 +505,19 @@ class MoralisService {
           displayedTokens: [],
           hiddenTokens: [],
           totalValue: 0,
-          mainListValue: 0, // NEW: Main list value
+          mainListValue: 0,
           total24hrChange: 0,
-          mainList24hrChange: 0, // NEW: Main list 24hr change
+          mainList24hrChange: 0,
         };
         cache.set(cacheKey, emptyResult);
         return emptyResult;
       }
 
-      // EXACT COPY: Categorize tokens
       const { displayedTokens, hiddenTokens } = this.categorizeTokens(
         tokensWithBalance,
         chainId
       );
 
-      // FIXED: Calculate separate totals for main list vs all tokens
-
-      // Main list calculations (only displayedTokens = preset + user-added)
       const mainListValue = displayedTokens.reduce((sum, t) => {
         const value = parseFloat(t.usd_value) || 0;
         return sum + value;
@@ -269,7 +528,6 @@ class MoralisService {
         return sum + change;
       }, 0);
 
-      // Total calculations (all tokens for reference)
       const totalValue = [...displayedTokens, ...hiddenTokens].reduce(
         (sum, t) => {
           const value = parseFloat(t.usd_value) || 0;
@@ -289,18 +547,16 @@ class MoralisService {
       const finalResult = {
         displayedTokens,
         hiddenTokens,
-        totalValue, // All tokens value
-        mainListValue, // NEW: Only main list (preset + user-added) value
-        total24hrChange: mainList24hrChange, // CHANGED: Return main list change for display
-        mainList24hrChange, // NEW: Explicit main list 24hr change
-        all24hrChange: total24hrChange, // NEW: All tokens 24hr change for reference
+        totalValue,
+        mainListValue,
+        total24hrChange: mainList24hrChange,
+        mainList24hrChange,
+        all24hrChange: total24hrChange,
         chainName: chainConfig.name,
       };
 
-      // Cache the result
       cache.set(cacheKey, finalResult);
 
-      // FIXED: Enhanced logging to show both values
       logger.info(
         `✅ Successfully processed tokens for wallet ${walletAddress}`
       );
@@ -314,24 +570,6 @@ class MoralisService {
           displayedTokens.length + hiddenTokens.length
         } tokens)`
       );
-      logger.info(
-        `📈 24hr Main List Change: ${
-          mainList24hrChange >= 0 ? "+" : ""
-        }$${Math.abs(mainList24hrChange).toFixed(3)}`
-      );
-      logger.info(
-        `📊 24hr Total Change: ${total24hrChange >= 0 ? "+" : ""}$${Math.abs(
-          total24hrChange
-        ).toFixed(3)}`
-      );
-      logger.info(
-        `🎯 Showing: ${displayedTokens.length} preset tokens in main list`
-      );
-      if (hiddenTokens.length > 0) {
-        logger.info(
-          `💡 Found ${hiddenTokens.length} additional token(s) not in main list.`
-        );
-      }
 
       return finalResult;
     } catch (error) {
@@ -341,7 +579,6 @@ class MoralisService {
         error: error.message,
       });
 
-      // Return empty result instead of throwing
       return {
         displayedTokens: [],
         hiddenTokens: [],
@@ -354,11 +591,47 @@ class MoralisService {
     }
   }
 
-  // Enhanced native balance with same approach
+  // ✅ ENHANCED: Native balance with Solana support
   async getNativeBalance(walletAddress, chainId) {
     try {
       await this.initialize();
 
+      // For Solana, native balance is included in portfolio
+      if (this.isSolanaChain(chainId)) {
+        logger.info(`💎 Fetching Solana native balance for ${walletAddress}`);
+
+        // We can get this from the portfolio endpoint
+        const portfolio = await this.getWalletTokenBalancesSolana(
+          walletAddress
+        );
+
+        // Find native SOL token
+        const nativeSol = [
+          ...portfolio.displayedTokens,
+          ...portfolio.hiddenTokens,
+        ].find(
+          (token) =>
+            token.native_token ||
+            token.token_address ===
+              "So11111111111111111111111111111111111111112"
+        );
+
+        if (nativeSol) {
+          return {
+            balance: parseFloat(nativeSol.balance_formatted) || 0,
+            balanceWei: nativeSol.balance || "0",
+            symbol: "SOL",
+          };
+        }
+
+        return {
+          balance: 0,
+          balanceWei: "0",
+          symbol: "SOL",
+        };
+      }
+
+      // EVM chains (existing logic)
       const chainConfig = PRESET_TOKENS[chainId];
       if (!chainConfig) {
         throw new Error(`Unsupported chain ID: ${chainId}`);
@@ -391,15 +664,16 @@ class MoralisService {
       return {
         balance: 0,
         balanceWei: "0",
-        symbol: "ETH",
+        symbol: this.isSolanaChain(chainId) ? "SOL" : "ETH",
       };
     }
   }
 
   getSupportedChains() {
     return Object.keys(PRESET_TOKENS).map((chainId) => ({
-      chainId: parseInt(chainId),
+      chainId: chainId === "solana" ? "solana" : parseInt(chainId),
       name: PRESET_TOKENS[chainId].name,
+      chainType: PRESET_TOKENS[chainId].chainType,
       tokenCount: PRESET_TOKENS[chainId].tokens.length,
     }));
   }

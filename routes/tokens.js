@@ -20,24 +20,33 @@ router.use(tokenRateLimit);
 
 /**
  * GET /api/tokens/wallet/:address
- * Get token balances with show/hide functionality - FIXED VERSION
+ * Get token balances - WORKS FOR BOTH EVM AND SOLANA
  */
 router.get("/wallet/:address", async (req, res) => {
   try {
     const { address } = req.params;
     const { chain, showHidden = "false" } = req.query;
 
-    // Validation
-    if (!address || !address.match(/^0x[a-fA-F0-9]{40}$/)) {
-      return ResponseUtil.validation(res, "Invalid wallet address format");
+    // Validation - accept both EVM addresses and Solana addresses
+    const isEvmAddress = /^0x[a-fA-F0-9]{40}$/.test(address);
+    const isSolanaAddress = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(address); // Base58 format
+
+    if (!isEvmAddress && !isSolanaAddress) {
+      return ResponseUtil.validation(
+        res,
+        "Invalid wallet address format (must be EVM or Solana address)"
+      );
     }
 
     if (!chain) {
       return ResponseUtil.validation(res, "Chain ID is required");
     }
 
-    const chainId = parseInt(chain);
-    if (isNaN(chainId)) {
+    // Handle chain ID - can be number (EVM) or string (Solana)
+    const chainId =
+      chain.toLowerCase() === "solana" ? "solana" : parseInt(chain);
+
+    if (chainId !== "solana" && isNaN(chainId)) {
       return ResponseUtil.validation(res, "Invalid chain ID");
     }
 
@@ -47,55 +56,14 @@ router.get("/wallet/:address", async (req, res) => {
       `Fetching tokens for wallet: ${address} on chain: ${chainId}, showHidden: ${showHiddenTokens}`
     );
 
-    // Check if Moralis service is initialized
-    if (!moralisService.initialized) {
-      logger.warn(
-        "Moralis service not initialized, attempting to initialize..."
-      );
-      try {
-        await moralisService.initialize();
-      } catch (initError) {
-        logger.error("Failed to initialize Moralis service:", initError);
-        return ResponseUtil.error(res, "Service initialization failed", 503);
-      }
-    }
+    // ✅ Service automatically detects chain type and uses correct endpoint
+    const result = await moralisService.getWalletTokenBalances(
+      address,
+      chainId
+    );
 
-    // Get token balances from Moralis - EXACT same approach as wallet-balance.js
-    let result = [];
-    try {
-      result = await moralisService.getWalletTokenBalances(address, chainId);
-    } catch (moralisError) {
-      logger.error("Moralis API error:", moralisError);
-
-      // Check for specific Moralis errors
-      if (moralisError.message.includes("Invalid address")) {
-        return ResponseUtil.validation(res, "Invalid wallet address");
-      }
-
-      if (moralisError.message.includes("Invalid chain")) {
-        return ResponseUtil.validation(res, "Unsupported chain ID");
-      }
-
-      if (moralisError.message.includes("API key")) {
-        return ResponseUtil.error(res, "API configuration error", 503);
-      }
-
-      // Return empty result for better UX
-      logger.warn(
-        `Returning empty result due to Moralis error: ${moralisError.message}`
-      );
-      result = {
-        displayedTokens: [],
-        hiddenTokens: [],
-        totalValue: 0,
-        total24hrChange: 0,
-        chainName: "Unknown",
-      };
-    }
-
-    // Process tokens into frontend format
+    // Process tokens (same as before, works for both EVM and Solana)
     const processToken = (token) => {
-      // Parse balance
       let balance = 0;
       if (token.balance_formatted) {
         balance = parseFloat(token.balance_formatted);
@@ -111,7 +79,6 @@ router.get("/wallet/:address", async (req, res) => {
       const priceChange24h =
         parseFloat(token.usd_price_24hr_percent_change) || 0;
 
-      // Determine if native token
       const isNativeToken =
         token.native_token ||
         token.token_address === "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE" ||
@@ -130,39 +97,36 @@ router.get("/wallet/:address", async (req, res) => {
         balance: balance,
         balanceWei: token.balance || "0",
         value: usdValue,
-        change24h: priceChange24h, // Percentage change
-        usdChange24h: change24h, // USD change amount
+        change24h: priceChange24h,
+        usdChange24h: change24h,
         price: usdPrice,
         isNative: isNativeToken,
         logoUrl: token.logo || token.thumbnail || null,
-        isPopular: true, // All preset tokens are popular
+        isPopular: true,
         possibleSpam: token.possible_spam || false,
         verifiedContract: token.verified_contract !== false,
       };
     };
 
-    // FIXED: Process displayed tokens (preset tokens) and sort by value
+    // Process displayed and hidden tokens
     const displayedTokens = result.displayedTokens
       .map(processToken)
       .sort((a, b) => b.value - a.value);
 
-    // FIXED: Process hidden tokens (non-preset tokens) and sort by value
     const hiddenTokens = result.hiddenTokens
       .map(processToken)
       .sort((a, b) => b.value - a.value);
 
-    // FIXED: Decide which tokens to return - KEEP SEPARATION
+    // Decide which tokens to return
     let tokensToReturn = [];
     let actualPresetCount = displayedTokens.length;
     let actualHiddenCount = hiddenTokens.length;
 
     if (showHiddenTokens) {
-      // FIXED: When showing hidden, send preset tokens FIRST, then hidden tokens
       tokensToReturn = [...displayedTokens, ...hiddenTokens];
     } else {
-      // When not showing hidden, send only preset tokens
       tokensToReturn = displayedTokens;
-      actualHiddenCount = hiddenTokens.length; // Still report hidden count
+      actualHiddenCount = hiddenTokens.length;
     }
 
     const response = {
@@ -170,13 +134,11 @@ router.get("/wallet/:address", async (req, res) => {
       chainId,
       chainName: result.chainName,
       tokens: tokensToReturn,
-      // FIXED: Summary data
       totalValue: result.totalValue,
       total24hrChange: result.total24hrChange,
       tokenCount: tokensToReturn.length,
-      // FIXED: Metadata for show/hide functionality
-      presetTokenCount: actualPresetCount, // Number of preset tokens
-      hiddenTokenCount: actualHiddenCount, // Number of hidden tokens
+      presetTokenCount: actualPresetCount,
+      hiddenTokenCount: actualHiddenCount,
       showingHidden: showHiddenTokens,
       hasHiddenTokens: hiddenTokens.length > 0,
       lastUpdated: new Date().toISOString(),
@@ -184,11 +146,6 @@ router.get("/wallet/:address", async (req, res) => {
 
     logger.info(
       `Successfully returning ${tokensToReturn.length} tokens (${actualPresetCount} preset, ${actualHiddenCount} hidden)`
-    );
-    logger.info(
-      `Total portfolio value: $${result.totalValue.toFixed(2)}, 24hr change: ${
-        result.total24hrChange >= 0 ? "+" : ""
-      }$${result.total24hrChange.toFixed(3)}`
     );
 
     return ResponseUtil.success(res, response, "Tokens fetched successfully");
